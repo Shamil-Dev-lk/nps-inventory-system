@@ -122,3 +122,5 @@ export default function StockReturnViewPage() {
     </div>
   );
 }
+
+export function generateStaticParams() { return []; }

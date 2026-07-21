@@ -100,3 +100,5 @@ export default function PurchaseRequestDetailPage({ params }: { params: { id: st
     </div>
   );
 }
+
+export function generateStaticParams() { return []; }

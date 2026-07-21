@@ -190,3 +190,5 @@ export default function IssueViewPage() {
     </div>
   );
 }
+
+export function generateStaticParams() { return []; }

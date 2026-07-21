@@ -112,3 +112,5 @@ export default function PurchaseOrderDetailPage({ params }: { params: { id: stri
     </div>
   );
 }
+
+export function generateStaticParams() { return []; }

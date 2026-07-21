@@ -133,3 +133,5 @@ export default function StockTransferViewPage() {
     </div>
   );
 }
+
+export function generateStaticParams() { return []; }

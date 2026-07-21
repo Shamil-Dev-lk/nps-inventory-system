@@ -88,3 +88,5 @@ export default function EditAssetPage({ params }: { params: { id: string } }) {
     </div>
   );
 }
+
+export function generateStaticParams() { return []; }

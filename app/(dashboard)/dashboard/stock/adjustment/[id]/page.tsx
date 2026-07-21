@@ -135,3 +135,5 @@ export default function StockAdjustmentViewPage() {
     </div>
   );
 }
+
+export function generateStaticParams() { return []; }

@@ -100,3 +100,5 @@ export default function EditPurchaseOrderPage({ params }: { params: { id: string
     </div>
   );
 }
+
+export function generateStaticParams() { return []; }

@@ -1,7 +1,11 @@
 import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
-  // Empty config
+  output: 'export',
+  basePath: '/government-stock-system',
+  images: {
+    unoptimized: true,
+  },
 };
 
 export default nextConfig;

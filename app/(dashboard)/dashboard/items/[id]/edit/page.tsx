@@ -162,3 +162,5 @@ export default function EditItemPage({ params }: { params: Promise<{ id: string 
     </div>
   );
 }
+
+export function generateStaticParams() { return []; }

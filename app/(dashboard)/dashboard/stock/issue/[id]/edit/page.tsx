@@ -139,3 +139,5 @@ export default function IssueEditPage() {
     </div>
   );
 }
+
+export function generateStaticParams() { return []; }

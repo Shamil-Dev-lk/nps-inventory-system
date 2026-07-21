@@ -126,3 +126,5 @@ export default function GrnViewPage() {
     </div>
   );
 }
+
+export function generateStaticParams() { return []; }

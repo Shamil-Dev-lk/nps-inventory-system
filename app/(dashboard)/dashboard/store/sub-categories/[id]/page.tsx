@@ -89,3 +89,5 @@ export default function EditSubCategoryPage({ params }: { params: { id: string }
     </div>
   );
 }
+
+export function generateStaticParams() { return []; }

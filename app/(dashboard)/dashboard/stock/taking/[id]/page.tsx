@@ -152,3 +152,5 @@ export default function StockTakingDetailsPage({ params }: { params: { id: strin
     </div>
   );
 }
+
+export function generateStaticParams() { return []; }

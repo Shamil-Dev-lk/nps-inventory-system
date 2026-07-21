@@ -101,3 +101,5 @@ export default function ViewCustomerPage() {
     </div>
   );
 }
+
+export function generateStaticParams() { return []; }

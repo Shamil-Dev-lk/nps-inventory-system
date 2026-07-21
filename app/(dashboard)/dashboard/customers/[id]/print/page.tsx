@@ -87,3 +87,5 @@ export default function PrintCustomerPage({ params }: { params: { id: string } }
     </div>
   );
 }
+
+export function generateStaticParams() { return []; }
