@@ -1,0 +1,487 @@
+﻿2026-07-21T10:28:46.5666847Z Current runner version: '2.335.1'
+2026-07-21T10:28:46.5690689Z ##[group]Runner Image Provisioner
+2026-07-21T10:28:46.5691731Z Hosted Compute Agent
+2026-07-21T10:28:46.5692398Z Version: 20260707.563
+2026-07-21T10:28:46.5693389Z Commit: 02667638d2b423fbc733a8e32a88b44996a3ba6e
+2026-07-21T10:28:46.5694140Z Build Date: 2026-07-07T19:33:50Z
+2026-07-21T10:28:46.5694902Z Worker ID: {6b193f45-9573-43be-9424-b8c8507f2a62}
+2026-07-21T10:28:46.5695605Z Azure Region: westus3
+2026-07-21T10:28:46.5696214Z ##[endgroup]
+2026-07-21T10:28:46.5697722Z ##[group]Operating System
+2026-07-21T10:28:46.5698396Z Ubuntu
+2026-07-21T10:28:46.5698984Z 24.04.4
+2026-07-21T10:28:46.5699531Z LTS
+2026-07-21T10:28:46.5700021Z ##[endgroup]
+2026-07-21T10:28:46.5700622Z ##[group]Runner Image
+2026-07-21T10:28:46.5701245Z Image: ubuntu-24.04
+2026-07-21T10:28:46.5701886Z Version: 20260714.240.1
+2026-07-21T10:28:46.5703393Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20260714.240/images/ubuntu/Ubuntu2404-Readme.md
+2026-07-21T10:28:46.5704978Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20260714.240
+2026-07-21T10:28:46.5705975Z ##[endgroup]
+2026-07-21T10:28:46.5707480Z ##[group]GITHUB_TOKEN Permissions
+2026-07-21T10:28:46.5709599Z Contents: read
+2026-07-21T10:28:46.5710264Z Metadata: read
+2026-07-21T10:28:46.5710866Z Pages: write
+2026-07-21T10:28:46.5711404Z ##[endgroup]
+2026-07-21T10:28:46.5713799Z Secret source: Actions
+2026-07-21T10:28:46.5714781Z Prepare workflow directory
+2026-07-21T10:28:46.6050617Z Prepare all required actions
+2026-07-21T10:28:46.6091693Z Getting action download info
+2026-07-21T10:28:46.9470550Z Download action repository 'actions/checkout@v4' (SHA:11d5960a326750d5838078e36cf38b85af677262)
+2026-07-21T10:28:47.6521647Z Download action repository 'actions/setup-node@v4' (SHA:49933ea5288caeca8642d1e84afbd3f7d6820020)
+2026-07-21T10:28:47.7371039Z Download action repository 'actions/configure-pages@v5' (SHA:983d7736d9b0ae728b81ab479565c72886d7745b)
+2026-07-21T10:28:48.4633676Z Download action repository 'actions/cache@v4' (SHA:0057852bfaa89a56745cba8c7296529d2fc39830)
+2026-07-21T10:28:48.5676173Z Download action repository 'actions/upload-pages-artifact@v3' (SHA:56afc609e74202658d3ffba0e8f6dda462b719fa)
+2026-07-21T10:28:48.9171023Z Getting action download info
+2026-07-21T10:28:49.0531193Z Download action repository 'actions/upload-artifact@v4' (SHA:ea165f8d65b6e75b540449e92b4886f43607fa02)
+2026-07-21T10:28:49.1810462Z Complete job name: build
+2026-07-21T10:28:49.2520137Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+2026-07-21T10:28:49.2528311Z ##[group]Run actions/checkout@v4
+2026-07-21T10:28:49.2528821Z with:
+2026-07-21T10:28:49.2529138Z   repository: Shamil-Dev-lk/government-stock-system
+2026-07-21T10:28:49.2532080Z   token: ***
+2026-07-21T10:28:49.2532352Z   ssh-strict: true
+2026-07-21T10:28:49.2532823Z   ssh-user: git
+2026-07-21T10:28:49.2533097Z   persist-credentials: true
+2026-07-21T10:28:49.2533391Z   clean: true
+2026-07-21T10:28:49.2533654Z   sparse-checkout-cone-mode: true
+2026-07-21T10:28:49.2533963Z   fetch-depth: 1
+2026-07-21T10:28:49.2534215Z   fetch-tags: false
+2026-07-21T10:28:49.2534469Z   show-progress: true
+2026-07-21T10:28:49.2534722Z   lfs: false
+2026-07-21T10:28:49.2534989Z   submodules: false
+2026-07-21T10:28:49.2535249Z   set-safe-directory: true
+2026-07-21T10:28:49.2535549Z   allow-unsafe-pr-checkout: false
+2026-07-21T10:28:49.2536112Z ##[endgroup]
+2026-07-21T10:28:49.3538150Z Syncing repository: Shamil-Dev-lk/government-stock-system
+2026-07-21T10:28:49.3539759Z ##[group]Getting Git version info
+2026-07-21T10:28:49.3540327Z Working directory is '/home/runner/work/government-stock-system/government-stock-system'
+2026-07-21T10:28:49.3541085Z [command]/usr/bin/git version
+2026-07-21T10:28:49.3629882Z git version 2.54.0
+2026-07-21T10:28:49.3668057Z ##[endgroup]
+2026-07-21T10:28:49.3680964Z Temporarily overriding HOME='/home/runner/work/_temp/75ae47ae-159f-4c95-a8e4-e8dd515328b3' before making global git config changes
+2026-07-21T10:28:49.3683059Z Adding repository directory to the temporary git global config as a safe directory
+2026-07-21T10:28:49.3684985Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/government-stock-system/government-stock-system
+2026-07-21T10:28:49.3750440Z Deleting the contents of '/home/runner/work/government-stock-system/government-stock-system'
+2026-07-21T10:28:49.3759630Z ##[group]Initializing the repository
+2026-07-21T10:28:49.3768404Z [command]/usr/bin/git init /home/runner/work/government-stock-system/government-stock-system
+2026-07-21T10:28:49.3869352Z hint: Using 'master' as the name for the initial branch. This default branch name
+2026-07-21T10:28:49.3870493Z hint: will change to "main" in Git 3.0. To configure the initial branch name
+2026-07-21T10:28:49.3871469Z hint: to use in all of your new repositories, which will suppress this warning,
+2026-07-21T10:28:49.3872201Z hint: call:
+2026-07-21T10:28:49.3872814Z hint:
+2026-07-21T10:28:49.3873362Z hint: 	git config --global init.defaultBranch <name>
+2026-07-21T10:28:49.3873961Z hint:
+2026-07-21T10:28:49.3874572Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+2026-07-21T10:28:49.3875560Z hint: 'development'. The just-created branch can be renamed via this command:
+2026-07-21T10:28:49.3876313Z hint:
+2026-07-21T10:28:49.3876705Z hint: 	git branch -m <name>
+2026-07-21T10:28:49.3877157Z hint:
+2026-07-21T10:28:49.3877769Z hint: Disable this message with "git config set advice.defaultBranchName false"
+2026-07-21T10:28:49.3883811Z Initialized empty Git repository in /home/runner/work/government-stock-system/government-stock-system/.git/
+2026-07-21T10:28:49.3896740Z [command]/usr/bin/git remote add origin https://github.com/Shamil-Dev-lk/government-stock-system
+2026-07-21T10:28:49.3941813Z ##[endgroup]
+2026-07-21T10:28:49.3942854Z ##[group]Disabling automatic garbage collection
+2026-07-21T10:28:49.3947315Z [command]/usr/bin/git config --local gc.auto 0
+2026-07-21T10:28:49.3980738Z ##[endgroup]
+2026-07-21T10:28:49.3981931Z ##[group]Setting up auth
+2026-07-21T10:28:49.3989387Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-07-21T10:28:49.4027554Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-07-21T10:28:49.4441917Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-07-21T10:28:49.4481132Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-07-21T10:28:49.4709362Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-07-21T10:28:49.4744269Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-07-21T10:28:49.4968657Z [command]/usr/bin/git config --local http.https://github.com/.extraheader AUTHORIZATION: basic ***
+2026-07-21T10:28:49.5006906Z ##[endgroup]
+2026-07-21T10:28:49.5007740Z ##[group]Fetching the repository
+2026-07-21T10:28:49.5017394Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +b9f95e431f62268de767b280e01d8c49fabf9272:refs/remotes/origin/main
+2026-07-21T10:28:50.4283098Z From https://github.com/Shamil-Dev-lk/government-stock-system
+2026-07-21T10:28:50.4284486Z  * [new ref]         b9f95e431f62268de767b280e01d8c49fabf9272 -> origin/main
+2026-07-21T10:28:50.4319282Z ##[endgroup]
+2026-07-21T10:28:50.4319985Z ##[group]Determining the checkout info
+2026-07-21T10:28:50.4321667Z ##[endgroup]
+2026-07-21T10:28:50.4328826Z [command]/usr/bin/git sparse-checkout disable
+2026-07-21T10:28:50.4381367Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+2026-07-21T10:28:50.4414424Z ##[group]Checking out the ref
+2026-07-21T10:28:50.4420973Z [command]/usr/bin/git checkout --progress --force -B main refs/remotes/origin/main
+2026-07-21T10:28:50.4814876Z Switched to a new branch 'main'
+2026-07-21T10:28:50.4817882Z branch 'main' set up to track 'origin/main'.
+2026-07-21T10:28:50.4826356Z ##[endgroup]
+2026-07-21T10:28:50.4874504Z [command]/usr/bin/git log -1 --format=%H
+2026-07-21T10:28:50.4903340Z b9f95e431f62268de767b280e01d8c49fabf9272
+2026-07-21T10:28:50.5163286Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+2026-07-21T10:28:50.5164988Z ##[group]Run actions/setup-node@v4
+2026-07-21T10:28:50.5165247Z with:
+2026-07-21T10:28:50.5165436Z   node-version: 20
+2026-07-21T10:28:50.5165665Z   always-auth: false
+2026-07-21T10:28:50.5165889Z   check-latest: false
+2026-07-21T10:28:50.5168587Z   token: ***
+2026-07-21T10:28:50.5168784Z ##[endgroup]
+2026-07-21T10:28:50.6549789Z Attempting to download 20...
+2026-07-21T10:28:50.6653235Z (node:2303) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+2026-07-21T10:28:50.6654164Z (Use `node --trace-deprecation ...` to show where the warning was created)
+2026-07-21T10:28:51.6877658Z Acquiring 20.20.2 - x64 from https://github.com/actions/node-versions/releases/download/20.20.2-23521894959/node-20.20.2-linux-x64.tar.gz
+2026-07-21T10:28:52.2292017Z Extracting ...
+2026-07-21T10:28:52.2409391Z [command]/usr/bin/tar xz --strip 1 --warning=no-unknown-keyword --overwrite -C /home/runner/work/_temp/fe1dab2d-52f9-4f61-9ff4-d72859678c29 -f /home/runner/work/_temp/2933e082-455c-4092-b56c-2a0b8ac39443
+2026-07-21T10:28:53.2646041Z Adding to the cache ...
+2026-07-21T10:28:55.2769680Z ##[group]Environment details
+2026-07-21T10:28:55.4978335Z node: v20.20.2
+2026-07-21T10:28:55.4978756Z npm: 10.8.2
+2026-07-21T10:28:55.4979073Z yarn: 1.22.22
+2026-07-21T10:28:55.4979743Z ##[endgroup]
+2026-07-21T10:28:55.5170923Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+2026-07-21T10:28:55.5172240Z ##[group]Run actions/configure-pages@v5
+2026-07-21T10:28:55.5172914Z with:
+2026-07-21T10:28:55.5175645Z   token: ***
+2026-07-21T10:28:55.5175848Z   enablement: false
+2026-07-21T10:28:55.5176062Z ##[endgroup]
+2026-07-21T10:28:56.2514257Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+2026-07-21T10:28:56.2515614Z ##[group]Run actions/cache@v4
+2026-07-21T10:28:56.2515854Z with:
+2026-07-21T10:28:56.2516052Z   path: .next/cache
+
+2026-07-21T10:28:56.2516720Z   key: Linux-nextjs-fc5c134a8f2d151fa36f64801962f64cfe9f001186165bb4b33791ceec068599-58e00ede01c508b03589983684ef8c6429b13064aa3c5f1fcf6585744c3b3502
+2026-07-21T10:28:56.2517651Z   restore-keys: Linux-nextjs-fc5c134a8f2d151fa36f64801962f64cfe9f001186165bb4b33791ceec068599-
+
+2026-07-21T10:28:56.2518174Z   enableCrossOsArchive: false
+2026-07-21T10:28:56.2518427Z   fail-on-cache-miss: false
+2026-07-21T10:28:56.2518662Z   lookup-only: false
+2026-07-21T10:28:56.2518873Z   save-always: false
+2026-07-21T10:28:56.2519109Z env:
+2026-07-21T10:28:56.2519295Z   GITHUB_PAGES: true
+2026-07-21T10:28:56.2519498Z ##[endgroup]
+2026-07-21T10:28:56.3566190Z (node:2384) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+2026-07-21T10:28:56.3567725Z (Use `node --trace-deprecation ...` to show where the warning was created)
+2026-07-21T10:28:56.5724146Z Cache not found for input keys: Linux-nextjs-fc5c134a8f2d151fa36f64801962f64cfe9f001186165bb4b33791ceec068599-58e00ede01c508b03589983684ef8c6429b13064aa3c5f1fcf6585744c3b3502, Linux-nextjs-fc5c134a8f2d151fa36f64801962f64cfe9f001186165bb4b33791ceec068599-
+2026-07-21T10:28:56.5813229Z ##[group]Run npm ci --legacy-peer-deps
+2026-07-21T10:28:56.5813834Z [36;1mnpm ci --legacy-peer-deps[0m
+2026-07-21T10:28:56.5893550Z shell: /usr/bin/bash -e {0}
+2026-07-21T10:28:56.5893828Z env:
+2026-07-21T10:28:56.5894023Z   GITHUB_PAGES: true
+2026-07-21T10:28:56.5894244Z ##[endgroup]
+2026-07-21T10:28:58.8788694Z npm warn deprecated rimraf@3.0.2: Rimraf versions prior to v4 are no longer supported
+2026-07-21T10:28:59.6513701Z npm warn deprecated inflight@1.0.6: This module is not supported, and leaks memory. Do not use it. Check out lru-cache if you want a good and tested way to coalesce async requests by a key value, which is much more comprehensive and powerful.
+2026-07-21T10:28:59.7766496Z npm warn deprecated glob@7.2.3: Old versions of glob are not supported, and contain widely publicized security vulnerabilities, which have been fixed in the current version. Please update. Support for old versions may be purchased (at exorbitant rates) by contacting i@izs.me
+2026-07-21T10:29:01.0463113Z npm warn deprecated @humanwhocodes/object-schema@2.0.3: Use @eslint/object-schema instead
+2026-07-21T10:29:01.0709526Z npm warn deprecated @humanwhocodes/config-array@0.13.0: Use @eslint/config-array instead
+2026-07-21T10:29:04.1006857Z npm warn deprecated recharts@2.15.4: 1.x and 2.x branches are no longer active. Bump to Recharts v3 to receive latest features and bugfixes. See https://github.com/recharts/recharts/wiki/3.0-migration-guide
+2026-07-21T10:29:04.1553957Z npm warn deprecated eslint@8.57.1: This version is no longer supported. Please see https://eslint.org/version-support for other options.
+2026-07-21T10:29:12.1986676Z 
+2026-07-21T10:29:12.1987423Z added 559 packages, and audited 560 packages in 16s
+2026-07-21T10:29:12.1987884Z 
+2026-07-21T10:29:12.1988166Z 166 packages are looking for funding
+2026-07-21T10:29:12.1988717Z   run `npm fund` for details
+2026-07-21T10:29:12.2359053Z 
+2026-07-21T10:29:12.2360388Z 3 vulnerabilities (2 moderate, 1 high)
+2026-07-21T10:29:12.2360865Z 
+2026-07-21T10:29:12.2361317Z To address all issues possible (including breaking changes), run:
+2026-07-21T10:29:12.2361853Z   npm audit fix --force
+2026-07-21T10:29:12.2362044Z 
+2026-07-21T10:29:12.2362296Z Some issues need review, and may require choosing
+2026-07-21T10:29:12.2363069Z a different dependency.
+2026-07-21T10:29:12.2363270Z 
+2026-07-21T10:29:12.2363432Z Run `npm audit` for details.
+2026-07-21T10:29:12.2765803Z ##[group]Run npm run build
+2026-07-21T10:29:12.2766211Z [36;1mnpm run build[0m
+2026-07-21T10:29:12.2825921Z shell: /usr/bin/bash -e {0}
+2026-07-21T10:29:12.2826182Z env:
+2026-07-21T10:29:12.2826368Z   GITHUB_PAGES: true
+2026-07-21T10:29:12.2826583Z ##[endgroup]
+2026-07-21T10:29:12.3934540Z 
+2026-07-21T10:29:12.3935791Z > antigravity-frontend@1.0.0 build
+2026-07-21T10:29:12.3936402Z > next build
+2026-07-21T10:29:12.3936642Z 
+2026-07-21T10:29:12.7690987Z ⚠ `eslint` configuration in next.config.ts is no longer supported. See more info here: https://nextjs.org/docs/app/api-reference/cli/next#next-lint-options
+2026-07-21T10:29:12.7753955Z ⚠ Invalid next.config.ts options detected: 
+2026-07-21T10:29:12.7775434Z ⚠     Unrecognized key(s) in object: 'eslint'
+2026-07-21T10:29:12.7776525Z ⚠ See more info here: https://nextjs.org/docs/messages/invalid-next-config
+2026-07-21T10:29:12.7793980Z ⚠ No build cache found. Please configure build caching for faster rebuilds. Read more: https://nextjs.org/docs/messages/no-cache
+2026-07-21T10:29:12.7910893Z Attention: Next.js now collects completely anonymous telemetry regarding usage.
+2026-07-21T10:29:12.7913822Z This information is used to shape Next.js' roadmap and prioritize features.
+2026-07-21T10:29:12.7916059Z You can learn more, including how to opt-out if you'd not like to participate in this anonymous program, by visiting the following URL:
+2026-07-21T10:29:12.7917671Z https://nextjs.org/telemetry
+2026-07-21T10:29:12.7918250Z 
+2026-07-21T10:29:12.8097343Z ▲ Next.js 16.2.10 (Turbopack)
+2026-07-21T10:29:12.8097954Z - Environments: .env.production
+2026-07-21T10:29:12.8098676Z 
+2026-07-21T10:29:12.9068550Z   Creating an optimized production build ...
+2026-07-21T10:29:25.9473499Z 
+2026-07-21T10:29:25.9474073Z > Build error occurred
+2026-07-21T10:29:25.9517298Z Error: Turbopack build failed with 13 errors:
+2026-07-21T10:29:25.9518364Z ./app/(dashboard)/dashboard/receipts/print/page.tsx:2:1
+2026-07-21T10:29:25.9519970Z The "use client" directive must be placed before other expressions. Move it to the top of the file to resolve this issue.
+2026-07-21T10:29:25.9521968Z   [90m1 |[0m [36mimport[0m { [33mSuspense[0m } [36mfrom[0m [32m'react'[0m;
+2026-07-21T10:29:25.9523413Z [31m[1m>[0m [90m2 |[0m [32m'use client'[0m;
+2026-07-21T10:29:25.9524262Z   [90m  |[0m [31m[1m^^^^^^^^^^^^^[0m
+2026-07-21T10:29:25.9524984Z   [90m3 |[0m
+2026-07-21T10:29:25.9526041Z   [90m4 |[0m [36mimport[0m [33mReact[0m, { useEffect, useState, useRef } [36mfrom[0m [32m'react'[0m;
+2026-07-21T10:29:25.9527536Z   [90m5 |[0m [36mimport[0m { useSearchParams, useRouter } [36mfrom[0m [32m'next/navigation'[0m;
+2026-07-21T10:29:25.9528274Z 
+2026-07-21T10:29:25.9528522Z Ecmascript file had an error
+2026-07-21T10:29:25.9528837Z 
+2026-07-21T10:29:25.9529001Z Import traces:
+2026-07-21T10:29:25.9529405Z   Client Component Browser:
+2026-07-21T10:29:25.9530229Z     ./app/(dashboard)/dashboard/receipts/print/page.tsx [Client Component Browser]
+2026-07-21T10:29:25.9531483Z     ./app/(dashboard)/dashboard/settings/organization/page.tsx [Client Component Browser]
+2026-07-21T10:29:25.9532906Z     ./app/(dashboard)/dashboard/settings/organization/page.tsx [Server Component]
+2026-07-21T10:29:25.9533557Z 
+2026-07-21T10:29:25.9533731Z   Client Component SSR:
+2026-07-21T10:29:25.9534514Z     ./app/(dashboard)/dashboard/receipts/print/page.tsx [Client Component SSR]
+2026-07-21T10:29:25.9535666Z     ./app/(dashboard)/dashboard/settings/organization/page.tsx [Client Component SSR]
+2026-07-21T10:29:25.9536841Z     ./app/(dashboard)/dashboard/settings/organization/page.tsx [Server Component]
+2026-07-21T10:29:25.9537432Z 
+2026-07-21T10:29:25.9537441Z 
+2026-07-21T10:29:25.9537846Z ./app/(dashboard)/dashboard/stock/grn/new/page.tsx:2:1
+2026-07-21T10:29:25.9539209Z The "use client" directive must be placed before other expressions. Move it to the top of the file to resolve this issue.
+2026-07-21T10:29:25.9541108Z   [90m1 |[0m [36mimport[0m { [33mSuspense[0m } [36mfrom[0m [32m'react'[0m;
+2026-07-21T10:29:25.9542205Z [31m[1m>[0m [90m2 |[0m [32m'use client'[0m;
+2026-07-21T10:29:25.9543191Z   [90m  |[0m [31m[1m^^^^^^^^^^^^^[0m
+2026-07-21T10:29:25.9543784Z   [90m3 |[0m
+2026-07-21T10:29:25.9544786Z   [90m4 |[0m [36mimport[0m [33mReact[0m, { useState, useEffect } [36mfrom[0m [32m'react'[0m;
+2026-07-21T10:29:25.9546204Z   [90m5 |[0m [36mimport[0m { useRouter, useSearchParams } [36mfrom[0m [32m'next/navigation'[0m;
+2026-07-21T10:29:25.9546966Z 
+2026-07-21T10:29:25.9547263Z Ecmascript file had an error
+2026-07-21T10:29:25.9547598Z 
+2026-07-21T10:29:25.9547607Z 
+2026-07-21T10:29:25.9548306Z ./app/(dashboard)/dashboard/receipts/print/page.tsx:4:17
+2026-07-21T10:29:25.9550373Z You're importing a module that depends on `useEffect` into a React Server Component module. This API is only available in Client Components. To fix, mark the file (or its parent) with the `"use client"` directive.
+2026-07-21T10:29:25.9552239Z     Learn more: https://nextjs.org/docs/app/api-reference/directives/use-client
+2026-07-21T10:29:25.9553250Z   [90m2 |[0m [32m'use client'[0m;
+2026-07-21T10:29:25.9554241Z   [90m3 |[0m
+2026-07-21T10:29:25.9556153Z [31m[1m>[0m [90m4 |[0m [36mimport[0m [33mReact[0m, { useEffect, useState, useRef } [36mfrom[0m [32m'react'[0m;
+2026-07-21T10:29:25.9556925Z   [90m  |[0m                 [31m[1m^^^^^^^^^[0m
+2026-07-21T10:29:25.9557569Z   [90m5 |[0m [36mimport[0m { useSearchParams, useRouter } [36mfrom[0m [32m'next/navigation'[0m;
+2026-07-21T10:29:25.9558302Z   [90m6 |[0m [36mimport[0m { useQuery } [36mfrom[0m [32m'@tanstack/react-query'[0m;
+2026-07-21T10:29:25.9558898Z   [90m7 |[0m [36mimport[0m api [36mfrom[0m [32m'@/lib/api'[0m;
+2026-07-21T10:29:25.9559176Z 
+2026-07-21T10:29:25.9559295Z Ecmascript file had an error
+2026-07-21T10:29:25.9559467Z 
+2026-07-21T10:29:25.9559554Z Import traces:
+2026-07-21T10:29:25.9559777Z   Client Component Browser:
+2026-07-21T10:29:25.9560224Z     ./app/(dashboard)/dashboard/receipts/print/page.tsx [Client Component Browser]
+2026-07-21T10:29:25.9560875Z     ./app/(dashboard)/dashboard/settings/organization/page.tsx [Client Component Browser]
+2026-07-21T10:29:25.9561523Z     ./app/(dashboard)/dashboard/settings/organization/page.tsx [Server Component]
+2026-07-21T10:29:25.9561851Z 
+2026-07-21T10:29:25.9561951Z   Client Component SSR:
+2026-07-21T10:29:25.9562355Z     ./app/(dashboard)/dashboard/receipts/print/page.tsx [Client Component SSR]
+2026-07-21T10:29:25.9563264Z     ./app/(dashboard)/dashboard/settings/organization/page.tsx [Client Component SSR]
+2026-07-21T10:29:25.9563897Z     ./app/(dashboard)/dashboard/settings/organization/page.tsx [Server Component]
+2026-07-21T10:29:25.9564242Z 
+2026-07-21T10:29:25.9564248Z 
+2026-07-21T10:29:25.9564524Z ./app/(dashboard)/dashboard/stock/grn/new/page.tsx:4:27
+2026-07-21T10:29:25.9565972Z You're importing a module that depends on `useEffect` into a React Server Component module. This API is only available in Client Components. To fix, mark the file (or its parent) with the `"use client"` directive.
+2026-07-21T10:29:25.9567170Z     Learn more: https://nextjs.org/docs/app/api-reference/directives/use-client
+2026-07-21T10:29:25.9567726Z   [90m2 |[0m [32m'use client'[0m;
+2026-07-21T10:29:25.9568061Z   [90m3 |[0m
+2026-07-21T10:29:25.9568740Z [31m[1m>[0m [90m4 |[0m [36mimport[0m [33mReact[0m, { useState, useEffect } [36mfrom[0m [32m'react'[0m;
+2026-07-21T10:29:25.9569411Z   [90m  |[0m                           [31m[1m^^^^^^^^^[0m
+2026-07-21T10:29:25.9570103Z   [90m5 |[0m [36mimport[0m { useRouter, useSearchParams } [36mfrom[0m [32m'next/navigation'[0m;
+2026-07-21T10:29:25.9570910Z   [90m6 |[0m [36mimport[0m { useForm, useFieldArray } [36mfrom[0m [32m'react-hook-form'[0m;
+2026-07-21T10:29:25.9571728Z   [90m7 |[0m [36mimport[0m { zodResolver } [36mfrom[0m [32m'@hookform/resolvers/zod'[0m;
+2026-07-21T10:29:25.9572183Z 
+2026-07-21T10:29:25.9572361Z Ecmascript file had an error
+2026-07-21T10:29:25.9572805Z 
+2026-07-21T10:29:25.9573092Z 
+2026-07-21T10:29:25.9573464Z ./app/(dashboard)/dashboard/receipts/print/page.tsx:4:38
+2026-07-21T10:29:25.9575148Z You're importing a module that depends on `useRef` into a React Server Component module. This API is only available in Client Components. To fix, mark the file (or its parent) with the `"use client"` directive.
+2026-07-21T10:29:25.9576759Z     Learn more: https://nextjs.org/docs/app/api-reference/directives/use-client
+2026-07-21T10:29:25.9577561Z   [90m2 |[0m [32m'use client'[0m;
+2026-07-21T10:29:25.9578053Z   [90m3 |[0m
+2026-07-21T10:29:25.9579343Z [31m[1m>[0m [90m4 |[0m [36mimport[0m [33mReact[0m, { useEffect, useState, useRef } [36mfrom[0m [32m'react'[0m;
+2026-07-21T10:29:25.9580438Z   [90m  |[0m                                      [31m[1m^^^^^^[0m
+2026-07-21T10:29:25.9581556Z   [90m5 |[0m [36mimport[0m { useSearchParams, useRouter } [36mfrom[0m [32m'next/navigation'[0m;
+2026-07-21T10:29:25.9582929Z   [90m6 |[0m [36mimport[0m { useQuery } [36mfrom[0m [32m'@tanstack/react-query'[0m;
+2026-07-21T10:29:25.9583899Z   [90m7 |[0m [36mimport[0m api [36mfrom[0m [32m'@/lib/api'[0m;
+2026-07-21T10:29:25.9584627Z 
+2026-07-21T10:29:25.9584829Z Ecmascript file had an error
+2026-07-21T10:29:25.9585150Z 
+2026-07-21T10:29:25.9585316Z Import traces:
+2026-07-21T10:29:25.9585697Z   Client Component Browser:
+2026-07-21T10:29:25.9586425Z     ./app/(dashboard)/dashboard/receipts/print/page.tsx [Client Component Browser]
+2026-07-21T10:29:25.9587523Z     ./app/(dashboard)/dashboard/settings/organization/page.tsx [Client Component Browser]
+2026-07-21T10:29:25.9588611Z     ./app/(dashboard)/dashboard/settings/organization/page.tsx [Server Component]
+2026-07-21T10:29:25.9589221Z 
+2026-07-21T10:29:25.9589362Z   Client Component SSR:
+2026-07-21T10:29:25.9589952Z     ./app/(dashboard)/dashboard/receipts/print/page.tsx [Client Component SSR]
+2026-07-21T10:29:25.9590639Z     ./app/(dashboard)/dashboard/settings/organization/page.tsx [Client Component SSR]
+2026-07-21T10:29:25.9591319Z     ./app/(dashboard)/dashboard/settings/organization/page.tsx [Server Component]
+2026-07-21T10:29:25.9592285Z 
+2026-07-21T10:29:25.9592295Z 
+2026-07-21T10:29:25.9593142Z ./app/(dashboard)/dashboard/receipts/print/page.tsx:5:27
+2026-07-21T10:29:25.9596276Z You're importing a module that depends on `useRouter` into a React Server Component module. This API is only available in Client Components. To fix, mark the file (or its parent) with the `"use client"` directive.
+2026-07-21T10:29:25.9597999Z     Learn more: https://nextjs.org/docs/app/api-reference/directives/use-client
+2026-07-21T10:29:25.9598763Z   [90m3 |[0m
+2026-07-21T10:29:25.9599613Z   [90m4 |[0m [36mimport[0m [33mReact[0m, { useEffect, useState, useRef } [36mfrom[0m [32m'react'[0m;
+2026-07-21T10:29:25.9600975Z [31m[1m>[0m [90m5 |[0m [36mimport[0m { useSearchParams, useRouter } [36mfrom[0m [32m'next/navigation'[0m;
+2026-07-21T10:29:25.9602040Z   [90m  |[0m                           [31m[1m^^^^^^^^^[0m
+2026-07-21T10:29:25.9603637Z   [90m6 |[0m [36mimport[0m { useQuery } [36mfrom[0m [32m'@tanstack/react-query'[0m;
+2026-07-21T10:29:25.9605195Z   [90m7 |[0m [36mimport[0m api [36mfrom[0m [32m'@/lib/api'[0m;
+2026-07-21T10:29:25.9606118Z   [90m8 |[0m [36mimport[0m { [33mQRCodeSVG[0m } [36mfrom[0m [32m'qrcode.react'[0m;
+2026-07-21T10:29:25.9606634Z 
+2026-07-21T10:29:25.9606825Z Ecmascript file had an error
+2026-07-21T10:29:25.9607119Z 
+2026-07-21T10:29:25.9607253Z Import traces:
+2026-07-21T10:29:25.9607572Z   Client Component Browser:
+2026-07-21T10:29:25.9608244Z     ./app/(dashboard)/dashboard/receipts/print/page.tsx [Client Component Browser]
+2026-07-21T10:29:25.9609203Z     ./app/(dashboard)/dashboard/settings/organization/page.tsx [Client Component Browser]
+2026-07-21T10:29:25.9610119Z     ./app/(dashboard)/dashboard/settings/organization/page.tsx [Server Component]
+2026-07-21T10:29:25.9610585Z 
+2026-07-21T10:29:25.9610737Z   Client Component SSR:
+2026-07-21T10:29:25.9611619Z     ./app/(dashboard)/dashboard/receipts/print/page.tsx [Client Component SSR]
+2026-07-21T10:29:25.9612771Z     ./app/(dashboard)/dashboard/settings/organization/page.tsx [Client Component SSR]
+2026-07-21T10:29:25.9613776Z     ./app/(dashboard)/dashboard/settings/organization/page.tsx [Server Component]
+2026-07-21T10:29:25.9614315Z 
+2026-07-21T10:29:25.9614340Z 
+2026-07-21T10:29:25.9614702Z ./app/(dashboard)/dashboard/stock/grn/new/page.tsx:5:10
+2026-07-21T10:29:25.9616298Z You're importing a module that depends on `useRouter` into a React Server Component module. This API is only available in Client Components. To fix, mark the file (or its parent) with the `"use client"` directive.
+2026-07-21T10:29:25.9617827Z     Learn more: https://nextjs.org/docs/app/api-reference/directives/use-client
+2026-07-21T10:29:25.9618479Z   [90m3 |[0m
+2026-07-21T10:29:25.9619308Z   [90m4 |[0m [36mimport[0m [33mReact[0m, { useState, useEffect } [36mfrom[0m [32m'react'[0m;
+2026-07-21T10:29:25.9620602Z [31m[1m>[0m [90m5 |[0m [36mimport[0m { useRouter, useSearchParams } [36mfrom[0m [32m'next/navigation'[0m;
+2026-07-21T10:29:25.9621896Z   [90m  |[0m          [31m[1m^^^^^^^^^[0m
+2026-07-21T10:29:25.9623043Z   [90m6 |[0m [36mimport[0m { useForm, useFieldArray } [36mfrom[0m [32m'react-hook-form'[0m;
+2026-07-21T10:29:25.9624255Z   [90m7 |[0m [36mimport[0m { zodResolver } [36mfrom[0m [32m'@hookform/resolvers/zod'[0m;
+2026-07-21T10:29:25.9625394Z   [90m8 |[0m [36mimport[0m * [36mas[0m z [36mfrom[0m [32m'zod'[0m;
+2026-07-21T10:29:25.9625842Z 
+2026-07-21T10:29:25.9625996Z Ecmascript file had an error
+2026-07-21T10:29:25.9626297Z 
+2026-07-21T10:29:25.9626303Z 
+2026-07-21T10:29:25.9626622Z ./app/(dashboard)/dashboard/receipts/print/page.tsx:5:10
+2026-07-21T10:29:25.9628403Z You're importing a module that depends on `useSearchParams` into a React Server Component module. This API is only available in Client Components. To fix, mark the file (or its parent) with the `"use client"` directive.
+2026-07-21T10:29:25.9630115Z     Learn more: https://nextjs.org/docs/app/api-reference/directives/use-client
+2026-07-21T10:29:25.9630824Z   [90m3 |[0m
+2026-07-21T10:29:25.9631597Z   [90m4 |[0m [36mimport[0m [33mReact[0m, { useEffect, useState, useRef } [36mfrom[0m [32m'react'[0m;
+2026-07-21T10:29:25.9633330Z [31m[1m>[0m [90m5 |[0m [36mimport[0m { useSearchParams, useRouter } [36mfrom[0m [32m'next/navigation'[0m;
+2026-07-21T10:29:25.9634352Z   [90m  |[0m          [31m[1m^^^^^^^^^^^^^^^[0m
+2026-07-21T10:29:25.9635374Z   [90m6 |[0m [36mimport[0m { useQuery } [36mfrom[0m [32m'@tanstack/react-query'[0m;
+2026-07-21T10:29:25.9636440Z   [90m7 |[0m [36mimport[0m api [36mfrom[0m [32m'@/lib/api'[0m;
+2026-07-21T10:29:25.9637332Z   [90m8 |[0m [36mimport[0m { [33mQRCodeSVG[0m } [36mfrom[0m [32m'qrcode.react'[0m;
+2026-07-21T10:29:25.9637809Z 
+2026-07-21T10:29:25.9637964Z Ecmascript file had an error
+2026-07-21T10:29:25.9638223Z 
+2026-07-21T10:29:25.9638333Z Import traces:
+2026-07-21T10:29:25.9638672Z   Client Component Browser:
+2026-07-21T10:29:25.9639285Z     ./app/(dashboard)/dashboard/receipts/print/page.tsx [Client Component Browser]
+2026-07-21T10:29:25.9640310Z     ./app/(dashboard)/dashboard/settings/organization/page.tsx [Client Component Browser]
+2026-07-21T10:29:25.9641178Z     ./app/(dashboard)/dashboard/settings/organization/page.tsx [Server Component]
+2026-07-21T10:29:25.9641685Z 
+2026-07-21T10:29:25.9641837Z   Client Component SSR:
+2026-07-21T10:29:25.9642385Z     ./app/(dashboard)/dashboard/receipts/print/page.tsx [Client Component SSR]
+2026-07-21T10:29:25.9643480Z     ./app/(dashboard)/dashboard/settings/organization/page.tsx [Client Component SSR]
+2026-07-21T10:29:25.9644230Z     ./app/(dashboard)/dashboard/settings/organization/page.tsx [Server Component]
+2026-07-21T10:29:25.9644625Z 
+2026-07-21T10:29:25.9644631Z 
+2026-07-21T10:29:25.9644882Z ./app/(dashboard)/dashboard/stock/grn/new/page.tsx:5:21
+2026-07-21T10:29:25.9646443Z You're importing a module that depends on `useSearchParams` into a React Server Component module. This API is only available in Client Components. To fix, mark the file (or its parent) with the `"use client"` directive.
+2026-07-21T10:29:25.9647731Z     Learn more: https://nextjs.org/docs/app/api-reference/directives/use-client
+2026-07-21T10:29:25.9648298Z   [90m3 |[0m
+2026-07-21T10:29:25.9648899Z   [90m4 |[0m [36mimport[0m [33mReact[0m, { useState, useEffect } [36mfrom[0m [32m'react'[0m;
+2026-07-21T10:29:25.9649944Z [31m[1m>[0m [90m5 |[0m [36mimport[0m { useRouter, useSearchParams } [36mfrom[0m [32m'next/navigation'[0m;
+2026-07-21T10:29:25.9650650Z   [90m  |[0m                     [31m[1m^^^^^^^^^^^^^^^[0m
+2026-07-21T10:29:25.9651371Z   [90m6 |[0m [36mimport[0m { useForm, useFieldArray } [36mfrom[0m [32m'react-hook-form'[0m;
+2026-07-21T10:29:25.9652162Z   [90m7 |[0m [36mimport[0m { zodResolver } [36mfrom[0m [32m'@hookform/resolvers/zod'[0m;
+2026-07-21T10:29:25.9653488Z   [90m8 |[0m [36mimport[0m * [36mas[0m z [36mfrom[0m [32m'zod'[0m;
+2026-07-21T10:29:25.9653826Z 
+2026-07-21T10:29:25.9654092Z Ecmascript file had an error
+2026-07-21T10:29:25.9654290Z 
+2026-07-21T10:29:25.9654296Z 
+2026-07-21T10:29:25.9654542Z ./app/(dashboard)/dashboard/receipts/print/page.tsx:4:28
+2026-07-21T10:29:25.9656075Z You're importing a module that depends on `useState` into a React Server Component module. This API is only available in Client Components. To fix, mark the file (or its parent) with the `"use client"` directive.
+2026-07-21T10:29:25.9657515Z     Learn more: https://nextjs.org/docs/app/api-reference/directives/use-client
+2026-07-21T10:29:25.9658277Z   [90m2 |[0m [32m'use client'[0m;
+2026-07-21T10:29:25.9658688Z   [90m3 |[0m
+2026-07-21T10:29:25.9659586Z [31m[1m>[0m [90m4 |[0m [36mimport[0m [33mReact[0m, { useEffect, useState, useRef } [36mfrom[0m [32m'react'[0m;
+2026-07-21T10:29:25.9660404Z   [90m  |[0m                            [31m[1m^^^^^^^^[0m
+2026-07-21T10:29:25.9661062Z   [90m5 |[0m [36mimport[0m { useSearchParams, useRouter } [36mfrom[0m [32m'next/navigation'[0m;
+2026-07-21T10:29:25.9661858Z   [90m6 |[0m [36mimport[0m { useQuery } [36mfrom[0m [32m'@tanstack/react-query'[0m;
+2026-07-21T10:29:25.9662474Z   [90m7 |[0m [36mimport[0m api [36mfrom[0m [32m'@/lib/api'[0m;
+2026-07-21T10:29:25.9662985Z 
+2026-07-21T10:29:25.9663107Z Ecmascript file had an error
+2026-07-21T10:29:25.9663267Z 
+2026-07-21T10:29:25.9663381Z Import traces:
+2026-07-21T10:29:25.9663650Z   Client Component Browser:
+2026-07-21T10:29:25.9664208Z     ./app/(dashboard)/dashboard/receipts/print/page.tsx [Client Component Browser]
+2026-07-21T10:29:25.9665053Z     ./app/(dashboard)/dashboard/settings/organization/page.tsx [Client Component Browser]
+2026-07-21T10:29:25.9666061Z     ./app/(dashboard)/dashboard/settings/organization/page.tsx [Server Component]
+2026-07-21T10:29:25.9666679Z 
+2026-07-21T10:29:25.9666823Z   Client Component SSR:
+2026-07-21T10:29:25.9667295Z     ./app/(dashboard)/dashboard/receipts/print/page.tsx [Client Component SSR]
+2026-07-21T10:29:25.9668100Z     ./app/(dashboard)/dashboard/settings/organization/page.tsx [Client Component SSR]
+2026-07-21T10:29:25.9668912Z     ./app/(dashboard)/dashboard/settings/organization/page.tsx [Server Component]
+2026-07-21T10:29:25.9669366Z 
+2026-07-21T10:29:25.9669377Z 
+2026-07-21T10:29:25.9669635Z ./app/(dashboard)/dashboard/stock/grn/new/page.tsx:4:17
+2026-07-21T10:29:25.9670932Z You're importing a module that depends on `useState` into a React Server Component module. This API is only available in Client Components. To fix, mark the file (or its parent) with the `"use client"` directive.
+2026-07-21T10:29:25.9672012Z     Learn more: https://nextjs.org/docs/app/api-reference/directives/use-client
+2026-07-21T10:29:25.9672707Z   [90m2 |[0m [32m'use client'[0m;
+2026-07-21T10:29:25.9673031Z   [90m3 |[0m
+2026-07-21T10:29:25.9673645Z [31m[1m>[0m [90m4 |[0m [36mimport[0m [33mReact[0m, { useState, useEffect } [36mfrom[0m [32m'react'[0m;
+2026-07-21T10:29:25.9674824Z   [90m  |[0m                 [31m[1m^^^^^^^^[0m
+2026-07-21T10:29:25.9676811Z   [90m5 |[0m [36mimport[0m { useRouter, useSearchParams } [36mfrom[0m [32m'next/navigation'[0m;
+2026-07-21T10:29:25.9678479Z   [90m6 |[0m [36mimport[0m { useForm, useFieldArray } [36mfrom[0m [32m'react-hook-form'[0m;
+2026-07-21T10:29:25.9679289Z   [90m7 |[0m [36mimport[0m { zodResolver } [36mfrom[0m [32m'@hookform/resolvers/zod'[0m;
+2026-07-21T10:29:25.9679678Z 
+2026-07-21T10:29:25.9679798Z Ecmascript file had an error
+2026-07-21T10:29:25.9679972Z 
+2026-07-21T10:29:25.9679978Z 
+2026-07-21T10:29:25.9680221Z ./app/(dashboard)/dashboard/stock/grn/new/page.tsx:6:1
+2026-07-21T10:29:25.9680669Z Export useFieldArray doesn't exist in target module
+2026-07-21T10:29:25.9681328Z   [90m4 |[0m [36mimport[0m [33mReact[0m, { useState, useEffect } [36mfrom[0m [32m'react'[0m;
+2026-07-21T10:29:25.9682126Z   [90m5 |[0m [36mimport[0m { useRouter, useSearchParams } [36mfrom[0m [32m'next/navigation'[0m;
+2026-07-21T10:29:25.9683323Z [31m[1m>[0m [90m6 |[0m [36mimport[0m { useForm, useFieldArray } [36mfrom[0m [32m'react-hook-form'[0m;
+2026-07-21T10:29:25.9684584Z   [90m  |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+2026-07-21T10:29:25.9685235Z   [90m7 |[0m [36mimport[0m { zodResolver } [36mfrom[0m [32m'@hookform/resolvers/zod'[0m;
+2026-07-21T10:29:25.9685898Z   [90m8 |[0m [36mimport[0m * [36mas[0m z [36mfrom[0m [32m'zod'[0m;
+2026-07-21T10:29:25.9686781Z   [90m9 |[0m [36mimport[0m { [33mArrowLeft[0m, [33mSave[0m, [33mPlus[0m, [33mTrash2[0m, [33mPackage[0m } [36mfrom[0m [32m'lucide-react'[0m;
+2026-07-21T10:29:25.9687299Z 
+2026-07-21T10:29:25.9687935Z The export useFieldArray was not found in module [project]/node_modules/react-hook-form/dist/react-server.esm.mjs [app-rsc] (ecmascript).
+2026-07-21T10:29:25.9688605Z Did you mean to import set?
+2026-07-21T10:29:25.9689416Z All exports of the module are statically known (It doesn't have dynamic exports). So it's known statically that the requested export doesn't exist.
+2026-07-21T10:29:25.9690011Z 
+2026-07-21T10:29:25.9690017Z 
+2026-07-21T10:29:25.9690238Z ./app/(dashboard)/dashboard/stock/grn/new/page.tsx:6:1
+2026-07-21T10:29:25.9690652Z Export useForm doesn't exist in target module
+2026-07-21T10:29:25.9691293Z   [90m4 |[0m [36mimport[0m [33mReact[0m, { useState, useEffect } [36mfrom[0m [32m'react'[0m;
+2026-07-21T10:29:25.9692082Z   [90m5 |[0m [36mimport[0m { useRouter, useSearchParams } [36mfrom[0m [32m'next/navigation'[0m;
+2026-07-21T10:29:25.9693251Z [31m[1m>[0m [90m6 |[0m [36mimport[0m { useForm, useFieldArray } [36mfrom[0m [32m'react-hook-form'[0m;
+2026-07-21T10:29:25.9693935Z   [90m  |[0m [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+2026-07-21T10:29:25.9694590Z   [90m7 |[0m [36mimport[0m { zodResolver } [36mfrom[0m [32m'@hookform/resolvers/zod'[0m;
+2026-07-21T10:29:25.9695232Z   [90m8 |[0m [36mimport[0m * [36mas[0m z [36mfrom[0m [32m'zod'[0m;
+2026-07-21T10:29:25.9696161Z   [90m9 |[0m [36mimport[0m { [33mArrowLeft[0m, [33mSave[0m, [33mPlus[0m, [33mTrash2[0m, [33mPackage[0m } [36mfrom[0m [32m'lucide-react'[0m;
+2026-07-21T10:29:25.9696692Z 
+2026-07-21T10:29:25.9697256Z The export useForm was not found in module [project]/node_modules/react-hook-form/dist/react-server.esm.mjs [app-rsc] (ecmascript).
+2026-07-21T10:29:25.9697913Z Did you mean to import set?
+2026-07-21T10:29:25.9698721Z All exports of the module are statically known (It doesn't have dynamic exports). So it's known statically that the requested export doesn't exist.
+2026-07-21T10:29:25.9699314Z 
+2026-07-21T10:29:25.9699320Z 
+2026-07-21T10:29:25.9699573Z     at <unknown> (./app/(dashboard)/dashboard/receipts/print/page.tsx:2:1)
+2026-07-21T10:29:25.9700121Z     at <unknown> (./app/(dashboard)/dashboard/stock/grn/new/page.tsx:2:1)
+2026-07-21T10:29:25.9700787Z     at <unknown> (./app/(dashboard)/dashboard/receipts/print/page.tsx:4:17)
+2026-07-21T10:29:25.9701316Z     at <unknown> (./app/(dashboard)/dashboard/stock/grn/new/page.tsx:4:27)
+2026-07-21T10:29:25.9701922Z     at <unknown> (./app/(dashboard)/dashboard/receipts/print/page.tsx:4:38)
+2026-07-21T10:29:25.9702698Z     at <unknown> (./app/(dashboard)/dashboard/receipts/print/page.tsx:5:27)
+2026-07-21T10:29:25.9703467Z     at <unknown> (./app/(dashboard)/dashboard/stock/grn/new/page.tsx:5:10)
+2026-07-21T10:29:25.9704090Z     at <unknown> (./app/(dashboard)/dashboard/receipts/print/page.tsx:5:10)
+2026-07-21T10:29:25.9704609Z     at <unknown> (./app/(dashboard)/dashboard/stock/grn/new/page.tsx:5:21)
+2026-07-21T10:29:25.9705126Z     at <unknown> (./app/(dashboard)/dashboard/receipts/print/page.tsx:4:28)
+2026-07-21T10:29:25.9705624Z     at <unknown> (./app/(dashboard)/dashboard/stock/grn/new/page.tsx:4:17)
+2026-07-21T10:29:25.9706122Z     at <unknown> (./app/(dashboard)/dashboard/stock/grn/new/page.tsx:6:1)
+2026-07-21T10:29:25.9706620Z     at <unknown> (./app/(dashboard)/dashboard/stock/grn/new/page.tsx:6:1)
+2026-07-21T10:29:25.9926248Z ##[error]Process completed with exit code 1.
+2026-07-21T10:29:26.0048605Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+2026-07-21T10:29:26.0049879Z Post job cleanup.
+2026-07-21T10:29:26.0883048Z [command]/usr/bin/git version
+2026-07-21T10:29:26.0927857Z git version 2.54.0
+2026-07-21T10:29:26.1000986Z Temporarily overriding HOME='/home/runner/work/_temp/02ee4f73-c76d-46d8-b528-8cf656e42276' before making global git config changes
+2026-07-21T10:29:26.1002657Z Adding repository directory to the temporary git global config as a safe directory
+2026-07-21T10:29:26.1008446Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/government-stock-system/government-stock-system
+2026-07-21T10:29:26.1047989Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-07-21T10:29:26.1085906Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-07-21T10:29:26.1329521Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-07-21T10:29:26.1358156Z http.https://github.com/.extraheader
+2026-07-21T10:29:26.1374138Z [command]/usr/bin/git config --local --unset-all http.https://github.com/.extraheader
+2026-07-21T10:29:26.1408639Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-07-21T10:29:26.1678731Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-07-21T10:29:26.1717170Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-07-21T10:29:26.2101035Z Cleaning up orphan processes
+2026-07-21T10:29:26.2391674Z ##[warning]Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/cache@v4, actions/checkout@v4, actions/configure-pages@v5, actions/setup-node@v4. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/

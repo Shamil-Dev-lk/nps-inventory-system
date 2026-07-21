@@ -1,5 +1,5 @@
-import { Suspense } from 'react';
 'use client';
+import { Suspense } from 'react';
 
 import React, { useEffect, useState, useRef } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
@@ -300,3 +300,4 @@ function DedicatedPrintReceiptPage({ isPreviewProp = false }: { isPreviewProp?: 
 }
 
 export default function PageWrapper() { return <Suspense fallback={<div>Loading...</div>}><DedicatedPrintReceiptPage /></Suspense>; }
+

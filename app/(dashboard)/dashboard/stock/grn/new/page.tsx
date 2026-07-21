@@ -1,5 +1,5 @@
-import { Suspense } from 'react';
 'use client';
+import { Suspense } from 'react';
 
 import React, { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -246,3 +246,4 @@ function NewGRNPage() {
 }
 
 export default function PageWrapper() { return <Suspense fallback={<div>Loading...</div>}><NewGRNPage /></Suspense>; }
+
