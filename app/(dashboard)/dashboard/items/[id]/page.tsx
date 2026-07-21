@@ -189,4 +189,4 @@ export default function ViewItemPage({ params }: { params: Promise<{ id: string 
   );
 }
 
-export function generateStaticParams() { return []; }
+

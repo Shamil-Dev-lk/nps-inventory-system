@@ -89,4 +89,4 @@ export default function EditAssetPage({ params }: { params: { id: string } }) {
   );
 }
 
-export function generateStaticParams() { return []; }
+

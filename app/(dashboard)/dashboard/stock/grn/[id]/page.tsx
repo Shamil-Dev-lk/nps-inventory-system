@@ -127,4 +127,4 @@ export default function GrnViewPage() {
   );
 }
 
-export function generateStaticParams() { return []; }
+

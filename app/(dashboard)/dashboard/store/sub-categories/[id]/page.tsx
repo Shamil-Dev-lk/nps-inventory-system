@@ -90,4 +90,4 @@ export default function EditSubCategoryPage({ params }: { params: { id: string }
   );
 }
 
-export function generateStaticParams() { return []; }
+

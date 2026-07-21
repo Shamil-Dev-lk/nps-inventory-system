@@ -102,4 +102,4 @@ export default function ViewCustomerPage() {
   );
 }
 
-export function generateStaticParams() { return []; }
+

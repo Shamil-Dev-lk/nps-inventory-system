@@ -88,4 +88,4 @@ export default function PrintCustomerPage({ params }: { params: { id: string } }
   );
 }
 
-export function generateStaticParams() { return []; }
+

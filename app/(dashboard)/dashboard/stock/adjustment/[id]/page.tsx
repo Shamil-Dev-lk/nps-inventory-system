@@ -136,4 +136,4 @@ export default function StockAdjustmentViewPage() {
   );
 }
 
-export function generateStaticParams() { return []; }
+

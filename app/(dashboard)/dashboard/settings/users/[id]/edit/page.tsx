@@ -138,4 +138,4 @@ export default function EditUserPage({ params }: { params: { id: string } }) {
   );
 }
 
-export function generateStaticParams() { return []; }
+

@@ -116,4 +116,4 @@ export default function EditPurchaseRequestPage({ params }: { params: { id: stri
   );
 }
 
-export function generateStaticParams() { return []; }
+

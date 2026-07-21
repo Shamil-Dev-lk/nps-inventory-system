@@ -113,4 +113,4 @@ export default function PurchaseOrderDetailPage({ params }: { params: { id: stri
   );
 }
 
-export function generateStaticParams() { return []; }
+

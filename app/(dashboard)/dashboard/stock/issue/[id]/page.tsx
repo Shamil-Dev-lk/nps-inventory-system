@@ -191,4 +191,4 @@ export default function IssueViewPage() {
   );
 }
 
-export function generateStaticParams() { return []; }
+

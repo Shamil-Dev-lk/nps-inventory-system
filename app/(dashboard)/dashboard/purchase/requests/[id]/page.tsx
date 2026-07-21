@@ -101,4 +101,4 @@ export default function PurchaseRequestDetailPage({ params }: { params: { id: st
   );
 }
 
-export function generateStaticParams() { return []; }
+

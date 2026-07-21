@@ -123,4 +123,4 @@ export default function StockReturnViewPage() {
   );
 }
 
-export function generateStaticParams() { return []; }
+

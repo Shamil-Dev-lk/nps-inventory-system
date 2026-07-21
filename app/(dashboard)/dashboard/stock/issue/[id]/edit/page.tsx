@@ -140,4 +140,4 @@ export default function IssueEditPage() {
   );
 }
 
-export function generateStaticParams() { return []; }
+
