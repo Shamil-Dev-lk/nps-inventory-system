@@ -1,0 +1,236 @@
+﻿2026-07-21T09:25:42.9824927Z Current runner version: '2.335.1'
+2026-07-21T09:25:42.9841617Z ##[group]Runner Image Provisioner
+2026-07-21T09:25:42.9842363Z Hosted Compute Agent
+2026-07-21T09:25:42.9842791Z Version: 20260707.563
+2026-07-21T09:25:42.9843210Z Commit: 02667638d2b423fbc733a8e32a88b44996a3ba6e
+2026-07-21T09:25:42.9843678Z Build Date: 2026-07-07T19:33:50Z
+2026-07-21T09:25:42.9844169Z Worker ID: {cfae3a55-d744-4323-8b34-b99915adfea9}
+2026-07-21T09:25:42.9844644Z Azure Region: centralus
+2026-07-21T09:25:42.9845036Z ##[endgroup]
+2026-07-21T09:25:42.9845913Z ##[group]Operating System
+2026-07-21T09:25:42.9846312Z Ubuntu
+2026-07-21T09:25:42.9846688Z 24.04.4
+2026-07-21T09:25:42.9847026Z LTS
+2026-07-21T09:25:42.9847360Z ##[endgroup]
+2026-07-21T09:25:42.9847741Z ##[group]Runner Image
+2026-07-21T09:25:42.9848181Z Image: ubuntu-24.04
+2026-07-21T09:25:42.9848570Z Version: 20260714.240.1
+2026-07-21T09:25:42.9849705Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20260714.240/images/ubuntu/Ubuntu2404-Readme.md
+2026-07-21T09:25:42.9850730Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20260714.240
+2026-07-21T09:25:42.9851357Z ##[endgroup]
+2026-07-21T09:25:42.9852365Z ##[group]GITHUB_TOKEN Permissions
+2026-07-21T09:25:42.9853971Z Contents: read
+2026-07-21T09:25:42.9854360Z Metadata: read
+2026-07-21T09:25:42.9854731Z Pages: write
+2026-07-21T09:25:42.9855115Z ##[endgroup]
+2026-07-21T09:25:42.9856527Z Secret source: Actions
+2026-07-21T09:25:42.9857110Z Prepare workflow directory
+2026-07-21T09:25:43.0109968Z Prepare all required actions
+2026-07-21T09:25:43.0137330Z Getting action download info
+2026-07-21T09:25:43.2436702Z Download action repository 'actions/checkout@v4' (SHA:11d5960a326750d5838078e36cf38b85af677262)
+2026-07-21T09:25:43.6430896Z Download action repository 'actions/setup-node@v4' (SHA:49933ea5288caeca8642d1e84afbd3f7d6820020)
+2026-07-21T09:25:43.7039670Z Download action repository 'actions/configure-pages@v5' (SHA:983d7736d9b0ae728b81ab479565c72886d7745b)
+2026-07-21T09:25:44.0468897Z Download action repository 'actions/cache@v4' (SHA:0057852bfaa89a56745cba8c7296529d2fc39830)
+2026-07-21T09:25:44.3224807Z Download action repository 'actions/upload-pages-artifact@v3' (SHA:56afc609e74202658d3ffba0e8f6dda462b719fa)
+2026-07-21T09:25:44.5677215Z Getting action download info
+2026-07-21T09:25:44.6550850Z Download action repository 'actions/upload-artifact@v4' (SHA:ea165f8d65b6e75b540449e92b4886f43607fa02)
+2026-07-21T09:25:45.2172936Z Complete job name: build
+2026-07-21T09:25:45.2644170Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+2026-07-21T09:25:45.2649504Z ##[group]Run actions/checkout@v4
+2026-07-21T09:25:45.2649874Z with:
+2026-07-21T09:25:45.2650151Z   repository: Shamil-Dev-lk/government-stock-system
+2026-07-21T09:25:45.2652281Z   token: ***
+2026-07-21T09:25:45.2652534Z   ssh-strict: true
+2026-07-21T09:25:45.2652788Z   ssh-user: git
+2026-07-21T09:25:45.2653049Z   persist-credentials: true
+2026-07-21T09:25:45.2653316Z   clean: true
+2026-07-21T09:25:45.2653606Z   sparse-checkout-cone-mode: true
+2026-07-21T09:25:45.2653894Z   fetch-depth: 1
+2026-07-21T09:25:45.2654165Z   fetch-tags: false
+2026-07-21T09:25:45.2654420Z   show-progress: true
+2026-07-21T09:25:45.2654684Z   lfs: false
+2026-07-21T09:25:45.2655002Z   submodules: false
+2026-07-21T09:25:45.2655258Z   set-safe-directory: true
+2026-07-21T09:25:45.2655545Z   allow-unsafe-pr-checkout: false
+2026-07-21T09:25:45.2655939Z ##[endgroup]
+2026-07-21T09:25:45.3421962Z Syncing repository: Shamil-Dev-lk/government-stock-system
+2026-07-21T09:25:45.3423330Z ##[group]Getting Git version info
+2026-07-21T09:25:45.3423826Z Working directory is '/home/runner/work/government-stock-system/government-stock-system'
+2026-07-21T09:25:45.3424602Z [command]/usr/bin/git version
+2026-07-21T09:25:45.3761233Z git version 2.54.0
+2026-07-21T09:25:45.3785237Z ##[endgroup]
+2026-07-21T09:25:45.3796151Z Temporarily overriding HOME='/home/runner/work/_temp/9a85d94f-bd76-4692-bf18-9cef5fcad145' before making global git config changes
+2026-07-21T09:25:45.3797156Z Adding repository directory to the temporary git global config as a safe directory
+2026-07-21T09:25:45.3800540Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/government-stock-system/government-stock-system
+2026-07-21T09:25:45.3836631Z Deleting the contents of '/home/runner/work/government-stock-system/government-stock-system'
+2026-07-21T09:25:45.3840351Z ##[group]Initializing the repository
+2026-07-21T09:25:45.3842001Z [command]/usr/bin/git init /home/runner/work/government-stock-system/government-stock-system
+2026-07-21T09:25:45.7158563Z hint: Using 'master' as the name for the initial branch. This default branch name
+2026-07-21T09:25:45.7159339Z hint: will change to "main" in Git 3.0. To configure the initial branch name
+2026-07-21T09:25:45.7160013Z hint: to use in all of your new repositories, which will suppress this warning,
+2026-07-21T09:25:45.7160414Z hint: call:
+2026-07-21T09:25:45.7161172Z hint:
+2026-07-21T09:25:45.7161555Z hint: 	git config --global init.defaultBranch <name>
+2026-07-21T09:25:45.7161841Z hint:
+2026-07-21T09:25:45.7162109Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+2026-07-21T09:25:45.7162593Z hint: 'development'. The just-created branch can be renamed via this command:
+2026-07-21T09:25:45.7162940Z hint:
+2026-07-21T09:25:45.7163222Z hint: 	git branch -m <name>
+2026-07-21T09:25:45.7163521Z hint:
+2026-07-21T09:25:45.7163814Z hint: Disable this message with "git config set advice.defaultBranchName false"
+2026-07-21T09:25:45.7164431Z Initialized empty Git repository in /home/runner/work/government-stock-system/government-stock-system/.git/
+2026-07-21T09:25:45.7168567Z [command]/usr/bin/git remote add origin https://github.com/Shamil-Dev-lk/government-stock-system
+2026-07-21T09:25:45.7194882Z ##[endgroup]
+2026-07-21T09:25:45.7195329Z ##[group]Disabling automatic garbage collection
+2026-07-21T09:25:45.7199169Z [command]/usr/bin/git config --local gc.auto 0
+2026-07-21T09:25:45.7220134Z ##[endgroup]
+2026-07-21T09:25:45.7220718Z ##[group]Setting up auth
+2026-07-21T09:25:45.7226270Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-07-21T09:25:45.7248665Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-07-21T09:25:45.7496343Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-07-21T09:25:45.7517049Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-07-21T09:25:45.7656395Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-07-21T09:25:45.7678521Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-07-21T09:25:45.7816921Z [command]/usr/bin/git config --local http.https://github.com/.extraheader AUTHORIZATION: basic ***
+2026-07-21T09:25:45.7854516Z ##[endgroup]
+2026-07-21T09:25:45.7855040Z ##[group]Fetching the repository
+2026-07-21T09:25:45.7862418Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +359d6efcd81cb56eada393cfd4102da28322f040:refs/remotes/origin/main
+2026-07-21T09:25:46.5295371Z From https://github.com/Shamil-Dev-lk/government-stock-system
+2026-07-21T09:25:46.5296539Z  * [new ref]         359d6efcd81cb56eada393cfd4102da28322f040 -> origin/main
+2026-07-21T09:25:46.5314536Z ##[endgroup]
+2026-07-21T09:25:46.5315248Z ##[group]Determining the checkout info
+2026-07-21T09:25:46.5316345Z ##[endgroup]
+2026-07-21T09:25:46.5322682Z [command]/usr/bin/git sparse-checkout disable
+2026-07-21T09:25:46.5356995Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+2026-07-21T09:25:46.6131320Z ##[group]Checking out the ref
+2026-07-21T09:25:46.6133906Z [command]/usr/bin/git checkout --progress --force -B main refs/remotes/origin/main
+2026-07-21T09:25:46.6336258Z Switched to a new branch 'main'
+2026-07-21T09:25:46.6336894Z branch 'main' set up to track 'origin/main'.
+2026-07-21T09:25:46.6350782Z ##[endgroup]
+2026-07-21T09:25:46.6369741Z [command]/usr/bin/git log -1 --format=%H
+2026-07-21T09:25:46.6387125Z 359d6efcd81cb56eada393cfd4102da28322f040
+2026-07-21T09:25:46.6577434Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+2026-07-21T09:25:46.6578620Z ##[group]Run actions/setup-node@v4
+2026-07-21T09:25:46.6578872Z with:
+2026-07-21T09:25:46.6579233Z   node-version: 20
+2026-07-21T09:25:46.6579436Z   always-auth: false
+2026-07-21T09:25:46.6579678Z   check-latest: false
+2026-07-21T09:25:46.6581482Z   token: ***
+2026-07-21T09:25:46.6581695Z ##[endgroup]
+2026-07-21T09:25:46.7699620Z Attempting to download 20...
+2026-07-21T09:25:46.7774904Z (node:2047) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+2026-07-21T09:25:46.7775823Z (Use `node --trace-deprecation ...` to show where the warning was created)
+2026-07-21T09:25:47.4333704Z Acquiring 20.20.2 - x64 from https://github.com/actions/node-versions/releases/download/20.20.2-23521894959/node-20.20.2-linux-x64.tar.gz
+2026-07-21T09:25:47.9139304Z Extracting ...
+2026-07-21T09:25:47.9212791Z [command]/usr/bin/tar xz --strip 1 --warning=no-unknown-keyword --overwrite -C /home/runner/work/_temp/ab892da0-f491-4d30-903e-8563dac74b5c -f /home/runner/work/_temp/d10aed02-5027-40f6-8baa-5187b81355b2
+2026-07-21T09:25:48.7028638Z Adding to the cache ...
+2026-07-21T09:25:50.2603071Z ##[group]Environment details
+2026-07-21T09:25:50.7012725Z node: v20.20.2
+2026-07-21T09:25:50.7013567Z npm: 10.8.2
+2026-07-21T09:25:50.7014160Z yarn: 1.22.22
+2026-07-21T09:25:50.7015454Z ##[endgroup]
+2026-07-21T09:25:50.7155084Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+2026-07-21T09:25:50.7156105Z ##[group]Run actions/configure-pages@v5
+2026-07-21T09:25:50.7156424Z with:
+2026-07-21T09:25:50.7158500Z   token: ***
+2026-07-21T09:25:50.7158733Z   enablement: false
+2026-07-21T09:25:50.7159130Z ##[endgroup]
+2026-07-21T09:25:51.2357196Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+2026-07-21T09:25:51.2358188Z ##[group]Run actions/cache@v4
+2026-07-21T09:25:51.2358441Z with:
+2026-07-21T09:25:51.2358667Z   path: .next/cache
+
+2026-07-21T09:25:51.2359455Z   key: Linux-nextjs-be4da0bd26bc7e62dfac56520fee8aba73ca0e48277222f180b89a6c076826d5-11d368ff036a31182320e2b1b0999fe5ec6fdaef70481526e8019b8c4045f7e0
+2026-07-21T09:25:51.2360208Z   restore-keys: Linux-nextjs-be4da0bd26bc7e62dfac56520fee8aba73ca0e48277222f180b89a6c076826d5-
+
+2026-07-21T09:25:51.2360647Z   enableCrossOsArchive: false
+2026-07-21T09:25:51.2360901Z   fail-on-cache-miss: false
+2026-07-21T09:25:51.2361176Z   lookup-only: false
+2026-07-21T09:25:51.2361421Z   save-always: false
+2026-07-21T09:25:51.2361761Z env:
+2026-07-21T09:25:51.2361976Z   GITHUB_PAGES: true
+2026-07-21T09:25:51.2362200Z ##[endgroup]
+2026-07-21T09:25:51.3192670Z (node:2128) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+2026-07-21T09:25:51.3193714Z (Use `node --trace-deprecation ...` to show where the warning was created)
+2026-07-21T09:25:51.4467690Z Cache not found for input keys: Linux-nextjs-be4da0bd26bc7e62dfac56520fee8aba73ca0e48277222f180b89a6c076826d5-11d368ff036a31182320e2b1b0999fe5ec6fdaef70481526e8019b8c4045f7e0, Linux-nextjs-be4da0bd26bc7e62dfac56520fee8aba73ca0e48277222f180b89a6c076826d5-
+2026-07-21T09:25:51.4533297Z ##[group]Run npm ci --legacy-peer-deps
+2026-07-21T09:25:51.4533689Z [36;1mnpm ci --legacy-peer-deps[0m
+2026-07-21T09:25:51.4579459Z shell: /usr/bin/bash -e {0}
+2026-07-21T09:25:51.4579778Z env:
+2026-07-21T09:25:51.4579991Z   GITHUB_PAGES: true
+2026-07-21T09:25:51.4580230Z ##[endgroup]
+2026-07-21T09:25:53.2417763Z npm warn deprecated rimraf@3.0.2: Rimraf versions prior to v4 are no longer supported
+2026-07-21T09:25:53.8086519Z npm warn deprecated inflight@1.0.6: This module is not supported, and leaks memory. Do not use it. Check out lru-cache if you want a good and tested way to coalesce async requests by a key value, which is much more comprehensive and powerful.
+2026-07-21T09:25:54.0032988Z npm warn deprecated glob@7.2.3: Old versions of glob are not supported, and contain widely publicized security vulnerabilities, which have been fixed in the current version. Please update. Support for old versions may be purchased (at exorbitant rates) by contacting i@izs.me
+2026-07-21T09:25:55.0685790Z npm warn deprecated @humanwhocodes/config-array@0.13.0: Use @eslint/config-array instead
+2026-07-21T09:25:55.0785171Z npm warn deprecated @humanwhocodes/object-schema@2.0.3: Use @eslint/object-schema instead
+2026-07-21T09:25:56.7786514Z npm warn deprecated recharts@2.15.4: 1.x and 2.x branches are no longer active. Bump to Recharts v3 to receive latest features and bugfixes. See https://github.com/recharts/recharts/wiki/3.0-migration-guide
+2026-07-21T09:25:56.8592609Z npm warn deprecated eslint@8.57.1: This version is no longer supported. Please see https://eslint.org/version-support for other options.
+2026-07-21T09:26:03.1350179Z 
+2026-07-21T09:26:03.1351453Z added 557 packages, and audited 558 packages in 12s
+2026-07-21T09:26:03.1352054Z 
+2026-07-21T09:26:03.1352250Z 165 packages are looking for funding
+2026-07-21T09:26:03.1352704Z   run `npm fund` for details
+2026-07-21T09:26:03.1589797Z 
+2026-07-21T09:26:03.1590548Z 3 vulnerabilities (2 moderate, 1 high)
+2026-07-21T09:26:03.1590780Z 
+2026-07-21T09:26:03.1591048Z To address all issues possible (including breaking changes), run:
+2026-07-21T09:26:03.1591377Z   npm audit fix --force
+2026-07-21T09:26:03.1591523Z 
+2026-07-21T09:26:03.1591720Z Some issues need review, and may require choosing
+2026-07-21T09:26:03.1592039Z a different dependency.
+2026-07-21T09:26:03.1592228Z 
+2026-07-21T09:26:03.1592351Z Run `npm audit` for details.
+2026-07-21T09:26:03.1755008Z ##[group]Run npm run build
+2026-07-21T09:26:03.1755317Z [36;1mnpm run build[0m
+2026-07-21T09:26:03.1787860Z shell: /usr/bin/bash -e {0}
+2026-07-21T09:26:03.1788346Z env:
+2026-07-21T09:26:03.1788594Z   GITHUB_PAGES: true
+2026-07-21T09:26:03.1788817Z ##[endgroup]
+2026-07-21T09:26:03.2611992Z 
+2026-07-21T09:26:03.2612598Z > antigravity-frontend@1.0.0 build
+2026-07-21T09:26:03.2613043Z > next build
+2026-07-21T09:26:03.2613170Z 
+2026-07-21T09:26:03.5146451Z ⚠ No build cache found. Please configure build caching for faster rebuilds. Read more: https://nextjs.org/docs/messages/no-cache
+2026-07-21T09:26:04.0158423Z Attention: Next.js now collects completely anonymous telemetry regarding usage.
+2026-07-21T09:26:04.0160942Z This information is used to shape Next.js' roadmap and prioritize features.
+2026-07-21T09:26:04.0162070Z You can learn more, including how to opt-out if you'd not like to participate in this anonymous program, by visiting the following URL:
+2026-07-21T09:26:04.0163208Z https://nextjs.org/telemetry
+2026-07-21T09:26:04.0163489Z 
+2026-07-21T09:26:04.0381202Z ▲ Next.js 16.2.10 (Turbopack)
+2026-07-21T09:26:04.0382014Z - Environments: .env.production
+2026-07-21T09:26:04.0382234Z 
+2026-07-21T09:26:04.1045011Z   Creating an optimized production build ...
+2026-07-21T09:26:12.7282143Z ✓ Compiled successfully in 8.5s
+2026-07-21T09:26:12.7341826Z   Running TypeScript ...
+2026-07-21T09:26:18.6093314Z Failed to type check.
+2026-07-21T09:26:18.6094595Z 
+2026-07-21T09:26:18.6095474Z ./app/(dashboard)/dashboard/items/[id]/edit/page.tsx:49:60
+2026-07-21T09:26:18.6097006Z Type error: Property 'id' does not exist on type 'Promise<{ id: string; }>'.
+2026-07-21T09:26:18.6097419Z 
+2026-07-21T09:26:18.6097826Z   [90m47 |[0m
+2026-07-21T09:26:18.6098317Z   [90m48 |[0m   [36mconst[0m updateMutation = useMutation({
+2026-07-21T09:26:18.6099385Z [31m[1m>[0m [90m49 |[0m     mutationFn: (data: any) => api.put([32m`/v1/items/[0m${params.id[32m}`[0m, data),
+2026-07-21T09:26:18.6100215Z   [90m   |[0m                                                            [31m[1m^[0m
+2026-07-21T09:26:18.6100791Z   [90m50 |[0m     onSuccess: () => {
+2026-07-21T09:26:18.6101348Z   [90m51 |[0m       queryClient.invalidateQueries({ queryKey: [[32m'items'[0m] });
+2026-07-21T09:26:18.6102112Z   [90m52 |[0m       queryClient.invalidateQueries({ queryKey: [[32m'item'[0m, params.id] });
+2026-07-21T09:26:18.6379106Z Next.js build worker exited with code: 1 and signal: null
+2026-07-21T09:26:18.6530745Z ##[error]Process completed with exit code 1.
+2026-07-21T09:26:18.6635822Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+2026-07-21T09:26:18.6636753Z Post job cleanup.
+2026-07-21T09:26:18.7237715Z [command]/usr/bin/git version
+2026-07-21T09:26:18.7266048Z git version 2.54.0
+2026-07-21T09:26:18.7290467Z Temporarily overriding HOME='/home/runner/work/_temp/0462da1a-14b1-4545-a9d0-e263f1861671' before making global git config changes
+2026-07-21T09:26:18.7291482Z Adding repository directory to the temporary git global config as a safe directory
+2026-07-21T09:26:18.7294299Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/government-stock-system/government-stock-system
+2026-07-21T09:26:18.7761226Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-07-21T09:26:18.7798562Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-07-21T09:26:18.7969919Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-07-21T09:26:18.7986193Z http.https://github.com/.extraheader
+2026-07-21T09:26:18.7993797Z [command]/usr/bin/git config --local --unset-all http.https://github.com/.extraheader
+2026-07-21T09:26:18.8958203Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-07-21T09:26:18.9108238Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-07-21T09:26:18.9162559Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-07-21T09:26:18.9397840Z Cleaning up orphan processes
+2026-07-21T09:26:18.9569193Z ##[warning]Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/cache@v4, actions/checkout@v4, actions/configure-pages@v5, actions/setup-node@v4. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
