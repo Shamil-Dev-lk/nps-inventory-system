@@ -1,8 +1,10 @@
-import { redirect } from 'next/navigation';
+import { Suspense } from 'react';
+import Redirector from './Redirector';
 
-export default function HomePage({ searchParams }: { searchParams: { p?: string } }) {
-  if (searchParams.p) {
-    redirect(searchParams.p.replace('/government-stock-system', '') || '/dashboard');
-  }
-  redirect('/dashboard');
+export default function HomePage() {
+  return (
+    <Suspense fallback={null}>
+      <Redirector />
+    </Suspense>
+  );
 }

@@ -1,3 +1,4 @@
+import { Suspense } from 'react';
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -30,7 +31,7 @@ const grnSchema = z.object({
 
 type GRNFormValues = z.infer<typeof grnSchema>;
 
-export default function NewGRNPage() {
+function NewGRNPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const prefillItemId = searchParams.get('item');
@@ -243,3 +244,5 @@ export default function NewGRNPage() {
     </div>
   );
 }
+
+export default function PageWrapper() { return <Suspense fallback={<div>Loading...</div>}><NewGRNPage /></Suspense>; }
