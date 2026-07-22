@@ -16,6 +16,8 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
+import { SoundProvider } from '@/components/SoundProvider';
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" suppressHydrationWarning>
@@ -28,16 +30,18 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         />
       </head>
       <body suppressHydrationWarning className={`${inter.variable} font-sans antialiased`}>
-        <Providers>
-          {children}
-          <Toaster
-            position="top-right"
-            richColors
-            closeButton
-            expand={false}
-            toastOptions={{ classNames: { toast: 'font-sans text-sm' } }}
-          />
-        </Providers>
+        <SoundProvider>
+          <Providers>
+            {children}
+            <Toaster
+              position="top-right"
+              richColors
+              closeButton
+              expand={false}
+              toastOptions={{ classNames: { toast: 'font-sans text-sm' } }}
+            />
+          </Providers>
+        </SoundProvider>
       </body>
     </html>
   );
