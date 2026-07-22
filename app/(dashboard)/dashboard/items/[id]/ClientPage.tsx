@@ -10,9 +10,9 @@ import { notFound } from 'next/navigation';
 
 import { StickerGeneratorDialog } from '@/components/print/StickerGeneratorDialog';
 
-export default function ViewItemPage({ params }: { params: Promise<{ id: string }> }) {
+export default function ViewItemPage({ params }: { params: { id: string } }) {
   const router = useRouter();
-  const { id } = React.use(params);
+  const { id } = params;
   const [stickerOpen, setStickerOpen] = React.useState(false);
 
   const { data: itemData, isLoading } = useQuery({

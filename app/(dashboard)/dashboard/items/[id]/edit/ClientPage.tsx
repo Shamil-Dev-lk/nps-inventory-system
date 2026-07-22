@@ -9,13 +9,12 @@ import { ArrowLeft, Save } from 'lucide-react';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
 
-export default function EditItemPage({ params }: { params: Promise<{ id: string }> }) {
+export default function EditItemPage({ params }: { params: { id: string } }) {
   const router = useRouter();
   const queryClient = useQueryClient();
   const { register, handleSubmit, reset, formState: { errors } } = useForm();
   
-  const unwrappedParams = React.use(params);
-  const itemId = unwrappedParams.id;
+  const itemId = params.id;
 
   const { data: itemData } = useQuery({ 
     queryKey: ['item', itemId], 
