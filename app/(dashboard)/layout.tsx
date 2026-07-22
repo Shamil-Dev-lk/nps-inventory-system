@@ -373,9 +373,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             </button>
 
             {/* Notifications */}
-            <button className="relative p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors">
+            <button 
+              onClick={() => toast.info('No new notifications', { description: 'You are all caught up!' })}
+              className="relative p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+            >
               <Bell size={18} />
-              <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-destructive" />
+              {/* <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-destructive" /> */}
             </button>
 
             {/* User avatar */}
