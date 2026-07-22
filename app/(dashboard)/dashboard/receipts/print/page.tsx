@@ -12,7 +12,7 @@ import { toast } from 'sonner';
 import html2canvas from 'html2canvas';
 import { jsPDF } from 'jspdf';
 
-function DedicatedPrintReceiptPage({ isPreviewProp = false }: { isPreviewProp?: boolean }) {
+export function DedicatedPrintReceiptPage({ isPreviewProp = false }: { isPreviewProp?: boolean }) {
   const searchParams = useSearchParams();
   const id = searchParams.get('id');
   const type = searchParams.get('type') || 'generic';

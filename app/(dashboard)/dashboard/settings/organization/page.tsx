@@ -13,7 +13,7 @@ import { applyThemeVars } from '@/components/theme-setter';
 import { useTheme } from 'next-themes';
 
 import { StickerEngine } from '@/components/print/StickerEngine';
-import DedicatedPrintReceiptPage from '../../receipts/print/page';
+import { DedicatedPrintReceiptPage } from '../../receipts/print/page';
 
 const orgSchema = z.object({
   name_en: z.string().min(1, 'Name is required'),
