@@ -16,7 +16,7 @@ export default function NotFound() {
     // it's easier to just use window.location directly.
     const path = window.location.pathname;
     if (path !== '/government-stock-system/' && path !== '/government-stock-system') {
-      window.location.replace('/government-stock-system/?p=' + encodeURIComponent(path));
+      window.location.replace('/nps-inventory-system/?p=' + encodeURIComponent(path));
     }
   }, []);
 
