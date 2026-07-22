@@ -32,26 +32,45 @@ export function DedicatedPrintReceiptPage({ isPreviewProp = false }: { isPreview
     queryKey: ['print-document', type, id],
     queryFn: async () => {
       if (!id) return null;
-      let endpoint = '';
-      if (type === 'customer') endpoint = `/v1/customers/${id}`;
-      else if (type === 'stock-issue') endpoint = `/v1/stock/issues/${id}`;
-      else if (type === 'grn') endpoint = `/v1/grn/${id}`;
-      else if (type === 'stock-adjustment') endpoint = `/v1/stock/adjustments/${id}`;
-      else if (type === 'stock-return') endpoint = `/v1/stock/returns/${id}`;
-      else if (type === 'stock-transfer') endpoint = `/v1/stock/transfers/${id}`;
-      else if (type === 'stock-taking') endpoint = `/v1/stock-taking/${id}`;
-      else if (type === 'supplier') endpoint = `/v1/suppliers/${id}`;
-      else return null;
-      
-      const res = await api.get(endpoint);
-      return res.data?.data;
+      if (type === 'customer') {
+        const { data } = await supabase.from('customers').select('*').eq('id', id).single();
+        return data;
+      }
+      if (type === 'stock-issue') {
+        const { data } = await supabase.from('stock_issues').select('*, department:departments(id, name_en), officer:users(id, name), project:projects(id, name_en), items:stock_issue_items(*, item:items(*))').eq('id', id).single();
+        return data;
+      }
+      if (type === 'grn') {
+        const { data } = await supabase.from('grns').select('*, supplier:suppliers(id, company_name), items:grn_items(*, item:items(*))').eq('id', id).single();
+        return data;
+      }
+      if (type === 'supplier') {
+        const { data } = await supabase.from('suppliers').select('*').eq('id', id).single();
+        return data;
+      }
+      if (type === 'stock-return') {
+        const { data } = await supabase.from('stock_returns').select('*, department:departments(id, name_en), returned_by:users(id, name), items:stock_return_items(*, item:items(*))').eq('id', id).single();
+        return data;
+      }
+      if (type === 'stock-transfer') {
+        const { data } = await supabase.from('stock_transfers').select('*, from_warehouse:warehouses!from_warehouse_id(name_en), to_warehouse:warehouses!to_warehouse_id(name_en), items:stock_transfer_items(*, item:items(*))').eq('id', id).single();
+        return data;
+      }
+      if (type === 'stock-taking') {
+        const { data } = await supabase.from('stock_taking').select('*, warehouse:warehouses(id, name_en), items:stock_taking_items(*, item:items(*))').eq('id', id).single();
+        return data;
+      }
+      return null;
     },
     enabled: !!id && type !== 'generic',
   });
 
   const { data: orgData } = useQuery({
     queryKey: ['organization'],
-    queryFn: () => api.get('/v1/organization').then(r => r.data?.data),
+    queryFn: async () => {
+      const { data } = await supabase.from('organizations').select('*').single();
+      return data;
+    },
     staleTime: Infinity
   });
 

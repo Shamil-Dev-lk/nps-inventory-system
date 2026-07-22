@@ -87,7 +87,7 @@ export default function EditItemPage({ params }: { params: { id: string } }) {
           <ArrowLeft size={20} />
         </Link>
         <div>
-          <h1 className="text-2xl font-bold">Edit Item: {itemData.item_code}</h1>
+          <h1 className="text-2xl font-bold">Edit Item: {itemData.code || itemData.item_code}</h1>
           <p className="text-sm text-muted-foreground">Update inventory item details</p>
         </div>
       </div>
@@ -98,8 +98,12 @@ export default function EditItemPage({ params }: { params: { id: string } }) {
           <h2 className="text-lg font-semibold mb-4">Basic Details</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
+              <label className="text-sm font-medium">Item Code</label>
+              <input {...register('code')} placeholder="Auto-generated if empty" className="w-full px-3 py-2 mt-1 border rounded-lg bg-white dark:bg-background" />
+            </div>
+            <div>
               <label className="text-sm font-medium">Name (English) *</label>
-              <input {...register('name_en', { required: true })} className="w-full px-3 py-2 mt-1 border rounded-lg" />
+              <input {...register('name_en', { required: true })} className="w-full px-3 py-2 mt-1 border rounded-lg bg-white dark:bg-background" />
               {errors.name_en && <span className="text-xs text-red-500">Required</span>}
             </div>
             <div>

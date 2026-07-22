@@ -22,7 +22,8 @@ export default function NewItemPage() {
   const createMutation = useMutation({
     mutationFn: async (data: any) => {
       // Generate a random item code if none provided
-      if (!data.item_code) data.item_code = 'ITEM-' + Math.floor(Math.random() * 1000000);
+      if (!data.code) data.code = 'ITM-' + Math.floor(Math.random() * 1000000);
+      delete data.item_code;
       
       const { error } = await supabase.from('items').insert([data]);
       if (error) throw error;
@@ -71,8 +72,12 @@ export default function NewItemPage() {
           <h2 className="text-lg font-semibold mb-4">Basic Details</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
+              <label className="text-sm font-medium">Item Code</label>
+              <input {...register('code')} placeholder="Auto-generated if empty" className="w-full px-3 py-2 mt-1 border rounded-lg bg-white dark:bg-background" />
+            </div>
+            <div>
               <label className="text-sm font-medium">Name (English) *</label>
-              <input {...register('name_en', { required: true })} className="w-full px-3 py-2 mt-1 border rounded-lg" />
+              <input {...register('name_en', { required: true })} className="w-full px-3 py-2 mt-1 border rounded-lg bg-white dark:bg-background" />
               {errors.name_en && <span className="text-xs text-red-500">Required</span>}
             </div>
             <div>
