@@ -4,7 +4,7 @@ import { Suspense } from 'react';
 import React, { useEffect, useState, useRef } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/lib/supabase';
+import api from '@/lib/api';
 import { QRCodeSVG } from 'qrcode.react';
 import Barcode from 'react-barcode';
 import { Download, Printer, Share2, Mail, FileText } from 'lucide-react';
@@ -32,34 +32,26 @@ function DedicatedPrintReceiptPage({ isPreviewProp = false }: { isPreviewProp?: 
     queryKey: ['print-document', type, id],
     queryFn: async () => {
       if (!id) return null;
-      let table = '';
-      if (type === 'customer') table = 'customers';
-      else if (type === 'stock-issue') table = 'stock_issues';
-      else if (type === 'grn') table = 'grn';
-      else if (type === 'stock-adjustment') table = 'stock_adjustments';
-      else if (type === 'stock-return') table = 'stock_returns';
-      else if (type === 'stock-transfer') table = 'stock_transfers';
-      else if (type === 'stock-taking') table = 'stock_taking';
-      else if (type === 'supplier') table = 'suppliers';
+      let endpoint = '';
+      if (type === 'customer') endpoint = `/v1/customers/${id}`;
+      else if (type === 'stock-issue') endpoint = `/v1/stock/issues/${id}`;
+      else if (type === 'grn') endpoint = `/v1/grn/${id}`;
+      else if (type === 'stock-adjustment') endpoint = `/v1/stock/adjustments/${id}`;
+      else if (type === 'stock-return') endpoint = `/v1/stock/returns/${id}`;
+      else if (type === 'stock-transfer') endpoint = `/v1/stock/transfers/${id}`;
+      else if (type === 'stock-taking') endpoint = `/v1/stock-taking/${id}`;
+      else if (type === 'supplier') endpoint = `/v1/suppliers/${id}`;
       else return null;
       
-      const { data, error } = await supabase.from(table).select('*').eq('id', id).single();
-      if (error) throw error;
-      return data;
+      const res = await api.get(endpoint);
+      return res.data?.data;
     },
     enabled: !!id && type !== 'generic',
   });
 
   const { data: orgData } = useQuery({
     queryKey: ['organization'],
-    queryFn: async () => {
-      const { data, error } = await supabase.from('organizations').select('*').single();
-      if (error) {
-        const { data: list } = await supabase.from('organizations').select('*');
-        return list?.[0] || null;
-      }
-      return data;
-    },
+    queryFn: () => api.get('/v1/organization').then(r => r.data?.data),
     staleTime: Infinity
   });
 
