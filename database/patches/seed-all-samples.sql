@@ -30,6 +30,12 @@ ALTER TABLE public.suppliers
   ADD COLUMN IF NOT EXISTS status TEXT DEFAULT 'active';
 ALTER TABLE public.suppliers DROP COLUMN IF EXISTS is_active;
 
+-- Fix brands table to match the frontend
+ALTER TABLE public.brands RENAME COLUMN name_en TO name;
+ALTER TABLE public.brands ADD COLUMN IF NOT EXISTS country TEXT;
+ALTER TABLE public.brands DROP COLUMN IF EXISTS name_si;
+ALTER TABLE public.brands DROP COLUMN IF EXISTS name_ta;
+
 -- ==========================================
 -- 2. COMPREHENSIVE SAMPLE DATA SEED SCRIPT
 -- ==========================================
@@ -57,7 +63,7 @@ INSERT INTO public.warehouses (name_en, code, location) VALUES
 ON CONFLICT DO NOTHING;
 
 -- Brands 
-INSERT INTO public.brands (name_en, code, description) VALUES
+INSERT INTO public.brands (name, code, description) VALUES
   ('Dell', 'DELL', 'Computers and Monitors'),
   ('Apple', 'AAPL', 'MacBooks and iPads'),
   ('Logitech', 'LOGI', 'Peripherals'),
