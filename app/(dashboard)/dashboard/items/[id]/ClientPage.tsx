@@ -20,7 +20,7 @@ export default function ViewItemPage({ params }: { params: { id: string } }) {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('items')
-        .select('*, category:categories(name_en), brand:brands(name), unit:units(name_en), warehouse:warehouses(name_en)')
+        .select('*, category:categories(name_en), unit:units(name_en)')
         .eq('id', id)
         .single();
         
@@ -45,7 +45,7 @@ export default function ViewItemPage({ params }: { params: { id: string } }) {
               {itemData.name_en}
             </h1>
             <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
-              <span className="bg-primary/10 text-primary px-2 py-0.5 rounded font-mono text-xs font-bold">{itemData.item_code}</span>
+              <span className="bg-primary/10 text-primary px-2 py-0.5 rounded font-mono text-xs font-bold">{itemData.code || itemData.item_code}</span>
               {itemData.barcode && <span>• Barcode: {itemData.barcode}</span>}
             </div>
           </div>
@@ -88,11 +88,11 @@ export default function ViewItemPage({ params }: { params: { id: string } }) {
               </div>
               <div>
                 <p className="text-sm text-muted-foreground flex items-center gap-1.5 mb-1"><Hash size={14} /> Item Code</p>
-                <p className="font-mono bg-muted inline-block px-1.5 rounded">{itemData.item_code}</p>
+                <p className="font-mono bg-muted inline-block px-1.5 rounded">{itemData.code || itemData.item_code}</p>
               </div>
               <div>
                 <p className="text-sm text-muted-foreground flex items-center gap-1.5 mb-1"><QrCode size={14} /> Barcode / QR</p>
-                <p className="font-mono bg-muted inline-block px-1.5 rounded">{itemData.barcode || itemData.item_code}</p>
+                <p className="font-mono bg-muted inline-block px-1.5 rounded">{itemData.barcode || itemData.code || itemData.item_code}</p>
               </div>
               <div className="col-span-2">
                 <p className="text-sm text-muted-foreground flex items-center gap-1.5 mb-1"><AlignLeft size={14} /> Description</p>
@@ -114,7 +114,7 @@ export default function ViewItemPage({ params }: { params: { id: string } }) {
               </div>
               <div className="bg-muted/30 p-3 rounded-lg border border-border/50">
                 <p className="text-xs text-muted-foreground mb-1">Brand</p>
-                <p className="font-semibold">{itemData.brand?.name || '—'}</p>
+                <p className="font-semibold">{itemData.brand_id ? `Brand #${itemData.brand_id}` : '—'}</p>
               </div>
               <div className="bg-muted/30 p-3 rounded-lg border border-border/50">
                 <p className="text-xs text-muted-foreground mb-1">Unit of Measure</p>
@@ -122,7 +122,7 @@ export default function ViewItemPage({ params }: { params: { id: string } }) {
               </div>
               <div className="bg-muted/30 p-3 rounded-lg border border-border/50">
                 <p className="text-xs text-muted-foreground mb-1">Primary Warehouse</p>
-                <p className="font-semibold">{itemData.warehouse?.name_en || '—'}</p>
+                <p className="font-semibold">{itemData.warehouse_id ? `Warehouse #${itemData.warehouse_id}` : '—'}</p>
               </div>
             </div>
           </div>
