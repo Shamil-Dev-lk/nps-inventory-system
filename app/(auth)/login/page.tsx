@@ -140,9 +140,9 @@ export default function LoginPage() {
           <motion.div
             animate={{ y: [0, -8, 0] }}
             transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
-            className="w-28 h-28 mx-auto mb-8 rounded-3xl bg-white/15 backdrop-blur-sm border border-white/25 shadow-2xl flex items-center justify-center"
+            className="w-28 h-28 mx-auto mb-8 rounded-3xl bg-white backdrop-blur-sm border border-white/25 shadow-2xl flex items-center justify-center overflow-hidden p-2"
           >
-            <Building2 size={56} className="text-white drop-shadow-lg" />
+            <img src="/logo.png" alt="Logo" className="w-full h-full object-contain" />
           </motion.div>
 
           <h1 className="text-5xl font-black tracking-tight mb-3 drop-shadow-md">{systemName}</h1>
@@ -198,8 +198,8 @@ export default function LoginPage() {
         <div className="w-full max-w-[400px]">
           {/* Mobile logo */}
           <div className="lg:hidden text-center mb-8">
-            <div className="w-16 h-16 rounded-2xl gov-gradient flex items-center justify-center mx-auto mb-4 shadow-lg">
-              <Building2 size={32} className="text-white" />
+            <div className="w-16 h-16 rounded-2xl bg-white flex items-center justify-center mx-auto mb-4 shadow-lg p-1.5 overflow-hidden">
+              <img src="/logo.png" alt="Logo" className="w-full h-full object-contain" />
             </div>
             <h1 className="text-2xl font-bold text-primary">{systemName}</h1>
             <p className="text-muted-foreground text-sm mt-1">{orgName}</p>

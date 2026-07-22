@@ -60,6 +60,18 @@ export function DedicatedPrintReceiptPage({ isPreviewProp = false }: { isPreview
         const { data } = await supabase.from('stock_taking').select('*, warehouse:warehouses(id, name_en), items:stock_taking_items(*, item:items(*))').eq('id', id).single();
         return data;
       }
+      if (type === 'stock-adjustment') {
+        const { data } = await supabase.from('stock_adjustments').select('*, warehouse:warehouses(id, name_en), item:items(*)').eq('id', id).single();
+        return data;
+      }
+      if (type === 'purchase-order') {
+        const { data } = await supabase.from('purchase_orders').select('*, supplier:suppliers(id, company_name), items:purchase_order_items(*, item:items(*))').eq('id', id).single();
+        return data;
+      }
+      if (type === 'purchase-request') {
+        const { data } = await supabase.from('purchase_requests').select('*, items:purchase_request_items(*, item:items(*))').eq('id', id).single();
+        return data;
+      }
       return null;
     },
     enabled: !!id && type !== 'generic',
@@ -127,8 +139,8 @@ export function DedicatedPrintReceiptPage({ isPreviewProp = false }: { isPreview
     }
   };
 
-  const receiptNumber = type === 'customer' ? `CUS-${id}` : type === 'supplier' ? `SUP-${id}` : (documentData?.issue_number || documentData?.grn_number || documentData?.adjustment_number || documentData?.return_number || documentData?.transfer_number || documentData?.st_number || `REC-${id || '0000'}`);
-  const customerName = type === 'customer' ? documentData?.name : type === 'supplier' ? documentData?.company_name : (documentData?.customer?.name || documentData?.department?.name_en || documentData?.warehouse?.name_en || 'Internal Store');
+  const receiptNumber = type === 'customer' ? `CUS-${id}` : type === 'supplier' ? `SUP-${id}` : (documentData?.issue_number || documentData?.grn_number || documentData?.adjustment_number || documentData?.return_number || documentData?.transfer_number || documentData?.st_number || documentData?.po_number || documentData?.pr_number || `REC-${id || '0000'}`);
+  const customerName = type === 'customer' ? documentData?.name : type === 'supplier' ? documentData?.company_name : (documentData?.customer?.name || documentData?.department?.name_en || documentData?.warehouse?.name_en || documentData?.supplier?.company_name || 'Internal Store');
   const amountStr = (documentData?.total_amount || 0).toLocaleString('en-LK', { minimumFractionDigits: 2 });
   const qrData = `ID: ${receiptNumber}\nName: ${customerName}\nAmount: Rs.${amountStr}\nDate: ${currentDate?.toLocaleDateString()}`;
 
@@ -184,7 +196,7 @@ export function DedicatedPrintReceiptPage({ isPreviewProp = false }: { isPreview
           {/* Header */}
           <div className="flex flex-col items-center text-center border-b border-black border-dashed pb-3 mb-3">
             <div className="w-16 h-16 mb-2">
-              <img src="/sabha-logo.png" alt="Logo" className="w-full h-full object-contain" />
+              <img src="/logo.png" alt="Logo" className="w-full h-full object-contain" />
             </div>
             <h1 className="text-[14px] font-bold uppercase">{orgData?.name_en || 'Pradeshiya Sabha'}</h1>
             <p className="text-[10px] uppercase font-bold mt-1">Gov Store & Inventory</p>
@@ -228,7 +240,7 @@ export function DedicatedPrintReceiptPage({ isPreviewProp = false }: { isPreview
                     <td className="py-1 pr-1">{documentData.item?.name_en || 'Unknown Item'}</td>
                     <td className="py-1 text-right">{Number(documentData.quantity * (documentData.unit_cost || documentData.unit_price || 0)).toLocaleString('en-LK', { minimumFractionDigits: 2 })}</td>
                   </tr>
-              ) : ['stock-issue', 'stock-return', 'stock-transfer', 'stock-taking', 'grn'].includes(type) && documentData?.items ? (
+              ) : ['stock-issue', 'stock-return', 'stock-transfer', 'stock-taking', 'grn', 'purchase-order', 'purchase-request'].includes(type) && documentData?.items ? (
                 documentData.items.map((item: any, idx: number) => (
                   <tr key={idx} className="border-b border-gray-100 last:border-0 align-top">
                     <td className="py-1">{item.quantity || item.physical_quantity || 1}</td>
