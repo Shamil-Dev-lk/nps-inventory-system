@@ -15,7 +15,7 @@ export default function NotFound() {
     // However, since we are inside the Next.js router already (if hydrated), 
     // it's easier to just use window.location directly.
     const path = window.location.pathname;
-    if (path !== '/government-stock-system/' && path !== '/government-stock-system') {
+    if (path !== '/nps-inventory-system/' && path !== '/nps-inventory-system') {
       window.location.replace('/nps-inventory-system/?p=' + encodeURIComponent(path));
     }
   }, []);
