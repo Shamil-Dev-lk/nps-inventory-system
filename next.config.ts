@@ -11,6 +11,8 @@ const nextConfig: NextConfig = {
     ignoreDuringBuilds: true,
   },
   output: 'export',
+  basePath: '/nps-inventory-system',
+  assetPrefix: '/nps-inventory-system',
 };
 
 export default nextConfig;
