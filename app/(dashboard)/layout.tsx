@@ -436,7 +436,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             {children}
           </motion.div>
           <footer className={`py-3 text-center print:hidden mt-auto w-full ${org?.footer_size || 'text-xs'} ${org?.footer_font || ''} ${org?.footer_color || 'text-muted-foreground/50'}`}>
-            {org?.footer_text || 'Shamil - Dev'}
+            {org?.footer_text || 'Developed by Shamil - Dev'}
           </footer>
         </main>
       </div>
