@@ -13,7 +13,7 @@ import {
   Boxes, Tags, Ruler, Bookmark, MapPin, Briefcase, AlertTriangle,
   ClipboardCheck, ArrowLeftRight, PackageMinus, PackagePlus,
   Warehouse as WarehouseIcon, Receipt, CreditCard, ScanLine,
-  ShieldCheck, QrCode, Monitor, Layers, Printer
+  ShieldCheck, QrCode, Monitor, Layers, Printer, User2
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useTheme } from 'next-themes';
