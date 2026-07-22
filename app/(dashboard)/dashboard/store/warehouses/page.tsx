@@ -83,7 +83,13 @@ export default function WarehousesPage() {
       setIsDeleteOpen(false);
       setDeletingWarehouse(null);
     },
-    onError: () => toast.error('Failed to delete warehouse'),
+    onError: (err: any) => {
+      if (err.code === '23503' || err.message?.includes('foreign key constraint')) {
+        toast.error('Cannot delete this warehouse because it is currently assigned to one or more records (e.g. items or stock levels).');
+      } else {
+        toast.error('Failed to delete warehouse');
+      }
+    },
   });
 
   const handleOpenForm = (warehouse?: Warehouse) => {

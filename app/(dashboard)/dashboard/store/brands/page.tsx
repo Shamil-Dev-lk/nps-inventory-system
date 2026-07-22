@@ -79,7 +79,13 @@ export default function BrandsPage() {
       setIsDeleteOpen(false);
       setDeletingBrand(null);
     },
-    onError: () => toast.error('Failed to delete brand'),
+    onError: (err: any) => {
+      if (err.code === '23503' || err.message?.includes('foreign key constraint')) {
+        toast.error('Cannot delete this brand because it is currently assigned to one or more items.');
+      } else {
+        toast.error('Failed to delete brand');
+      }
+    },
   });
 
   const handleOpenForm = (brand?: Brand) => {

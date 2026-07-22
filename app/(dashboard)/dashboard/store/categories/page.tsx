@@ -83,7 +83,13 @@ export default function CategoriesPage() {
       setIsDeleteOpen(false);
       setDeletingCategory(null);
     },
-    onError: (err: any) => toast.error('Failed to delete category: ' + (err.message || 'Unknown error')),
+    onError: (err: any) => {
+      if (err.code === '23503' || err.message?.includes('foreign key constraint')) {
+        toast.error('Cannot delete this category because it is currently assigned to one or more items.');
+      } else {
+        toast.error('Failed to delete category: ' + (err.message || 'Unknown error'));
+      }
+    },
   });
 
   // Handlers

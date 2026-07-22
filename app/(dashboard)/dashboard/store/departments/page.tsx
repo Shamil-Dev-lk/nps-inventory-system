@@ -80,7 +80,13 @@ export default function DepartmentsPage() {
       setIsDeleteOpen(false);
       setDeletingDepartment(null);
     },
-    onError: () => toast.error('Failed to delete department'),
+    onError: (err: any) => {
+      if (err.code === '23503' || err.message?.includes('foreign key constraint')) {
+        toast.error('Cannot delete this department because it is currently assigned to one or more records (e.g. issues or returns).');
+      } else {
+        toast.error('Failed to delete department');
+      }
+    },
   });
 
   const handleOpenForm = (department?: Department) => {

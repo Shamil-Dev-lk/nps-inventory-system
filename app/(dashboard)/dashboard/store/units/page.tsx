@@ -81,7 +81,13 @@ export default function UnitsPage() {
       setIsDeleteOpen(false);
       setDeletingUnit(null);
     },
-    onError: () => toast.error('Failed to delete unit'),
+    onError: (err: any) => {
+      if (err.code === '23503' || err.message?.includes('foreign key constraint')) {
+        toast.error('Cannot delete this unit because it is currently assigned to one or more items.');
+      } else {
+        toast.error('Failed to delete unit');
+      }
+    },
   });
 
   const handleOpenForm = (unit?: Unit) => {

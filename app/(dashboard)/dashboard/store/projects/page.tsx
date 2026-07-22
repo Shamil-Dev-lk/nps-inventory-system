@@ -81,7 +81,13 @@ export default function ProjectsPage() {
       setIsDeleteOpen(false);
       setDeletingProject(null);
     },
-    onError: () => toast.error('Failed to delete project'),
+    onError: (err: any) => {
+      if (err.code === '23503' || err.message?.includes('foreign key constraint')) {
+        toast.error('Cannot delete this project because it is currently assigned to one or more records.');
+      } else {
+        toast.error('Failed to delete project');
+      }
+    },
   });
 
   const handleOpenForm = (project?: Project) => {

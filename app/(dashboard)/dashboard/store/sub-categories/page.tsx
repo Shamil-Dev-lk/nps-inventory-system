@@ -37,7 +37,13 @@ export default function SubCategoriesPage() {
       toast.success('Sub-Category deleted successfully.');
       qc.invalidateQueries({ queryKey: ['sub-categories'] });
     },
-    onError: () => toast.error('Failed to delete sub-category.'),
+    onError: (err: any) => {
+      if (err.code === '23503' || err.message?.includes('foreign key constraint')) {
+        toast.error('Cannot delete this sub-category because it is currently assigned to one or more items.');
+      } else {
+        toast.error('Failed to delete sub-category.');
+      }
+    },
   });
 
   const handleDelete = (sc: SubCategory) => {
