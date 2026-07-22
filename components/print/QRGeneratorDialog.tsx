@@ -70,8 +70,8 @@ export function QRGeneratorDialog({ items, open, onOpenChange }: QRGeneratorProp
                           <span className="text-[6px] font-bold uppercase text-gray-700">Nikaweratiya Pradeshiya Sabha</span>
                         </div>
                       </div>
-                      <QRCode value={item.qr_code || item.item_code} size={100} />
-                      <span className="text-xs font-bold mt-2 tracking-widest">{item.item_code}</span>
+                      <QRCode value={item.qr_code || item.barcode || item.code || item.item_code || 'NO-CODE'} size={100} />
+                      <span className="text-xs font-bold mt-2 tracking-widest">{item.code || item.item_code}</span>
                       <span className="text-[10px] text-gray-500 w-full text-center truncate px-2">{item.name_en}</span>
                       <span className="text-[8px] text-gray-400 mt-1 uppercase">Verify: {Math.random().toString(36).substring(2, 8).toUpperCase()}</span>
                     </div>

@@ -70,7 +70,7 @@ export function BarcodeGeneratorDialog({ items, open, onOpenChange }: BarcodeGen
                           <span className="text-[6px] font-bold uppercase text-gray-700">Nikaweratiya Pradeshiya Sabha</span>
                         </div>
                       </div>
-                      <Barcode value={item.barcode || item.item_code} width={1.5} height={40} fontSize={14} />
+                      <Barcode value={item.barcode || item.code || item.item_code || 'NO-CODE'} width={1.5} height={40} fontSize={14} />
                       <span className="text-xs text-gray-500 truncate w-full text-center mt-1">{item.name_en}</span>
                       <span className="text-[8px] text-gray-400 mt-1 uppercase text-right w-full">Verify: {Math.random().toString(36).substring(2, 8).toUpperCase()}</span>
                     </div>
