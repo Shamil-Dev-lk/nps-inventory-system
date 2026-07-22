@@ -93,8 +93,8 @@ export default function SuppliersPage() {
           onAdd={() => router.push('/dashboard/store/suppliers/new')}
           onEdit={(row) => router.push(`/dashboard/store/suppliers/${row.id}/view`)}
           onDelete={(row) => { setDeletingSupplier(row); setIsDeleteOpen(true); }}
-          onPrint={(row) => window.open(`/dashboard/receipts/print?type=supplier&id=${row.id}`, '_blank')}
-          onDownload={(row) => window.open(`/dashboard/receipts/print?type=supplier&id=${row.id}&action=download`, '_blank')}
+          onPrint={(row) => window.open(`${window.location.pathname.split('/dashboard')[0] || ''}/dashboard/receipts/print?type=supplier&id=${row.id}`, '_blank')}
+          onDownload={(row) => window.open(`${window.location.pathname.split('/dashboard')[0] || ''}/dashboard/receipts/print?type=supplier&id=${row.id}&action=download`, '_blank')}
         />
       </div>
 

@@ -119,11 +119,11 @@ export default function CustomersPage() {
                         <a href={`/dashboard/customers/${customer.id}/view`} className="p-1.5 rounded hover:bg-muted text-muted-foreground hover:text-green-500" title="View Customer" rel="noopener noreferrer">
                           <Eye size={15} />
                         </a>
-                        <button onClick={() => window.open(`/dashboard/receipts/print?type=customer&id=${customer.id}`, '_blank')} className="p-1.5 rounded hover:bg-muted text-muted-foreground hover:text-purple-500" title="Print Receipt">
+                        <button onClick={() => window.open(`${window.location.pathname.split('/dashboard')[0] || ''}/dashboard/receipts/print?type=customer&id=${customer.id}`, '_blank')} className="p-1.5 rounded hover:bg-muted text-muted-foreground hover:text-purple-500" title="Print Receipt">
                           <Printer size={15} />
                         </button>
                         <button 
-                          onClick={() => window.open(`/dashboard/receipts/print?type=customer&id=${customer.id}&action=download`, '_blank')}
+                          onClick={() => window.open(`${window.location.pathname.split('/dashboard')[0] || ''}/dashboard/receipts/print?type=customer&id=${customer.id}&action=download`, '_blank')}
                           className="p-1.5 rounded hover:bg-muted text-muted-foreground hover:text-indigo-500" title="Download Receipt"
                         >
                           <Download size={15} />
