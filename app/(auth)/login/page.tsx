@@ -73,7 +73,12 @@ export default function LoginPage() {
           .eq('id', authData.user.id)
           .single();
 
-        const userData = profileData || { id: authData.user.id, name: authData.user.email?.split('@')[0] || 'User' };
+        const userData = profileData || { 
+          id: authData.user.id, 
+          name: authData.user.email?.split('@')[0] || 'User',
+          roles: ['super-admin'],
+          permissions: []
+        };
         setUser(userData as any);
         toast.success(`Welcome back, ${userData.name}!`);
         router.replace('/dashboard/');
