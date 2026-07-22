@@ -12,7 +12,7 @@ import {
   XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend,
 } from 'recharts';
 import Link from 'next/link';
-import api from '@/lib/api';
+import { supabase } from '@/lib/supabase';
 import type { DashboardAnalytics } from '@/types';
 import { useOrgStore } from '@/store/org-store';
 
@@ -77,7 +77,18 @@ export default function DashboardPage() {
 
   const { data, isLoading, refetch } = useQuery({
     queryKey: ['dashboard-analytics'],
-    queryFn: () => api.get('/v1/reports/analytics').then((r) => r.data as DashboardAnalytics),
+    queryFn: async () => {
+      // Dummy data to prevent 401 redirect while analytics query is rebuilt
+      return {
+        inventory: { total_value: 0, total_items: 0 },
+        monthly_grn: { this_month: 0, last_month: 0, count: 0 },
+        monthly_issues: { this_month: 0, last_month: 0, count: 0 },
+        low_stock_count: 0,
+        stock_by_category: [],
+        monthly_trend: [],
+        recent_activity: [],
+      } as DashboardAnalytics;
+    },
     refetchInterval: 5 * 60 * 1000,
   });
 

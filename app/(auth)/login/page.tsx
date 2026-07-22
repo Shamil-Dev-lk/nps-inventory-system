@@ -43,9 +43,11 @@ export default function LoginPage() {
 
   const { data: orgData } = useQuery({
     queryKey: ['organization-public'],
-    queryFn: () => api.get('/v1/organization').then((r) => r.data.data as Organization),
-    staleTime: Infinity,
-    retry: false,
+    queryFn: async () => {
+      const { data, error } = await supabase.from('organizations').select('*').single();
+      if (error && error.code !== 'PGRST116') throw error;
+      return data as Organization;
+    },
   });
 
   useEffect(() => { if (orgData) setOrg(orgData); }, [orgData, setOrg]);

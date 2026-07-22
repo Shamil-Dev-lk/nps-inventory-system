@@ -17,7 +17,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useTheme } from 'next-themes';
-import api from '@/lib/api';
+import { supabase } from '@/lib/supabase';
 import { useAuthStore } from '@/store/auth-store';
 import { useOrgStore } from '@/store/org-store';
 import type { Organization } from '@/types';
@@ -172,7 +172,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   const { data: orgData } = useQuery({
     queryKey: ['organization'],
-    queryFn: () => api.get('/v1/organization').then((r) => r.data.data as Organization),
+    queryFn: async () => {
+      const { data, error } = await supabase.from('organizations').select('*').single();
+      if (error && error.code !== 'PGRST116') throw error;
+      return data as Organization;
+    },
     staleTime: Infinity,
   });
 

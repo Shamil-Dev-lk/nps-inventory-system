@@ -40,7 +40,7 @@ api.interceptors.response.use(
         if (typeof window !== 'undefined') {
           localStorage.removeItem('auth_token');
           localStorage.removeItem('auth-storage');
-          window.location.href = '/login';
+          window.location.href = '/nps-inventory-system/login';
         }
       }
     }
