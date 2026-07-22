@@ -16,7 +16,7 @@ export const api = axios.create({
 // Attach token and language header
 api.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
-    const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null;
+    const token = typeof window !== 'undefined' ? localStorage.getItem('nps_auth_token') : null;
     if (token) config.headers.Authorization = `Bearer ${token}`;
 
     const lang = typeof window !== 'undefined' ? (localStorage.getItem('language') || 'en') : 'en';
@@ -38,8 +38,8 @@ api.interceptors.response.use(
 
       if (!isLoginRequest && !isLoginPage) {
         if (typeof window !== 'undefined') {
-          localStorage.removeItem('auth_token');
-          localStorage.removeItem('auth-storage');
+          localStorage.removeItem('nps_auth_token');
+          localStorage.removeItem('nps-auth-storage');
           window.location.href = '/nps-inventory-system/login';
         }
       }

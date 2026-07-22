@@ -26,13 +26,13 @@ export const useAuthStore = create<AuthState>()(
       setToken: (token) => {
         set({ token });
         if (typeof window !== 'undefined') {
-          localStorage.setItem('auth_token', token);
+          localStorage.setItem('nps_auth_token', token);
         }
       },
 
       logout: () => {
         if (typeof window !== 'undefined') {
-          localStorage.removeItem('auth_token');
+          localStorage.removeItem('nps_auth_token');
         }
         set({ user: null, token: null, isAuthenticated: false });
       },
@@ -56,7 +56,7 @@ export const useAuthStore = create<AuthState>()(
       },
     }),
     {
-      name: 'auth-storage',
+      name: 'nps-auth-storage',
       storage: createJSONStorage(() =>
         typeof window !== 'undefined'
           ? localStorage
