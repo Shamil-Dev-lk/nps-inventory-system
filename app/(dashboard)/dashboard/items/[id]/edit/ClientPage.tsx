@@ -69,6 +69,12 @@ export default function EditItemPage({ params }: { params: { id: string } }) {
     data.minimum_stock = parseFloat(data.minimum_stock || 0);
     data.maximum_stock = parseFloat(data.maximum_stock || 0);
     data.reorder_level = parseFloat(data.reorder_level || 0);
+    
+    if (data.category_id === '') data.category_id = null;
+    if (data.brand_id === '') data.brand_id = null;
+    if (data.unit_id === '') data.unit_id = null;
+    if (data.warehouse_id === '') data.warehouse_id = null;
+    
     updateMutation.mutate(data);
   };
 

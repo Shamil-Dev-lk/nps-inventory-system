@@ -44,6 +44,12 @@ export default function NewItemPage() {
     data.maximum_stock = parseFloat(data.maximum_stock || 0);
     data.reorder_level = parseFloat(data.reorder_level || 0);
     if (data.current_quantity) data.current_quantity = parseFloat(data.current_quantity);
+    
+    if (data.category_id === '') data.category_id = null;
+    if (data.brand_id === '') data.brand_id = null;
+    if (data.unit_id === '') data.unit_id = null;
+    if (data.warehouse_id === '') data.warehouse_id = null;
+    
     createMutation.mutate(data);
   };
 
