@@ -22,6 +22,14 @@ ALTER TABLE public.projects
   ADD COLUMN IF NOT EXISTS is_active BOOLEAN DEFAULT true;
 
 
+-- Fix suppliers table to match the frontend
+ALTER TABLE public.suppliers RENAME COLUMN name TO company_name;
+ALTER TABLE public.suppliers RENAME COLUMN phone TO telephone;
+ALTER TABLE public.suppliers
+  ADD COLUMN IF NOT EXISTS supplier_code TEXT,
+  ADD COLUMN IF NOT EXISTS status TEXT DEFAULT 'active';
+ALTER TABLE public.suppliers DROP COLUMN IF EXISTS is_active;
+
 -- ==========================================
 -- 2. COMPREHENSIVE SAMPLE DATA SEED SCRIPT
 -- ==========================================
