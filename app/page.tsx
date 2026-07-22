@@ -1,5 +1,35 @@
-import { redirect } from 'next/navigation';
+'use client';
+
+import { useEffect } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 
 export default function HomePage() {
-  redirect('/nps-inventory-system/dashboard');
+  const router = useRouter();
+  const searchParams = useSearchParams();
+
+  useEffect(() => {
+    const p = searchParams.get('p');
+    if (p) {
+      let target = p;
+      // Strip out the base path to avoid double base paths
+      while (target.includes('/nps-inventory-system')) {
+        target = target.replace('/nps-inventory-system', '');
+      }
+      
+      if (!target || target === '/') {
+        target = '/dashboard';
+      }
+      
+      // Since trailingSlash is true, make sure target ends with /
+      if (!target.endsWith('/')) {
+        target += '/';
+      }
+      
+      router.replace(target);
+      return;
+    }
+    router.replace('/dashboard');
+  }, [router, searchParams]);
+
+  return null;
 }

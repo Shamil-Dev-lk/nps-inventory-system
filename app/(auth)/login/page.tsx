@@ -76,7 +76,7 @@ export default function LoginPage() {
         const userData = profileData || { id: authData.user.id, name: authData.user.email?.split('@')[0] || 'User' };
         setUser(userData as any);
         toast.success(`Welcome back, ${userData.name}!`);
-        window.location.href = '/nps-inventory-system/dashboard';
+        router.replace('/dashboard/');
       }
     } catch (error: any) {
       toast.error(error.message || 'Invalid credentials. Please try again.');
@@ -96,8 +96,8 @@ export default function LoginPage() {
       setToken(res.data.token);
       setUser(res.data.user);
       toast.success('Two-factor authentication verified!');
-      window.location.href = '/nps-inventory-system/dashboard';
-    } catch {
+      router.replace('/dashboard/');
+    } catch (err: any) {
       toast.error('Invalid OTP code. Please try again.');
       setOtp('');
     } finally {
