@@ -7,7 +7,7 @@ import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { ArrowLeft, Plus, Trash2, Save, ScanLine, QrCode, Search } from 'lucide-react';
 import Link from 'next/link';
-import api from '@/lib/api';
+import { supabase } from '@/lib/supabase';
 import { BarcodeScannerModal } from '@/components/scanner/BarcodeScannerModal';
 import { Modal } from '@/components/ui/modal';
 
@@ -35,7 +35,14 @@ export default function NewStockIssuePage() {
   const issueToType = watch('issue_to_type');
   const { fields, append, remove } = useFieldArray({ control, name: 'items' });
 
-  const { data: departments = [] } = useQuery({ queryKey: ['departments'], queryFn: () => api.get('/v1/departments').then(r => r.data.data) });
+  const { data: departments = [] } = useQuery({
+    queryKey: ['departments'],
+    queryFn: async () => {
+      const { data, error } = await supabase.from('departments').select('*');
+      if (error) throw error;
+      return data || [];
+    }
+  });
   
   const [isScannerOpen, setIsScannerOpen] = useState(false);
   const [barcodeInput, setBarcodeInput] = useState('');
@@ -68,21 +75,75 @@ export default function NewStockIssuePage() {
     }
     setBarcodeInput('');
   };
-  const { data: projects = [] } = useQuery({ queryKey: ['projects'], queryFn: () => api.get('/v1/projects').then(r => r.data.data) });
-  const { data: warehouses = [] } = useQuery({ queryKey: ['warehouses'], queryFn: () => api.get('/v1/warehouses').then(r => r.data.data) });
-  const { data: users = [] } = useQuery({ queryKey: ['users'], queryFn: () => api.get('/v1/users').then(r => r.data.data) });
-  const { data: itemsList = [] } = useQuery({ queryKey: ['items'], queryFn: () => api.get('/v1/items?per_page=1000').then(r => (r.data?.data?.data || r.data?.data || r.data || [])) });
-  const { data: customers = [] } = useQuery({ queryKey: ['customers'], queryFn: () => api.get('/v1/customers?per_page=1000').then(r => r.data?.data || []) });
+  const { data: projects = [] } = useQuery({
+    queryKey: ['projects'],
+    queryFn: async () => {
+      const { data, error } = await supabase.from('projects').select('*');
+      if (error) throw error;
+      return data || [];
+    }
+  });
+  const { data: warehouses = [] } = useQuery({
+    queryKey: ['warehouses'],
+    queryFn: async () => {
+      const { data, error } = await supabase.from('warehouses').select('*');
+      if (error) throw error;
+      return data || [];
+    }
+  });
+  const { data: users = [] } = useQuery({
+    queryKey: ['users'],
+    queryFn: async () => {
+      const { data, error } = await supabase.from('users').select('*');
+      if (error) throw error;
+      return data || [];
+    }
+  });
+  const { data: itemsList = [] } = useQuery({
+    queryKey: ['items'],
+    queryFn: async () => {
+      const { data, error } = await supabase.from('items').select('*, unit:units(symbol)');
+      if (error) throw error;
+      return data || [];
+    }
+  });
+  const { data: customers = [] } = useQuery({
+    queryKey: ['customers'],
+    queryFn: async () => {
+      const { data, error } = await supabase.from('customers').select('*');
+      if (error) throw error;
+      return data || [];
+    }
+  });
 
   const createMutation = useMutation({
-    mutationFn: (data: any) => api.post('/v1/stock/issues', data),
-    onSuccess: (data) => {
+    mutationFn: async (formData: any) => {
+      const { items, person_name, person_id_number, person_position, person_time, ...issueData } = formData;
+      const { data: issue, error: issueErr } = await supabase.from('stock_issues').insert([{
+        ...issueData,
+        status: 'draft'
+      }]).select().single();
+      if (issueErr) throw issueErr;
+
+      if (items && items.length > 0) {
+        const issueItems = items.map((i: any) => ({
+          stock_issue_id: issue.id,
+          item_id: i.item_id,
+          quantity: i.quantity,
+          remarks: i.remarks
+        }));
+        const { error: itemsErr } = await supabase.from('stock_issue_items').insert(issueItems);
+        if (itemsErr) throw itemsErr;
+      }
+      return issue;
+    },
+    onSuccess: (data: any) => {
       queryClient.invalidateQueries({ queryKey: ['stock-issues'] });
       toast.success('Stock issue created successfully');
-      router.push(`/dashboard/stock/issue/${data.data.data.id}?print=true`);
+      router.push(`/dashboard/stock/issue/${data.id}?print=true`);
     },
     onError: (err: any) => {
-      toast.error(err.response?.data?.message || 'Failed to create stock issue');
+      toast.error(err.message || 'Failed to create stock issue');
     },
   });
 

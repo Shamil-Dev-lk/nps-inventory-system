@@ -3,7 +3,7 @@ import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useParams, useRouter } from 'next/navigation';
 import { ArrowLeft, Package, Calendar, MapPin, FileText, CheckCircle, XCircle, Printer, Download } from 'lucide-react';
-import api from '@/lib/api';
+import { supabase } from '@/lib/supabase';
 import Link from 'next/link';
 import { PrintLayout } from '@/components/print/PrintLayout';
 
@@ -12,12 +12,19 @@ export default function GrnViewPage() {
   const router = useRouter();
   const id = params.id;
 
-  const { data, isLoading } = useQuery({
+  const { data: grn, isLoading } = useQuery({
     queryKey: ['grn', id],
-    queryFn: () => api.get(`/v1/grn/${id}`).then(r => r.data),
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('grns')
+        .select('*, supplier:suppliers(*), warehouse:warehouses(*), items:grn_items(*, item:items(*))')
+        .eq('id', id)
+        .single();
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!id,
   });
-
-  const grn = data?.data;
 
   if (isLoading) {
     return <div className="p-8 text-center text-muted-foreground animate-pulse">Loading GRN details...</div>;

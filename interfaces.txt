@@ -1,0 +1,213 @@
+
+/// app\(dashboard)\dashboard\ai\page.tsx
+interface Message { role: 'user'|'assistant'; content: string; time: Date; }
+const suggestions = [
+  'Which items are critically low on stock?',
+  'What is the total inventory value?',
+  'Show purchase recommendations for this month',
+  'Which items have not moved in 3 months?',
+  "Summarize this week's GRN activity",
+];
+
+export default function AIPage() {
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [input, setInput] = useState('');
+  const endRef = useRef<HTMLDivElement>(null);
+
+  const { data: summary, isLoading: summaryLoading, refetch: refetchSummary } = useQuery({
+    queryKey: ['ai-dashboard-summary'],
+    queryFn: () => api.get('/v1/ai/dashboard-summary').then(r => r.data),
+  });
+  
+  const { data: recs, isLoading: recsLoading } = useQuery({
+    queryKey: ['ai-recommendations'],
+    queryFn: () => api.get('/v1/ai/recommendations').then(r => r.data),
+  });
+
+  const sendMessage = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!input.trim()) return;
+    
+    const userMsg: Message = { role: 'user', content: input, time: new Date() };
+    setMessages(prev => [...prev, userMsg]);
+    setInput('');
+    
+    // placeholder response
+    setTimeout(() => {
+        setMessages(prev => [...prev, { role: 'assistant', content: 'This is a placeholder response.', time: new Date() }]);
+    }, 1000);
+  };
+
+  return (
+    <div className="flex flex-col h-[calc(100vh-100px)] max-w-4xl mx-auto space-y-4">
+      <div className="flex items-center gap-3 pb-4 border-b">
+        <Bot size={32} className="text-primary" />
+        <div>
+            <h1 className="text-2xl font-bold">AI Assistant</h1>
+            <p className="text-muted-foreground text-sm">Ask me anything about your inventory data.</p>
+        </div>
+      </div>
+      
+      <div className="flex-1 overflow-y-auto space-y-4 p-4 border rounded-xl bg-card">
+        {messages.length === 0 ? (
+            <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground">
+                <Sparkles size={48} className="mb-4 text-primary/50" />
+                <p>Hello! I am your ANTIGRAVITY AI assistant.</p>
+                <div className="flex flex-wrap justify-center gap-2 mt-6">
+                    {suggestions.map(s => (
+                        <button key={s} onClick={() => setInput(s)} className="px-3 py-1.5 text-sm border rounded-full hover:bg-muted transition">
+                            {s}
+                        </button>
+                    ))}
+                </div>
+            </div>
+        ) : (
+            messages.map((m, i) => (
+                <div key={i} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                    <div className={`px-4 py-2 rounded-xl max-w-[80%] ${m.role === 'user' ? 'bg-primary text-primary-foreground' : 'bg-muted'}`}>
+                        {m.content}
+                    </div>
+                </div>
+            ))
+        )}
+        <div ref={endRef} />
+      </div>
+
+      <form onSubmit={sendMessage} className="flex gap-2">
+        <input 
+            type="text" 
+            value={input} 
+            onChange={e => setInput(e.target.value)}
+            placeholder="Type your message..."
+            className="flex-1 px-4 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary"
+        />
+        <button type="submit" disabled={!input.trim()} className="px-4 py-2 bg-primary text-primary-foreground rounded-xl hover:opacity-90 disabled:opacity-50">
+            <Send size={20} />
+        </button>
+      </form>
+    </div>
+  );
+}
+
+/// app\(dashboard)\dashboard\assets\page.tsx
+interface Asset {
+  id: number;
+  asset_code: string;
+  name: string;
+  status: string;
+}
+
+/// app\(dashboard)\dashboard\customers\page.tsx
+interface Customer {
+  id: number;
+  name: string;
+  email: string;
+  phone: string;
+  nic?: string;
+  designation?: string;
+}
+
+/// app\(dashboard)\dashboard\store\brands\page.tsx
+interface Brand {
+  id: number;
+  code: string;
+  name: string;
+  country?: string;
+  description?: string;
+  is_active: boolean;
+  created_at: string;
+}
+
+/// app\(dashboard)\dashboard\store\categories\page.tsx
+interface Category {
+  id: number;
+  code: string;
+  name_en: string;
+  name_si?: string;
+  name_ta?: string;
+  description?: string;
+  is_active: boolean;
+  created_at: string;
+}
+
+/// app\(dashboard)\dashboard\store\departments\page.tsx
+interface Department {
+  id: number;
+  code: string;
+  name_en: string;
+  name_si?: string;
+  name_ta?: string;
+  description?: string;
+  is_active: boolean;
+  created_at: string;
+}
+
+/// app\(dashboard)\dashboard\store\projects\page.tsx
+interface Project {
+  id: number;
+  project_code: string;
+  name_en: string;
+  name_si?: string;
+  name_ta?: string;
+  description?: string;
+  status: 'planning' | 'active' | 'on_hold' | 'completed' | 'cancelled';
+  is_active: boolean;
+  created_at: string;
+}
+
+/// app\(dashboard)\dashboard\store\sub-categories\page.tsx
+interface SubCategory {
+  id: number;
+  name_en: string;
+  category_id: number;
+  category?: { id: number; name_en: string };
+}
+
+/// app\(dashboard)\dashboard\store\suppliers\page.tsx
+interface Supplier {
+  id: number;
+  supplier_code: string;
+  company_name: string;
+  contact_person?: string;
+  telephone?: string;
+  email?: string;
+  status: 'active' | 'inactive' | 'blacklisted';
+  created_at: string;
+}
+
+/// app\(dashboard)\dashboard\store\units\page.tsx
+interface Unit {
+  id: number;
+  code: string;
+  name_en: string;
+  name_si?: string;
+  name_ta?: string;
+  symbol: string;
+  description?: string;
+  is_active: boolean;
+  created_at: string;
+}
+
+/// app\(dashboard)\dashboard\store\warehouses\page.tsx
+interface Warehouse {
+  id: number;
+  code: string;
+  name_en: string;
+  name_si?: string;
+  name_ta?: string;
+  address?: string;
+  telephone?: string;
+  capacity?: number;
+  is_main: boolean;
+  is_active: boolean;
+  created_at: string;
+}
+
+/// app\(dashboard)\layout.tsx
+interface NavItem {
+  label: string;
+  href?: string;
+  icon: React.ElementType;
+  children?: NavItem[];
+  permission?: string;
+}

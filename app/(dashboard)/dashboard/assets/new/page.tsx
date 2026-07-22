@@ -7,7 +7,7 @@ import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { ArrowLeft, Save } from 'lucide-react';
 import Link from 'next/link';
-import api from '@/lib/api';
+import { supabase } from '@/lib/supabase';
 
 export default function NewAssetPage() {
   const router = useRouter();
@@ -15,13 +15,17 @@ export default function NewAssetPage() {
   const { register, handleSubmit, formState: { errors } } = useForm();
 
   const createMutation = useMutation({
-    mutationFn: (data: any) => api.post('/v1/assets', data),
+    mutationFn: async (data: any) => {
+      const { data: result, error } = await supabase.from('assets').insert([data]).select().single();
+      if (error) throw error;
+      return result;
+    },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['assets'] });
       toast.success('Asset created successfully');
       router.push('/dashboard/assets');
     },
-    onError: () => toast.error('Failed to create asset'),
+    onError: (error: any) => toast.error(error?.message || 'Failed to create asset'),
   });
 
   const onSubmit = (data: any) => {

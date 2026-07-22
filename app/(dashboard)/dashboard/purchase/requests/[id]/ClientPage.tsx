@@ -5,14 +5,18 @@ import { useQuery } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, Edit } from 'lucide-react';
 import Link from 'next/link';
-import api from '@/lib/api';
+import { supabase } from '@/lib/supabase';
 
 export default function PurchaseRequestDetailPage({ params }: { params: { id: string } }) {
   const router = useRouter();
 
   const { data: pr, isLoading } = useQuery({
     queryKey: ['purchase_request', params.id],
-    queryFn: () => api.get(`/v1/purchase/requests/${params.id}`).then(r => r.data.data)
+    queryFn: async () => {
+      const { data, error } = await supabase.from('purchase_requests').select('*, department:departments(name_en)').eq('id', params.id).single();
+      if (error) throw error;
+      return data;
+    }
   });
 
   if (isLoading) return <div className="p-8 text-center text-muted-foreground">Loading...</div>;

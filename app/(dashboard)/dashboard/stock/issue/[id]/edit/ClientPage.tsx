@@ -4,7 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useParams, useRouter } from 'next/navigation';
 import { ArrowLeft, Save, Plus, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
-import api from '@/lib/api';
+import { supabase } from '@/lib/supabase';
 import Link from 'next/link';
 
 export default function IssueEditPage() {
@@ -16,16 +16,23 @@ export default function IssueEditPage() {
   const [notes, setNotes] = useState('');
   const [items, setItems] = useState<any[]>([]);
 
-  const { data, isLoading } = useQuery({
+  const { data: issue, isLoading } = useQuery({
     queryKey: ['issue', id],
-    queryFn: () => api.get(`/v1/stock/issues/${id}`).then(r => r.data),
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('stock_issues')
+        .select('*, warehouse:warehouses(id, name_en), items:stock_issue_items(*, item:items(*))')
+        .eq('id', id)
+        .single();
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!id,
   });
-
-  const issue = data?.data;
 
   useEffect(() => {
     if (issue) {
-      setNotes(issue.notes || '');
+      setNotes(issue.notes || issue.remarks || '');
       setItems(issue.items?.map((item: any) => ({
         id: item.id,
         item_id: item.item_id,
@@ -36,13 +43,18 @@ export default function IssueEditPage() {
   }, [issue]);
 
   const updateMutation = useMutation({
-    mutationFn: (data: any) => api.put(`/v1/stock/issues/${id}`, data),
+    mutationFn: async (updateData: any) => {
+      const { notes } = updateData;
+      const { error } = await supabase.from('stock_issues').update({ notes, remarks: notes }).eq('id', id);
+      if (error) throw error;
+      return true;
+    },
     onSuccess: () => {
       toast.success('Issue updated successfully');
-      qc.invalidateQueries({ queryKey: ['issue'] });
+      qc.invalidateQueries({ queryKey: ['issue', id] });
       router.push(`/dashboard/stock/issue/${id}`);
     },
-    onError: () => toast.error('Failed to update issue'),
+    onError: (err: any) => toast.error(err.message || 'Failed to update issue'),
   });
 
   const handleSubmit = (e: React.FormEvent) => {

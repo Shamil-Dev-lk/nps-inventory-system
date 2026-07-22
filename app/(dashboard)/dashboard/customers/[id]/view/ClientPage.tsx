@@ -5,7 +5,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { ArrowLeft, Edit, Printer, Download, User } from 'lucide-react';
 import Link from 'next/link';
-import api from '@/lib/api';
+import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
 
 export default function ViewCustomerPage() {
@@ -16,7 +16,11 @@ export default function ViewCustomerPage() {
   
   const { data: customer, isLoading } = useQuery({
     queryKey: ['customer', id],
-    queryFn: () => api.get(`/v1/customers/${id}`).then((r) => r.data?.data),
+    queryFn: async () => {
+      const { data, error } = await supabase.from('customers').select('*').eq('id', id).single();
+      if (error) throw error;
+      return data;
+    },
   });
   if (isLoading) return <div className="p-8 text-center text-muted-foreground shimmer h-32 rounded-xl max-w-2xl mx-auto" />;
   if (!customer) return <div className="p-8 text-center text-red-500 font-bold">Customer not found</div>;

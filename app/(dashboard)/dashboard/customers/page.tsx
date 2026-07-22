@@ -5,7 +5,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { Plus, Edit, Trash2, Users, Eye, Printer, Download } from 'lucide-react';
 import Link from 'next/link';
-import api from '@/lib/api';
+import { supabase } from '@/lib/supabase';
 
 interface Customer {
   id: number;
@@ -22,16 +22,23 @@ export default function CustomersPage() {
 
   const { data: customers = [], isLoading } = useQuery({
     queryKey: ['customers'],
-    queryFn: () => api.get('/v1/customers').then((r) => r.data?.data || []),
+    queryFn: async () => {
+      const { data, error } = await supabase.from('customers').select('*').order('created_at', { ascending: false });
+      if (error) throw error;
+      return data || [];
+    },
   });
 
   const deleteMutation = useMutation({
-    mutationFn: (id: number) => api.delete(`/v1/customers/${id}`),
+    mutationFn: async (id: number) => {
+      const { error } = await supabase.from('customers').delete().eq('id', id);
+      if (error) throw error;
+    },
     onSuccess: () => {
       toast.success('Customer deleted successfully.');
       qc.invalidateQueries({ queryKey: ['customers'] });
     },
-    onError: () => toast.error('Failed to delete customer.'),
+    onError: (error: any) => toast.error(error?.message || 'Failed to delete customer.'),
   });
 
   const handleDelete = (customer: Customer) => {

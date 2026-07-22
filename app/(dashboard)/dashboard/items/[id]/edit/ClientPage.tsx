@@ -7,7 +7,7 @@ import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { ArrowLeft, Save } from 'lucide-react';
 import Link from 'next/link';
-import api from '@/lib/api';
+import { supabase } from '@/lib/supabase';
 
 export default function EditItemPage({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter();
@@ -19,13 +19,17 @@ export default function EditItemPage({ params }: { params: Promise<{ id: string 
 
   const { data: itemData } = useQuery({ 
     queryKey: ['item', itemId], 
-    queryFn: () => api.get(`/v1/items/${itemId}`).then(r => r.data.data) 
+    queryFn: async () => {
+      const { data, error } = await supabase.from('items').select('*').eq('id', itemId).single();
+      if (error) throw error;
+      return data;
+    } 
   });
 
-  const { data: categories = [] } = useQuery({ queryKey: ['categories'], queryFn: () => api.get('/v1/categories').then(r => r.data.data) });
-  const { data: brands = [] } = useQuery({ queryKey: ['brands'], queryFn: () => api.get('/v1/brands').then(r => r.data.data) });
-  const { data: units = [] } = useQuery({ queryKey: ['units'], queryFn: () => api.get('/v1/units').then(r => r.data.data) });
-  const { data: warehouses = [] } = useQuery({ queryKey: ['warehouses'], queryFn: () => api.get('/v1/warehouses').then(r => r.data.data) });
+  const { data: categories = [] } = useQuery({ queryKey: ['categories'], queryFn: async () => { const { data } = await supabase.from('categories').select('*'); return data || []; } });
+  const { data: brands = [] } = useQuery({ queryKey: ['brands'], queryFn: async () => { const { data } = await supabase.from('brands').select('*'); return data || []; } });
+  const { data: units = [] } = useQuery({ queryKey: ['units'], queryFn: async () => { const { data } = await supabase.from('units').select('*'); return data || []; } });
+  const { data: warehouses = [] } = useQuery({ queryKey: ['warehouses'], queryFn: async () => { const { data } = await supabase.from('warehouses').select('*'); return data || []; } });
 
   useEffect(() => {
     if (itemData) {
@@ -46,14 +50,18 @@ export default function EditItemPage({ params }: { params: Promise<{ id: string 
   }, [itemData, reset]);
 
   const updateMutation = useMutation({
-    mutationFn: (data: any) => api.put(`/v1/items/${params.id}`, data),
+    mutationFn: async (data: any) => {
+      const { error } = await supabase.from('items').update(data).eq('id', itemId);
+      if (error) throw error;
+      return true;
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['items'] });
-      queryClient.invalidateQueries({ queryKey: ['item', params.id] });
+      queryClient.invalidateQueries({ queryKey: ['item', itemId] });
       toast.success('Item updated successfully');
       router.push('/dashboard/items');
     },
-    onError: () => toast.error('Failed to update item'),
+    onError: (err: any) => toast.error(err.message || 'Failed to update item'),
   });
 
   const onSubmit = (data: any) => {

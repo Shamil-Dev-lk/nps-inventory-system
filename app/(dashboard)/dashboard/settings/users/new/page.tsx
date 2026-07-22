@@ -7,7 +7,7 @@ import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { ArrowLeft, Save } from 'lucide-react';
 import Link from 'next/link';
-import api from '@/lib/api';
+import { supabase } from '@/lib/supabase';
 
 export default function NewUserPage() {
   const router = useRouter();
@@ -16,23 +16,35 @@ export default function NewUserPage() {
 
   const { data: rolesData } = useQuery({
     queryKey: ['roles'],
-    queryFn: () => api.get('/v1/roles').then(r => r.data),
+    queryFn: async () => {
+      const { data, error } = await supabase.from('roles').select('*');
+      if (error) throw error;
+      return { data: data || [] };
+    },
   });
 
   const { data: departmentsData } = useQuery({
     queryKey: ['departments'],
-    queryFn: () => api.get('/v1/departments').then(r => r.data),
+    queryFn: async () => {
+      const { data, error } = await supabase.from('departments').select('*');
+      if (error) throw error;
+      return { data: data || [] };
+    },
   });
 
   const createMutation = useMutation({
-    mutationFn: (data: any) => api.post('/v1/users', data),
+    mutationFn: async (userData: any) => {
+      const { data, error } = await supabase.from('users').insert([userData]).select();
+      if (error) throw error;
+      return data;
+    },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['users'] });
       toast.success('User created successfully');
       router.push('/dashboard/settings/users');
     },
     onError: (error: any) => {
-        const message = error.response?.data?.message || 'Failed to create user. Check the fields.';
+        const message = error.message || 'Failed to create user. Check the fields.';
         toast.error(message);
     },
   });

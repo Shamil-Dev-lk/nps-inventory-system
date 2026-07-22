@@ -6,7 +6,7 @@ import { motion } from 'framer-motion';
 import { Plus, Search, Eye, Trash2, ClipboardCheck, Clock, CheckCircle, Printer, FileDown } from 'lucide-react';
 import { toast } from 'sonner';
 import Link from 'next/link';
-import api from '@/lib/api';
+import { supabase } from '@/lib/supabase';
 
 const statusConfig = {
   draft:       { label: 'Draft', class: 'badge-secondary', icon: Clock },
@@ -24,20 +24,41 @@ export default function StockTakingPage() {
 
   const { data, isLoading, refetch } = useQuery({
     queryKey: ['stock-taking', page, search, status],
-    queryFn: () =>
-      api.get('/v1/stock/taking', {
-        params: { page, per_page: perPage, search, status },
-      }).then((r) => r.data),
+    queryFn: async () => {
+      let query = supabase
+        .from('stock_takings')
+        .select('*, warehouse:warehouses(id, name_en)', { count: 'exact' });
+
+      if (search) query = query.ilike('st_number', `%${search}%`);
+      if (status) query = query.eq('status', status);
+
+      const from = (page - 1) * perPage;
+      const to = from + perPage - 1;
+      query = query.range(from, to).order('created_at', { ascending: false });
+
+      const { data: stData, error, count } = await query;
+      if (error) throw error;
+
+      return {
+        data: {
+          data: stData || [],
+          total: count || 0,
+        }
+      };
+    },
     placeholderData: (prev) => prev,
   });
 
   const deleteMutation = useMutation({
-    mutationFn: (id: number) => api.delete(`/v1/stock/taking/${id}`),
+    mutationFn: async (id: number) => {
+      const { error } = await supabase.from('stock_takings').delete().eq('id', id);
+      if (error) throw error;
+    },
     onSuccess: () => {
       toast.success('Session deleted successfully.');
       qc.invalidateQueries({ queryKey: ['stock-taking'] });
     },
-    onError: (err: any) => toast.error(err.response?.data?.message || 'Failed to delete'),
+    onError: (err: any) => toast.error(err.message || 'Failed to delete'),
   });
 
   const handleDelete = (item: any) => {

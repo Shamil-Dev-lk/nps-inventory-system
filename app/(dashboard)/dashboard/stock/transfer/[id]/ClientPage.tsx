@@ -3,7 +3,7 @@ import React, { useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useParams, useSearchParams, useRouter } from 'next/navigation';
 import { ArrowLeft, Package, Calendar, MapPin, FileText, Printer, Download, ArrowRightLeft } from 'lucide-react';
-import api from '@/lib/api';
+import { supabase } from '@/lib/supabase';
 import Link from 'next/link';
 import { PrintLayout } from '@/components/print/PrintLayout';
 
@@ -13,12 +13,25 @@ export default function StockTransferViewPage() {
   const id = params.id;
   const shouldPrint = searchParams.get('print') === 'true';
 
-  const { data, isLoading } = useQuery({
+  const { data: transfer, isLoading } = useQuery({
     queryKey: ['stock-transfer', id],
-    queryFn: () => api.get(`/v1/stock/transfers/${id}`).then(r => r.data),
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('stock_transfers')
+        .select(`
+          *,
+          from_warehouse:from_warehouse_id(id, name_en),
+          to_warehouse:to_warehouse_id(id, name_en),
+          from_department:from_department_id(id, name_en),
+          to_department:to_department_id(id, name_en),
+          items:stock_transfer_items(*, item:items(*, unit:units(*)))
+        `)
+        .eq('id', id)
+        .single();
+      if (error) throw error;
+      return data;
+    },
   });
-
-  const transfer = data?.data;
 
   useEffect(() => {
     if (transfer && shouldPrint) {

@@ -7,7 +7,7 @@ import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { ArrowLeft, Save } from 'lucide-react';
 import Link from 'next/link';
-import api from '@/lib/api';
+import { supabase } from '@/lib/supabase';
 
 export default function EditCustomerPage({ params }: { params: { id: string } }) {
   const router = useRouter();
@@ -16,7 +16,11 @@ export default function EditCustomerPage({ params }: { params: { id: string } })
 
   const { data: customer, isLoading } = useQuery({
     queryKey: ['customer', params.id],
-    queryFn: () => api.get(`/v1/customers/${params.id}`).then((r) => r.data?.data),
+    queryFn: async () => {
+      const { data, error } = await supabase.from('customers').select('*').eq('id', params.id).single();
+      if (error) throw error;
+      return data;
+    },
   });
 
   useEffect(() => {
@@ -24,13 +28,18 @@ export default function EditCustomerPage({ params }: { params: { id: string } })
   }, [customer, reset]);
 
   const updateMutation = useMutation({
-    mutationFn: (data: any) => api.put(`/v1/customers/${params.id}`, data),
+    mutationFn: async (data: any) => {
+      const { id, created_at, updated_at, ...updateData } = data;
+      const { data: result, error } = await supabase.from('customers').update(updateData).eq('id', params.id).select().single();
+      if (error) throw error;
+      return result;
+    },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['customers'] });
       toast.success('Customer updated successfully');
       router.push('/dashboard/customers');
     },
-    onError: () => toast.error('Failed to update customer'),
+    onError: (error: any) => toast.error(error?.message || 'Failed to update customer'),
   });
 
   const onSubmit = (data: any) => {

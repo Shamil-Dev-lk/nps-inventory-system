@@ -3,7 +3,7 @@ import React, { useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useParams, useSearchParams, useRouter } from 'next/navigation';
 import { ArrowLeft, Package, Calendar, MapPin, FileText, CheckCircle, XCircle, Printer, Download } from 'lucide-react';
-import api from '@/lib/api';
+import { supabase } from '@/lib/supabase';
 import Link from 'next/link';
 import { PrintLayout } from '@/components/print/PrintLayout';
 
@@ -14,12 +14,24 @@ export default function StockReturnViewPage() {
   const id = params.id;
   const shouldPrint = searchParams.get('print') === 'true';
 
-  const { data, isLoading } = useQuery({
+  const { data: ret, isLoading } = useQuery({
     queryKey: ['stock-return', id],
-    queryFn: () => api.get(`/v1/stock/returns/${id}`).then(r => r.data),
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('stock_returns')
+        .select(`
+          *,
+          warehouse:warehouses(id, name_en),
+          department:departments(id, name_en),
+          officer:users(id, name),
+          items:stock_return_items(*, item:items(*, unit:units(*)))
+        `)
+        .eq('id', id)
+        .single();
+      if (error) throw error;
+      return data;
+    },
   });
-
-  const ret = data?.data;
 
   useEffect(() => {
     if (ret && shouldPrint) {

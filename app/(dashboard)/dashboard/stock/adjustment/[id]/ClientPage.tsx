@@ -3,7 +3,7 @@ import React, { useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useParams, useSearchParams, useRouter } from 'next/navigation';
 import { ArrowLeft, Package, Calendar, FileText, Printer, Download, SlidersHorizontal } from 'lucide-react';
-import api from '@/lib/api';
+import { supabase } from '@/lib/supabase';
 import Link from 'next/link';
 import { PrintLayout } from '@/components/print/PrintLayout';
 
@@ -13,12 +13,19 @@ export default function StockAdjustmentViewPage() {
   const id = params.id;
   const shouldPrint = searchParams.get('print') === 'true';
 
-  const { data, isLoading } = useQuery({
+  const { data: adjustment, isLoading } = useQuery({
     queryKey: ['stock-adjustment', id],
-    queryFn: () => api.get(`/v1/stock/adjustments/${id}`).then(r => r.data),
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('stock_adjustments')
+        .select('*, warehouse:warehouses(*), item:items(*, unit:units(*))')
+        .eq('id', id)
+        .single();
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!id,
   });
-
-  const adjustment = data?.data;
 
   useEffect(() => {
     if (adjustment && shouldPrint) {

@@ -4,7 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Plus, Search, Eye, CheckCircle, RefreshCw, Printer, FileDown } from 'lucide-react';
 import { toast } from 'sonner';
 import Link from 'next/link';
-import api from '@/lib/api';
+import { supabase } from '@/lib/supabase';
 import { useAuthStore } from '@/store/auth-store';
 
 export default function StockIssuePage() {
@@ -13,17 +13,35 @@ export default function StockIssuePage() {
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState('');
   const [page, setPage] = useState(1);
-  const { data, isLoading, refetch } = useQuery({
+  const { data: issues = [], isLoading, refetch } = useQuery({
     queryKey: ['stock-issues', page, search, status],
-    queryFn: () => api.get('/v1/stock/issues', { params: { page, search, status } }).then(r => r.data),
+    queryFn: async () => {
+      let query = supabase
+        .from('stock_issues')
+        .select('*, department:departments(id, name_en), officer:users(id, name), project:projects(id, name_en), customer:customers(id, name), warehouse:warehouses(id, name_en), issued_by:users(id, name)')
+        .order('created_at', { ascending: false });
+
+      if (search) {
+        query = query.ilike('issue_number', `%${search}%`);
+      }
+      if (status) {
+        query = query.eq('status', status);
+      }
+
+      const { data, error } = await query;
+      if (error) throw error;
+      return data || [];
+    },
   });
   const approveMutation = useMutation({
-    mutationFn: (id: number) => api.post(`/v1/stock/issues/${id}/approve`),
+    mutationFn: async (id: number) => {
+      const { error } = await supabase.from('stock_issues').update({ status: 'approved' }).eq('id', id);
+      if (error) throw error;
+      return true;
+    },
     onSuccess: () => { toast.success('Issue approved.'); qc.invalidateQueries({ queryKey: ['stock-issues'] }); },
-    onError: () => toast.error('Approval failed.'),
+    onError: (err: any) => toast.error(err.message || 'Approval failed.'),
   });
-  const issues = data?.data?.data || [];
-  const meta = data?.data;
   return (
     <div className="space-y-5 max-w-[1600px]">
       <div className="page-header">

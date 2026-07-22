@@ -7,7 +7,7 @@ import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { ArrowLeft, Save } from 'lucide-react';
 import Link from 'next/link';
-import api from '@/lib/api';
+import { supabase } from '@/lib/supabase';
 
 export default function EditUserPage({ params }: { params: { id: string } }) {
   const router = useRouter();
@@ -16,17 +16,29 @@ export default function EditUserPage({ params }: { params: { id: string } }) {
 
   const { data: user, isLoading } = useQuery({
     queryKey: ['user', params.id],
-    queryFn: () => api.get(`/v1/users/${params.id}`).then(r => r.data.data),
+    queryFn: async () => {
+      const { data, error } = await supabase.from('users').select('*').eq('id', params.id).single();
+      if (error) throw error;
+      return data;
+    },
   });
 
   const { data: rolesData } = useQuery({
     queryKey: ['roles'],
-    queryFn: () => api.get('/v1/roles').then(r => r.data),
+    queryFn: async () => {
+      const { data, error } = await supabase.from('roles').select('*');
+      if (error) throw error;
+      return { data: data || [] };
+    },
   });
 
   const { data: departmentsData } = useQuery({
     queryKey: ['departments'],
-    queryFn: () => api.get('/v1/departments').then(r => r.data),
+    queryFn: async () => {
+      const { data, error } = await supabase.from('departments').select('*');
+      if (error) throw error;
+      return { data: data || [] };
+    },
   });
 
   useEffect(() => {
@@ -34,7 +46,7 @@ export default function EditUserPage({ params }: { params: { id: string } }) {
       reset({
         name: user.name,
         email: user.email,
-        role: user.roles?.[0] || '',
+        role: user.roles?.[0] || user.role || '',
         designation: user.designation || '',
         department_id: user.department_id || '',
         phone: user.phone || '',
@@ -45,7 +57,11 @@ export default function EditUserPage({ params }: { params: { id: string } }) {
   }, [user, reset]);
 
   const updateMutation = useMutation({
-    mutationFn: (data: any) => api.put(`/v1/users/${params.id}`, data),
+    mutationFn: async (userData: any) => {
+      const { data, error } = await supabase.from('users').update(userData).eq('id', params.id).select();
+      if (error) throw error;
+      return data;
+    },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['users'] });
       qc.invalidateQueries({ queryKey: ['user', params.id] });
@@ -53,7 +69,7 @@ export default function EditUserPage({ params }: { params: { id: string } }) {
       router.push('/dashboard/settings/users');
     },
     onError: (error: any) => {
-        const message = error.response?.data?.message || 'Failed to update user.';
+        const message = error.message || 'Failed to update user.';
         toast.error(message);
     },
   });

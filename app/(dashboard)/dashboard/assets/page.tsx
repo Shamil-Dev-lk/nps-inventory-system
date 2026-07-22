@@ -5,7 +5,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { Plus, Eye, Edit, Trash2, Package } from 'lucide-react';
 import Link from 'next/link';
-import api from '@/lib/api';
+import { supabase } from '@/lib/supabase';
 
 interface Asset {
   id: number;
@@ -20,16 +20,23 @@ export default function AssetsPage() {
 
   const { data: assets = [], isLoading } = useQuery({
     queryKey: ['assets'],
-    queryFn: () => api.get('/v1/assets').then((r) => r.data?.data || []),
+    queryFn: async () => {
+      const { data, error } = await supabase.from('assets').select('*').order('created_at', { ascending: false });
+      if (error) throw error;
+      return data || [];
+    },
   });
 
   const deleteMutation = useMutation({
-    mutationFn: (id: number) => api.delete(`/v1/assets/${id}`),
+    mutationFn: async (id: number) => {
+      const { error } = await supabase.from('assets').delete().eq('id', id);
+      if (error) throw error;
+    },
     onSuccess: () => {
       toast.success('Asset deleted successfully.');
       qc.invalidateQueries({ queryKey: ['assets'] });
     },
-    onError: () => toast.error('Failed to delete asset.'),
+    onError: (error: any) => toast.error(error?.message || 'Failed to delete asset.'),
   });
 
   const handleDelete = (asset: Asset) => {

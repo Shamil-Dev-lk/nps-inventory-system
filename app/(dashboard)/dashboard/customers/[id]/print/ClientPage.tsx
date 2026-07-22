@@ -2,7 +2,7 @@
 
 import React, { useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import api from '@/lib/api';
+import { supabase } from '@/lib/supabase';
 import { Printer } from 'lucide-react';
 
 import { PrintLayout } from '@/components/print/PrintLayout';
@@ -10,7 +10,11 @@ import { PrintLayout } from '@/components/print/PrintLayout';
 export default function PrintCustomerPage({ params }: { params: { id: string } }) {
   const { data: customer, isLoading } = useQuery({
     queryKey: ['customer', params.id],
-    queryFn: () => api.get(`/v1/customers/${params.id}`).then((r) => r.data?.data),
+    queryFn: async () => {
+      const { data, error } = await supabase.from('customers').select('*').eq('id', params.id).single();
+      if (error) throw error;
+      return data;
+    },
   });
 
   useEffect(() => {

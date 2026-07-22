@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { RefreshCw, Search, Download, Filter, Package, AlertTriangle, CheckCircle, FileText } from 'lucide-react';
-import api from '@/lib/api';
+import { supabase } from '@/lib/supabase';
 
 export default function CurrentStockPage() {
   const [search, setSearch] = useState('');
@@ -13,21 +13,65 @@ export default function CurrentStockPage() {
 
   const { data, isLoading, refetch } = useQuery({
     queryKey: ['report-current-stock', page, search, categoryId, warehouseId],
-    queryFn: () =>
-      api.get('/v1/reports/current-stock', {
-        params: { page, per_page: perPage, search, category_id: categoryId, warehouse_id: warehouseId },
-      }).then((r) => r.data),
+    queryFn: async () => {
+      let query = supabase
+        .from('items')
+        .select('*, category:categories(id, name_en), warehouse:warehouses(id, name_en), unit:units(id, short_name)', { count: 'exact' });
+
+      if (search) query = query.or(`name_en.ilike.%${search}%,item_code.ilike.%${search}%`);
+      if (categoryId) query = query.eq('category_id', categoryId);
+      if (warehouseId) query = query.eq('warehouse_id', warehouseId);
+
+      const from = (page - 1) * perPage;
+      const to = from + perPage - 1;
+      query = query.range(from, to).order('created_at', { ascending: false });
+
+      const { data: rawItems, error, count } = await query;
+      if (error) throw error;
+
+      const { data: allItems, error: summaryError } = await supabase.from('items').select('current_quantity, average_cost, reorder_level');
+      if (summaryError) throw summaryError;
+
+      const totalItems = allItems?.length || 0;
+      const totalValue = allItems?.reduce((sum: number, item: any) => sum + (Number(item.current_quantity || 0) * Number(item.average_cost || 0)), 0) || 0;
+      const lowStockCount = allItems?.filter((item: any) => (item.current_quantity || 0) <= (item.reorder_level || 0) && (item.current_quantity || 0) > 0).length || 0;
+      const outOfStockCount = allItems?.filter((item: any) => (item.current_quantity || 0) <= 0).length || 0;
+
+      return {
+        data: {
+          data: rawItems || [],
+          total: count || 0,
+          from: from + 1,
+          to: Math.min(from + perPage, count || 0),
+          last_page: Math.ceil((count || 0) / perPage),
+        },
+        summary: {
+          total_items: totalItems,
+          total_value: totalValue,
+          low_stock_count: lowStockCount,
+          out_of_stock_count: outOfStockCount,
+        }
+      };
+    },
     placeholderData: (prev) => prev,
   });
 
   const { data: categories } = useQuery({
     queryKey: ['categories'],
-    queryFn: () => api.get('/v1/categories').then((r) => r.data.data),
+    queryFn: async () => {
+      const { data, error } = await supabase.from('categories').select('*');
+      if (error) throw error;
+      return data || [];
+    },
   });
 
   const { data: warehouses } = useQuery({
     queryKey: ['warehouses'],
-    queryFn: () => api.get('/v1/warehouses').then((r) => r.data.data),
+    queryFn: async () => {
+      const { data, error } = await supabase.from('warehouses').select('*');
+      if (error) throw error;
+      return data || [];
+    },
   });
 
   const items = data?.data?.data || [];

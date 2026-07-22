@@ -5,7 +5,7 @@ import { motion } from 'framer-motion';
 import { Plus, Search, Eye, Edit, CheckCircle, XCircle, RefreshCw, Printer, FileDown } from 'lucide-react';
 import { toast } from 'sonner';
 import Link from 'next/link';
-import api from '@/lib/api';
+import { supabase } from '@/lib/supabase';
 import { useAuthStore } from '@/store/auth-store';
 
 export default function GrnPage() {
@@ -16,15 +16,48 @@ export default function GrnPage() {
   const [page, setPage] = useState(1);
   const { data, isLoading, refetch } = useQuery({
     queryKey: ['grn', page, search, status],
-    queryFn: () => api.get('/v1/grn', { params: { page, search, status } }).then(r => r.data),
+    queryFn: async () => {
+      let query = supabase
+        .from('grns')
+        .select('*, supplier:suppliers(id, company_name, name), warehouse:warehouses(id, name_en)', { count: 'exact' });
+
+      if (search) {
+        query = query.or(`grn_number.ilike.%${search}%,invoice_number.ilike.%${search}%`);
+      }
+      if (status) {
+        query = query.eq('status', status);
+      }
+
+      const perPage = 20;
+      const from = (page - 1) * perPage;
+      const to = from + perPage - 1;
+      query = query.range(from, to).order('created_at', { ascending: false });
+
+      const { data: list, error, count } = await query;
+      if (error) throw error;
+
+      return {
+        grns: list || [],
+        meta: {
+          total: count || 0,
+          from: from + 1,
+          to: Math.min(from + perPage, count || 0),
+          last_page: Math.ceil((count || 0) / perPage),
+        }
+      };
+    },
   });
   const approveMutation = useMutation({
-    mutationFn: (id: number) => api.post(`/v1/grn/${id}/approve`),
+    mutationFn: async (id: number) => {
+      const { error } = await supabase.from('grns').update({ status: 'approved' }).eq('id', id);
+      if (error) throw error;
+      return true;
+    },
     onSuccess: () => { toast.success('GRN approved.'); qc.invalidateQueries({ queryKey: ['grn'] }); },
-    onError: () => toast.error('Failed to approve.'),
+    onError: (err: any) => toast.error(err.message || 'Failed to approve.'),
   });
-  const grns = data?.data?.data || [];
-  const meta = data?.data;
+  const grns = data?.grns || [];
+  const meta = data?.meta;
   return (
     <div className="space-y-5 max-w-[1600px]">
       <div className="page-header">

@@ -7,7 +7,7 @@ import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { ArrowLeft, Save, ScanLine, QrCode } from 'lucide-react';
 import Link from 'next/link';
-import api from '@/lib/api';
+import { supabase } from '@/lib/supabase';
 import { BarcodeScannerModal } from '@/components/scanner/BarcodeScannerModal';
 
 export default function NewStockAdjustmentPage() {
@@ -32,8 +32,23 @@ export default function NewStockAdjustmentPage() {
   
   const selectedItemId = watch('item_id');
 
-  const { data: warehouses = [] } = useQuery({ queryKey: ['warehouses'], queryFn: () => api.get('/v1/warehouses').then(r => r.data.data) });
-  const { data: itemsList = [] } = useQuery({ queryKey: ['items'], queryFn: () => api.get('/v1/items?per_page=1000').then(r => (r.data?.data?.data || r.data?.data || r.data || [])) });
+  const { data: warehouses = [] } = useQuery({
+    queryKey: ['warehouses'],
+    queryFn: async () => {
+      const { data, error } = await supabase.from('warehouses').select('*');
+      if (error) throw error;
+      return data || [];
+    }
+  });
+
+  const { data: itemsList = [] } = useQuery({
+    queryKey: ['items'],
+    queryFn: async () => {
+      const { data, error } = await supabase.from('items').select('*');
+      if (error) throw error;
+      return data || [];
+    }
+  });
 
   const handleBarcodeScan = (code: string) => {
     if (!code) return;
@@ -50,14 +65,18 @@ export default function NewStockAdjustmentPage() {
   };
 
   const createMutation = useMutation({
-    mutationFn: (data: any) => api.post('/v1/stock/adjustments', data),
-    onSuccess: (data) => {
+    mutationFn: async (data: any) => {
+      const { data: res, error } = await supabase.from('stock_adjustments').insert([data]).select().single();
+      if (error) throw error;
+      return res;
+    },
+    onSuccess: (data: any) => {
       queryClient.invalidateQueries({ queryKey: ['stock-adjustments'] });
       toast.success('Stock adjustment created successfully');
-      router.push(`/dashboard/stock/adjustment/${data.data.data.id}?print=true`);
+      router.push(`/dashboard/stock/adjustment/${data.id}?print=true`);
     },
     onError: (err: any) => {
-      toast.error(err.response?.data?.message || 'Failed to create stock adjustment');
+      toast.error(err.message || 'Failed to create stock adjustment');
     },
   });
 

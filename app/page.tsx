@@ -1,10 +1,5 @@
-import { Suspense } from 'react';
-import Redirector from './Redirector';
+import { redirect } from 'next/navigation';
 
 export default function HomePage() {
-  return (
-    <Suspense fallback={null}>
-      <Redirector />
-    </Suspense>
-  );
+  redirect('/dashboard');
 }

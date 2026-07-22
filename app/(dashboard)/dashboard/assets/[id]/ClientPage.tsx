@@ -7,7 +7,7 @@ import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { ArrowLeft, Save } from 'lucide-react';
 import Link from 'next/link';
-import api from '@/lib/api';
+import { supabase } from '@/lib/supabase';
 
 export default function EditAssetPage({ params }: { params: { id: string } }) {
   const router = useRouter();
@@ -16,7 +16,11 @@ export default function EditAssetPage({ params }: { params: { id: string } }) {
 
   const { data: asset, isLoading } = useQuery({
     queryKey: ['asset', params.id],
-    queryFn: () => api.get(`/v1/assets/${params.id}`).then((r) => r.data?.data),
+    queryFn: async () => {
+      const { data, error } = await supabase.from('assets').select('*').eq('id', params.id).single();
+      if (error) throw error;
+      return data;
+    },
   });
 
   useEffect(() => {
@@ -24,13 +28,18 @@ export default function EditAssetPage({ params }: { params: { id: string } }) {
   }, [asset, reset]);
 
   const updateMutation = useMutation({
-    mutationFn: (data: any) => api.put(`/v1/assets/${params.id}`, data),
+    mutationFn: async (data: any) => {
+      const { id, created_at, updated_at, ...updateData } = data;
+      const { data: result, error } = await supabase.from('assets').update(updateData).eq('id', params.id).select().single();
+      if (error) throw error;
+      return result;
+    },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['assets'] });
       toast.success('Asset updated successfully');
       router.push('/dashboard/assets');
     },
-    onError: () => toast.error('Failed to update asset'),
+    onError: (error: any) => toast.error(error?.message || 'Failed to update asset'),
   });
 
   const onSubmit = (data: any) => {

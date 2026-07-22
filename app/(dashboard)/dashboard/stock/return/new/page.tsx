@@ -7,7 +7,7 @@ import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { ArrowLeft, Plus, Trash2, Save, ScanLine, QrCode } from 'lucide-react';
 import Link from 'next/link';
-import api from '@/lib/api';
+import { supabase } from '@/lib/supabase';
 import { BarcodeScannerModal } from '@/components/scanner/BarcodeScannerModal';
 
 export default function NewStockReturnPage() {
@@ -28,10 +28,38 @@ export default function NewStockReturnPage() {
   const [isScannerOpen, setIsScannerOpen] = useState(false);
   const [barcodeInput, setBarcodeInput] = useState('');
 
-  const { data: departments = [] } = useQuery({ queryKey: ['departments'], queryFn: () => api.get('/v1/departments').then(r => r.data.data) });
-  const { data: warehouses = [] } = useQuery({ queryKey: ['warehouses'], queryFn: () => api.get('/v1/warehouses').then(r => r.data.data) });
-  const { data: users = [] } = useQuery({ queryKey: ['users'], queryFn: () => api.get('/v1/users').then(r => r.data.data) });
-  const { data: itemsList = [] } = useQuery({ queryKey: ['items'], queryFn: () => api.get('/v1/items?per_page=1000').then(r => (r.data?.data?.data || r.data?.data || r.data || [])) });
+  const { data: departments = [] } = useQuery({ 
+    queryKey: ['departments'], 
+    queryFn: async () => {
+      const { data, error } = await supabase.from('departments').select('*');
+      if (error) throw error;
+      return data || [];
+    }
+  });
+  const { data: warehouses = [] } = useQuery({ 
+    queryKey: ['warehouses'], 
+    queryFn: async () => {
+      const { data, error } = await supabase.from('warehouses').select('*');
+      if (error) throw error;
+      return data || [];
+    }
+  });
+  const { data: users = [] } = useQuery({ 
+    queryKey: ['users'], 
+    queryFn: async () => {
+      const { data, error } = await supabase.from('users').select('*');
+      if (error) throw error;
+      return data || [];
+    }
+  });
+  const { data: itemsList = [] } = useQuery({ 
+    queryKey: ['items'], 
+    queryFn: async () => {
+      const { data, error } = await supabase.from('items').select('*');
+      if (error) throw error;
+      return data || [];
+    }
+  });
 
   const handleBarcodeScan = (code: string) => {
     if (!code) return;
@@ -60,14 +88,35 @@ export default function NewStockReturnPage() {
   };
 
   const createMutation = useMutation({
-    mutationFn: (data: any) => api.post('/v1/stock/returns', data),
-    onSuccess: (data) => {
+    mutationFn: async (formData: any) => {
+      const { items, ...returnHeader } = formData;
+      const return_number = `RET-${Date.now().toString().slice(-6)}`;
+      const { data: ret, error: retError } = await supabase
+        .from('stock_returns')
+        .insert([{ ...returnHeader, return_number, status: 'draft' }])
+        .select()
+        .single();
+      if (retError) throw retError;
+
+      if (items && items.length > 0) {
+        const returnItems = items.map((i: any) => ({
+          stock_return_id: ret.id,
+          item_id: i.item_id,
+          quantity: i.quantity,
+          remarks: i.remarks || null,
+        }));
+        const { error: itemsError } = await supabase.from('stock_return_items').insert(returnItems);
+        if (itemsError) throw itemsError;
+      }
+      return ret;
+    },
+    onSuccess: (ret) => {
       queryClient.invalidateQueries({ queryKey: ['stock-returns'] });
       toast.success('Stock return created successfully');
-      router.push(`/dashboard/stock/return/${data.data.data.id}?print=true`);
+      router.push(`/dashboard/stock/return/${ret.id}?print=true`);
     },
     onError: (err: any) => {
-      toast.error(err.response?.data?.message || 'Failed to create stock return');
+      toast.error(err.message || 'Failed to create stock return');
     },
   });
 

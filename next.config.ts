@@ -1,8 +1,6 @@
 import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
-  output: 'export',
-  basePath: '/government-stock-system',
   images: {
     unoptimized: true,
   },
@@ -12,6 +10,7 @@ const nextConfig: NextConfig = {
   eslint: {
     ignoreDuringBuilds: true,
   },
+  output: 'export',
 };
 
 export default nextConfig;

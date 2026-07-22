@@ -1,10 +1,10 @@
-﻿'use client';
+'use client';
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, PieChart, Pie, Cell } from 'recharts';
 import { TrendingUp, Package, AlertTriangle, DollarSign, RefreshCw } from 'lucide-react';
-import api from '@/lib/api';
+import { supabase } from '@/lib/supabase';
 import { useOrgStore } from '@/store/org-store';
 
 const COLORS = ['#006838','#8DC63F','#FDB913','#00a651','#2ecc71','#f39c12'];
@@ -13,7 +13,36 @@ export default function AnalyticsPage() {
   const { org } = useOrgStore();
   const { data, isLoading, refetch } = useQuery({
     queryKey: ['dashboard-analytics'],
-    queryFn: () => api.get('/v1/reports/analytics').then(r => r.data),
+    queryFn: async () => {
+      const { data: items, error: itemsErr } = await supabase.from('items').select('*, category:categories(name_en)');
+      if (itemsErr) throw itemsErr;
+
+      const totalItems = items?.length || 0;
+      const totalValue = items?.reduce((sum: number, item: any) => sum + (Number(item.current_quantity || 0) * Number(item.average_cost || 0)), 0) || 0;
+      const lowStockCount = items?.filter((item: any) => (item.current_quantity || 0) <= (item.reorder_level || 0) && (item.current_quantity || 0) > 0).length || 0;
+      const outOfStockCount = items?.filter((item: any) => (item.current_quantity || 0) <= 0).length || 0;
+
+      const categoryMap: Record<string, { category: { name_en: string }, count: number, value: number }> = {};
+      items?.forEach((item: any) => {
+        const catName = item.category?.name_en || 'Other';
+        if (!categoryMap[catName]) {
+          categoryMap[catName] = { category: { name_en: catName }, count: 0, value: 0 };
+        }
+        categoryMap[catName].count += 1;
+        categoryMap[catName].value += Number(item.current_quantity || 0) * Number(item.average_cost || 0);
+      });
+
+      return {
+        inventory: {
+          total_items: totalItems,
+          total_value: totalValue,
+          low_stock_count: lowStockCount,
+          out_of_stock_count: outOfStockCount,
+        },
+        stock_by_category: Object.values(categoryMap),
+        monthly_trend: [],
+      };
+    },
   });
   const fmt = (v: number) => `Rs. ${Number(v).toLocaleString('en-LK', {minimumFractionDigits:0,maximumFractionDigits:0})}`;
   const trend = data?.monthly_trend || [];

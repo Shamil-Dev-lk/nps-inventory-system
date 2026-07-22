@@ -14,6 +14,7 @@ import Link from 'next/link';
 import api from '@/lib/api';
 import { useAuthStore } from '@/store/auth-store';
 import { exportToCsv } from '@/lib/export';
+import { supabase } from '@/lib/supabase';
 import type { Item } from '@/types';
 import { StickerGeneratorDialog } from '@/components/print/StickerGeneratorDialog';
 import { QRGeneratorDialog } from '@/components/print/QRGeneratorDialog';
@@ -44,8 +45,9 @@ export default function ItemsPage() {
   const handlePrintAllStickers = async () => {
     try {
       setIsFetchingAll(true);
-      const res = await api.get('/v1/items', { params: { per_page: 9999 } });
-      setSelectedItems(res.data.data.data || []);
+      const { data, error } = await supabase.from('items').select('*, category:categories(id, name_en)');
+      if (error) throw error;
+      setSelectedItems(data as any[] || []);
       setStickerOpen(true);
     } catch (error) {
       toast.error('Failed to load all items for printing');
@@ -55,7 +57,7 @@ export default function ItemsPage() {
   };
 
   const toggleSelectAll = (checked: boolean) => {
-    if (checked && data?.data?.data) setSelectedItems(data.data.data);
+    if (checked && data?.data) setSelectedItems(data.data as any[]);
     else setSelectedItems([]);
   };
 
@@ -68,27 +70,58 @@ export default function ItemsPage() {
 
   const { data, isLoading, refetch } = useQuery({
     queryKey: ['items', page, search, categoryId, statusFilter],
-    queryFn: () =>
-      api.get('/v1/items', {
-        params: { page, per_page: perPage, search, category_id: categoryId, status: statusFilter },
-      }).then((r) => r.data),
+    queryFn: async () => {
+      let query = supabase
+        .from('items')
+        .select('*, category:categories(id, name_en)', { count: 'exact' });
+        
+      if (search) query = query.or(`name_en.ilike.%${search}%,item_code.ilike.%${search}%,barcode.ilike.%${search}%`);
+      if (categoryId) query = query.eq('category_id', categoryId);
+      
+      const from = (page - 1) * perPage;
+      const to = from + perPage - 1;
+      query = query.range(from, to).order('created_at', { ascending: false });
+      
+      const { data, error, count } = await query;
+      if (error) throw error;
+      
+      return {
+        data: data || [],
+        total: count || 0,
+        from: from + 1,
+        to: Math.min(from + perPage, count || 0),
+        last_page: Math.ceil((count || 0) / perPage),
+        summary: {
+           total_items: count || 0,
+           total_value: data?.reduce((acc: number, curr: any) => acc + ((curr.average_cost || 0) * (curr.current_quantity || 0)), 0) || 0,
+           low_stock_count: data?.filter(i => i.is_low_stock && !i.is_out_of_stock).length || 0,
+           out_of_stock_count: data?.filter(i => i.is_out_of_stock).length || 0,
+        }
+      };
+    },
     placeholderData: (prev) => prev,
   });
 
   const { data: categories } = useQuery({
     queryKey: ['item-categories'],
-    queryFn: () => api.get('/v1/categories').then((r) => r.data.data),
+    queryFn: async () => {
+      const { data } = await supabase.from('categories').select('*');
+      return data || [];
+    }
   });
 
   const deleteMutation = useMutation({
-    mutationFn: (id: number) => api.delete(`/v1/items/${id}`),
+    mutationFn: async (id: number | string) => {
+      const { error } = await supabase.from('items').delete().eq('id', id);
+      if (error) throw error;
+      return true;
+    },
     onSuccess: () => {
       toast.success('Item deleted successfully.');
       qc.invalidateQueries({ queryKey: ['items'] });
     },
     onError: (err: any) => {
-      const msg = err.response?.data?.message || 'Failed to delete item.';
-      toast.error(msg);
+      toast.error(err.message || 'Failed to delete item.');
     },
   });
 
@@ -98,8 +131,8 @@ export default function ItemsPage() {
     }
   };
 
-  const items: Item[] = data?.data?.data || [];
-  const meta = data?.data;
+  const items: Item[] = (data as any)?.data || [];
+  const meta = data;
 
   return (
     <div className="space-y-5 max-w-[1600px]">

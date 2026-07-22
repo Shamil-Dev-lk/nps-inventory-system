@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Plus, Search, Eye, RefreshCw } from 'lucide-react';
 import Link from 'next/link';
-import api from '@/lib/api';
+import { supabase } from '@/lib/supabase';
 import { useAuthStore } from '@/store/auth-store';
 
 export default function PurchaseOrdersPage() {
@@ -11,11 +11,22 @@ export default function PurchaseOrdersPage() {
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState('');
   const [page, setPage] = useState(1);
-  const { data, isLoading, refetch } = useQuery({
+  const { data: posData, isLoading, refetch } = useQuery({
     queryKey: ['purchase-orders', page, search, status],
-    queryFn: () => api.get('/v1/purchase/orders', { params: { page, search, status } }).then(r => r.data),
+    queryFn: async () => {
+      let query = supabase.from('purchase_orders').select('*, supplier:suppliers(name)').order('created_at', { ascending: false });
+      if (search) {
+        query = query.ilike('po_number', `%${search}%`);
+      }
+      if (status) {
+        query = query.eq('status', status);
+      }
+      const { data, error } = await query;
+      if (error) throw error;
+      return data || [];
+    },
   });
-  const pos = data?.data?.data || [];
+  const pos = Array.isArray(posData) ? posData : (posData as any)?.data?.data || [];
 
   return (
     <div className="space-y-5 max-w-[1600px]">

@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { RefreshCw, Filter, FileText, Download, TrendingUp, FileCheck } from 'lucide-react';
-import api from '@/lib/api';
+import { supabase } from '@/lib/supabase';
 
 export default function IssueReportPage() {
   const [departmentId, setDepartmentId] = useState('');
@@ -14,16 +14,43 @@ export default function IssueReportPage() {
 
   const { data, isLoading, refetch } = useQuery({
     queryKey: ['report-issue', page, departmentId, fromDate, toDate, status],
-    queryFn: () =>
-      api.get('/v1/reports/issues', {
-        params: { page, per_page: perPage, department_id: departmentId, from_date: fromDate, to_date: toDate, status },
-      }).then((r) => r.data),
+    queryFn: async () => {
+      let query = supabase
+        .from('stock_issues')
+        .select('*, department:departments(id, name_en), warehouse:warehouses(id, name_en)', { count: 'exact' });
+
+      if (departmentId) query = query.eq('department_id', departmentId);
+      if (status) query = query.eq('status', status);
+      if (fromDate) query = query.gte('issue_date', fromDate);
+      if (toDate) query = query.lte('issue_date', toDate);
+
+      const from = (page - 1) * perPage;
+      const to = from + perPage - 1;
+      query = query.range(from, to).order('created_at', { ascending: false });
+
+      const { data: rawIssues, error, count } = await query;
+      if (error) throw error;
+
+      return {
+        data: {
+          data: rawIssues || [],
+          total: count || 0,
+          from: from + 1,
+          to: Math.min(from + perPage, count || 0),
+          last_page: Math.ceil((count || 0) / perPage),
+        }
+      };
+    },
     placeholderData: (prev) => prev,
   });
 
   const { data: departments } = useQuery({
     queryKey: ['departments'],
-    queryFn: () => api.get('/v1/departments', { params: { per_page: 1000 } }).then((r) => r.data.data.data),
+    queryFn: async () => {
+      const { data, error } = await supabase.from('departments').select('*');
+      if (error) throw error;
+      return data || [];
+    },
   });
 
   const issues = data?.data?.data || [];

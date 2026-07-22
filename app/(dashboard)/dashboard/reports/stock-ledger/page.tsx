@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { RefreshCw, Filter, FileText, Download } from 'lucide-react';
-import api from '@/lib/api';
+import { supabase } from '@/lib/supabase';
 
 export default function StockLedgerPage() {
   const [itemId, setItemId] = useState('');
@@ -15,21 +15,53 @@ export default function StockLedgerPage() {
 
   const { data, isLoading, refetch } = useQuery({
     queryKey: ['report-stock-ledger', page, itemId, warehouseId, fromDate, toDate, transactionType],
-    queryFn: () =>
-      api.get('/v1/reports/stock-ledger', {
-        params: { page, per_page: perPage, item_id: itemId, warehouse_id: warehouseId, from_date: fromDate, to_date: toDate, transaction_type: transactionType },
-      }).then((r) => r.data),
+    queryFn: async () => {
+      let query = supabase
+        .from('stock_ledger')
+        .select('*, item:items(id, name_en, item_code), warehouse:warehouses(id, name_en)', { count: 'exact' });
+
+      if (itemId) query = query.eq('item_id', itemId);
+      if (warehouseId) query = query.eq('warehouse_id', warehouseId);
+      if (transactionType) query = query.eq('transaction_type', transactionType);
+      if (fromDate) query = query.gte('transaction_date', fromDate);
+      if (toDate) query = query.lte('transaction_date', toDate);
+
+      const from = (page - 1) * perPage;
+      const to = from + perPage - 1;
+      query = query.range(from, to).order('created_at', { ascending: false });
+
+      const { data: rawEntries, error, count } = await query;
+      if (error) throw error;
+
+      return {
+        data: {
+          data: rawEntries || [],
+          total: count || 0,
+          from: from + 1,
+          to: Math.min(from + perPage, count || 0),
+          last_page: Math.ceil((count || 0) / perPage),
+        }
+      };
+    },
     placeholderData: (prev) => prev,
   });
 
   const { data: itemsList } = useQuery({
     queryKey: ['items-list'],
-    queryFn: () => api.get('/v1/items', { params: { per_page: 1000 } }).then((r) => r.data.data.data),
+    queryFn: async () => {
+      const { data, error } = await supabase.from('items').select('id, item_code, name_en');
+      if (error) throw error;
+      return data || [];
+    },
   });
 
   const { data: warehouses } = useQuery({
     queryKey: ['warehouses'],
-    queryFn: () => api.get('/v1/warehouses').then((r) => r.data.data),
+    queryFn: async () => {
+      const { data, error } = await supabase.from('warehouses').select('*');
+      if (error) throw error;
+      return data || [];
+    },
   });
 
   const entries = data?.data?.data || [];

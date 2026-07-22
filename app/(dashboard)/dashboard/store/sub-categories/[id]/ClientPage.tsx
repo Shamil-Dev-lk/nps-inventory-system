@@ -7,7 +7,7 @@ import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { ArrowLeft, Save } from 'lucide-react';
 import Link from 'next/link';
-import api from '@/lib/api';
+import { supabase } from '@/lib/supabase';
 
 export default function EditSubCategoryPage({ params }: { params: { id: string } }) {
   const router = useRouter();
@@ -16,12 +16,20 @@ export default function EditSubCategoryPage({ params }: { params: { id: string }
 
   const { data: categories = [] } = useQuery({ 
     queryKey: ['categories'], 
-    queryFn: () => api.get('/v1/categories').then(r => r.data?.data || []) 
+    queryFn: async () => {
+      const { data, error } = await supabase.from('categories').select('*');
+      if (error) throw error;
+      return data || [];
+    }
   });
 
   const { data: subCategory, isLoading } = useQuery({
     queryKey: ['sub-category', params.id],
-    queryFn: () => api.get(`/v1/sub-categories/${params.id}`).then((r) => r.data?.data),
+    queryFn: async () => {
+      const { data, error } = await supabase.from('sub_categories').select('*').eq('id', params.id).single();
+      if (error) throw error;
+      return data;
+    },
   });
 
   useEffect(() => {
@@ -29,13 +37,17 @@ export default function EditSubCategoryPage({ params }: { params: { id: string }
   }, [subCategory, reset]);
 
   const updateMutation = useMutation({
-    mutationFn: (data: any) => api.put(`/v1/sub-categories/${params.id}`, data),
+    mutationFn: async (data: any) => {
+      const { error } = await supabase.from('sub_categories').update(data).eq('id', params.id);
+      if (error) throw error;
+      return true;
+    },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['sub-categories'] });
       toast.success('Sub-category updated successfully');
       router.push('/dashboard/store/sub-categories');
     },
-    onError: () => toast.error('Failed to update sub-category'),
+    onError: (err: any) => toast.error(err.message || 'Failed to update sub-category'),
   });
 
   const onSubmit = (data: any) => {

@@ -7,7 +7,7 @@ import { toast } from 'sonner';
 import { DataTable, Column } from '@/components/ui/data-table';
 import { ConfirmDeleteDialog } from '@/components/ui/confirm-delete-dialog';
 import { Modal } from '@/components/ui/modal';
-import api from '@/lib/api';
+import { supabase } from '@/lib/supabase';
 
 interface Supplier {
   id: number;
@@ -33,11 +33,19 @@ export default function SuppliersPage() {
 
   const { data: suppliers = [], isLoading } = useQuery({
     queryKey: ['suppliers'],
-    queryFn: () => api.get('/v1/suppliers').then((r) => (r.data?.data || []) as Supplier[]),
+    queryFn: async () => {
+      const { data, error } = await supabase.from('suppliers').select('*').order('created_at', { ascending: false });
+      if (error) throw error;
+      return data as Supplier[];
+    },
   });
 
   const createMutation = useMutation({
-    mutationFn: (data: SupplierFormData) => api.post('/v1/suppliers', data),
+    mutationFn: async (data: SupplierFormData) => {
+      const { error } = await supabase.from('suppliers').insert([data]);
+      if (error) throw error;
+      return true;
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['suppliers'] });
       toast.success('Supplier created successfully');
@@ -47,8 +55,11 @@ export default function SuppliersPage() {
   });
 
   const updateMutation = useMutation({
-    mutationFn: (data: { id: number; payload: SupplierFormData }) => 
-      api.put(`/v1/suppliers/${data.id}`, data.payload),
+    mutationFn: async (data: { id: number; payload: SupplierFormData }) => {
+      const { error } = await supabase.from('suppliers').update(data.payload).eq('id', data.id);
+      if (error) throw error;
+      return true;
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['suppliers'] });
       toast.success('Supplier updated successfully');
@@ -58,7 +69,11 @@ export default function SuppliersPage() {
   });
 
   const deleteMutation = useMutation({
-    mutationFn: (id: number) => api.delete(`/v1/suppliers/${id}`),
+    mutationFn: async (id: number) => {
+      const { error } = await supabase.from('suppliers').delete().eq('id', id);
+      if (error) throw error;
+      return true;
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['suppliers'] });
       toast.success('Supplier deleted successfully');

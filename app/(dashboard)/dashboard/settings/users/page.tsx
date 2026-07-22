@@ -1,10 +1,10 @@
-﻿'use client';
+'use client';
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Plus, Search, Edit, Trash2, RefreshCw, Shield, UserCheck, UserX } from 'lucide-react';
 import { toast } from 'sonner';
 import Link from 'next/link';
-import api from '@/lib/api';
+import { supabase } from '@/lib/supabase';
 import { useAuthStore } from '@/store/auth-store';
 
 export default function UsersPage() {
@@ -14,17 +14,53 @@ export default function UsersPage() {
   const [page, setPage] = useState(1);
   const { data, isLoading, refetch } = useQuery({
     queryKey: ['users', page, search],
-    queryFn: () => api.get('/v1/users', { params: { page, search } }).then(r => r.data),
+    queryFn: async () => {
+      let query = supabase
+        .from('users')
+        .select('*, department:departments(id, name_en)', { count: 'exact' });
+
+      if (search) {
+        query = query.or(`name.ilike.%${search}%,email.ilike.%${search}%,employee_id.ilike.%${search}%`);
+      }
+
+      const perPage = 20;
+      const from = (page - 1) * perPage;
+      const to = from + perPage - 1;
+      query = query.range(from, to).order('created_at', { ascending: false });
+
+      const { data: rawUsers, error, count } = await query;
+      if (error) throw error;
+
+      return {
+        data: rawUsers || [],
+        meta: {
+          total: count || 0,
+          from: from + 1,
+          to: Math.min(from + perPage, count || 0),
+          last_page: Math.ceil((count || 0) / perPage),
+        }
+      };
+    },
   });
   const toggleMutation = useMutation({
-    mutationFn: (id: number) => api.patch(`/v1/users/${id}/toggle-status`),
-    onSuccess: (_, id) => { toast.success('User status updated.'); qc.invalidateQueries({ queryKey: ['users'] }); },
-    onError: () => toast.error('Failed to update status.'),
+    mutationFn: async (id: number | string) => {
+      const { data: user, error: fetchErr } = await supabase.from('users').select('is_active').eq('id', id).single();
+      if (fetchErr) throw fetchErr;
+      const { error } = await supabase.from('users').update({ is_active: !user.is_active }).eq('id', id);
+      if (error) throw error;
+      return true;
+    },
+    onSuccess: () => { toast.success('User status updated.'); qc.invalidateQueries({ queryKey: ['users'] }); },
+    onError: (err: any) => toast.error(err.message || 'Failed to update status.'),
   });
   const deleteMutation = useMutation({
-    mutationFn: (id: number) => api.delete(`/v1/users/${id}`),
+    mutationFn: async (id: number | string) => {
+      const { error } = await supabase.from('users').delete().eq('id', id);
+      if (error) throw error;
+      return true;
+    },
     onSuccess: () => { toast.success('User deleted.'); qc.invalidateQueries({ queryKey: ['users'] }); },
-    onError: () => toast.error('Delete failed.'),
+    onError: (err: any) => toast.error(err.message || 'Delete failed.'),
   });
   const users = data?.data || [];
   const meta = data?.meta;

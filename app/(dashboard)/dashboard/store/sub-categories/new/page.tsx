@@ -7,7 +7,7 @@ import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { ArrowLeft, Save } from 'lucide-react';
 import Link from 'next/link';
-import api from '@/lib/api';
+import { supabase } from '@/lib/supabase';
 
 export default function NewSubCategoryPage() {
   const router = useRouter();
@@ -16,17 +16,25 @@ export default function NewSubCategoryPage() {
 
   const { data: categories = [] } = useQuery({ 
     queryKey: ['categories'], 
-    queryFn: () => api.get('/v1/categories').then(r => r.data?.data || []) 
+    queryFn: async () => {
+      const { data, error } = await supabase.from('categories').select('*');
+      if (error) throw error;
+      return data || [];
+    }
   });
 
   const createMutation = useMutation({
-    mutationFn: (data: any) => api.post('/v1/sub-categories', data),
+    mutationFn: async (data: any) => {
+      const { error } = await supabase.from('sub_categories').insert([data]);
+      if (error) throw error;
+      return true;
+    },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['sub-categories'] });
       toast.success('Sub-category created successfully');
       router.push('/dashboard/store/sub-categories');
     },
-    onError: () => toast.error('Failed to create sub-category'),
+    onError: (err: any) => toast.error(err.message || 'Failed to create sub-category'),
   });
 
   const onSubmit = (data: any) => {

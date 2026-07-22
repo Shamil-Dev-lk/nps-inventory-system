@@ -7,7 +7,7 @@ import { toast } from 'sonner';
 import { DataTable, Column } from '@/components/ui/data-table';
 import { ConfirmDeleteDialog } from '@/components/ui/confirm-delete-dialog';
 import { Modal } from '@/components/ui/modal';
-import api from '@/lib/api';
+import { supabase } from '@/lib/supabase';
 
 interface Department {
   id: number;
@@ -33,11 +33,19 @@ export default function DepartmentsPage() {
 
   const { data: departments = [], isLoading } = useQuery({
     queryKey: ['departments'],
-    queryFn: () => api.get('/v1/departments').then((r) => (r.data?.data || []) as Department[]),
+    queryFn: async () => {
+      const { data, error } = await supabase.from('departments').select('*').order('created_at', { ascending: false });
+      if (error) throw error;
+      return data as Department[];
+    },
   });
 
   const createMutation = useMutation({
-    mutationFn: (data: DepartmentFormData) => api.post('/v1/departments', data),
+    mutationFn: async (data: DepartmentFormData) => {
+      const { error } = await supabase.from('departments').insert([data]);
+      if (error) throw error;
+      return true;
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['departments'] });
       toast.success('Department created successfully');
@@ -47,8 +55,11 @@ export default function DepartmentsPage() {
   });
 
   const updateMutation = useMutation({
-    mutationFn: (data: { id: number; payload: DepartmentFormData }) => 
-      api.put(`/v1/departments/${data.id}`, data.payload),
+    mutationFn: async (data: { id: number; payload: DepartmentFormData }) => {
+      const { error } = await supabase.from('departments').update(data.payload).eq('id', data.id);
+      if (error) throw error;
+      return true;
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['departments'] });
       toast.success('Department updated successfully');
@@ -58,7 +69,11 @@ export default function DepartmentsPage() {
   });
 
   const deleteMutation = useMutation({
-    mutationFn: (id: number) => api.delete(`/v1/departments/${id}`),
+    mutationFn: async (id: number) => {
+      const { error } = await supabase.from('departments').delete().eq('id', id);
+      if (error) throw error;
+      return true;
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['departments'] });
       toast.success('Department deleted successfully');

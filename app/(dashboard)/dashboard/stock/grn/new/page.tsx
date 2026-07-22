@@ -1,6 +1,5 @@
 'use client';
 import { Suspense } from 'react';
-
 import React, { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useForm, useFieldArray } from 'react-hook-form';
@@ -9,7 +8,7 @@ import * as z from 'zod';
 import { ArrowLeft, Save, Plus, Trash2, Package } from 'lucide-react';
 import Link from 'next/link';
 import { toast } from 'sonner';
-import api from '@/lib/api';
+import { supabase } from '@/lib/supabase';
 
 const grnSchema = z.object({
   supplier_id: z.string().min(1, 'Supplier is required'),
@@ -55,28 +54,36 @@ function NewGRNPage() {
   });
 
   useEffect(() => {
-    // Fetch suppliers, warehouses, and items
-    api.get('/v1/suppliers').then(res => setSuppliers(res.data.data || []));
-    api.get('/v1/warehouses').then(res => setWarehouses(res.data.data || []));
-    api.get('/v1/items?per_page=1000').then(res => {
-      const items = (res.data?.data?.data || res.data?.data || res.data || []);
-      setItemsList(items);
-      
-      // Auto-fill price if prefilled item exists
-      if (prefillItemId) {
-        const item = items.find((i: any) => i.id.toString() === prefillItemId);
-        if (item) {
-          setValue('items.0.unit_price', Number(item.purchase_price));
+    const fetchData = async () => {
+      try {
+        const [supRes, whRes, itemRes] = await Promise.all([
+          supabase.from('suppliers').select('*'),
+          supabase.from('warehouses').select('*'),
+          supabase.from('items').select('*')
+        ]);
+
+        if (supRes.data) setSuppliers(supRes.data.map((s: any) => ({ id: s.id, name: s.company_name || s.name || '' })));
+        if (whRes.data) setWarehouses(whRes.data);
+        if (itemRes.data) {
+          setItemsList(itemRes.data);
+          if (prefillItemId) {
+            const item = itemRes.data.find((i: any) => i.id.toString() === prefillItemId);
+            if (item) {
+              setValue('items.0.unit_price', Number(item.purchase_price || 0));
+            }
+          }
         }
+      } catch (err) {
+        console.error(err);
       }
-    });
+    };
+    fetchData();
   }, [prefillItemId, setValue]);
 
-  // Update unit price when item selection changes
   const handleItemChange = (index: number, itemId: string) => {
     const item = itemsList.find(i => i.id.toString() === itemId);
     if (item) {
-      setValue(`items.${index}.unit_price`, Number(item.purchase_price));
+      setValue(`items.${index}.unit_price`, Number(item.purchase_price || 0));
     }
   };
 
@@ -86,11 +93,38 @@ function NewGRNPage() {
   const onSubmit = async (data: GRNFormValues) => {
     try {
       setIsSubmitting(true);
-      await api.post('/v1/grn', data);
+      const totalVal = data.items.reduce((sum, item) => sum + (Number(item.accepted_quantity) || 0) * (Number(item.unit_price) || 0), 0);
+      
+      const { data: grn, error } = await supabase.from('grns').insert([{
+        supplier_id: data.supplier_id,
+        warehouse_id: data.warehouse_id,
+        received_date: data.received_date,
+        invoice_number: data.invoice_number,
+        remarks: data.remarks,
+        total_amount: totalVal,
+        status: 'draft'
+      }]).select().single();
+
+      if (error) throw error;
+
+      if (grn && data.items?.length) {
+        const grnItems = data.items.map(item => ({
+          grn_id: grn.id,
+          item_id: item.item_id,
+          received_quantity: item.received_quantity,
+          accepted_quantity: item.accepted_quantity,
+          unit_price: item.unit_price,
+          batch_number: item.batch_number,
+          expiry_date: item.expiry_date
+        }));
+        const { error: itemsErr } = await supabase.from('grn_items').insert(grnItems);
+        if (itemsErr) throw itemsErr;
+      }
+
       toast.success('Goods Receive Note created successfully');
       router.push('/dashboard/stock/grn');
     } catch (error: any) {
-      toast.error(error.response?.data?.message || 'Failed to create GRN');
+      toast.error(error.message || 'Failed to create GRN');
     } finally {
       setIsSubmitting(false);
     }
@@ -246,4 +280,3 @@ function NewGRNPage() {
 }
 
 export default function PageWrapper() { return <Suspense fallback={<div>Loading...</div>}><NewGRNPage /></Suspense>; }
-

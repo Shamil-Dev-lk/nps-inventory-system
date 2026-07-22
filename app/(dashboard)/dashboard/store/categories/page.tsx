@@ -7,7 +7,7 @@ import { toast } from 'sonner';
 import { DataTable, Column } from '@/components/ui/data-table';
 import { ConfirmDeleteDialog } from '@/components/ui/confirm-delete-dialog';
 import { Modal } from '@/components/ui/modal';
-import api from '@/lib/api';
+import { supabase } from '@/lib/supabase';
 
 // Types
 interface Category {
@@ -35,12 +35,20 @@ export default function CategoriesPage() {
   // Fetch data
   const { data: categories = [], isLoading } = useQuery({
     queryKey: ['categories'],
-    queryFn: () => api.get('/v1/categories').then((r) => (r.data?.data || []) as Category[]),
+    queryFn: async () => {
+      const { data, error } = await supabase.from('categories').select('*').order('created_at', { ascending: false });
+      if (error) throw error;
+      return data as Category[];
+    },
   });
 
   // Mutations
   const createMutation = useMutation({
-    mutationFn: (data: CategoryFormData) => api.post('/v1/categories', data),
+    mutationFn: async (data: CategoryFormData) => {
+      const { error } = await supabase.from('categories').insert([data]);
+      if (error) throw error;
+      return true;
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['categories'] });
       toast.success('Category created successfully');
@@ -50,8 +58,11 @@ export default function CategoriesPage() {
   });
 
   const updateMutation = useMutation({
-    mutationFn: (data: { id: number; payload: CategoryFormData }) => 
-      api.put(`/v1/categories/${data.id}`, data.payload),
+    mutationFn: async (data: { id: number; payload: CategoryFormData }) => {
+      const { error } = await supabase.from('categories').update(data.payload).eq('id', data.id);
+      if (error) throw error;
+      return true;
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['categories'] });
       toast.success('Category updated successfully');
@@ -61,7 +72,11 @@ export default function CategoriesPage() {
   });
 
   const deleteMutation = useMutation({
-    mutationFn: (id: number) => api.delete(`/v1/categories/${id}`),
+    mutationFn: async (id: number) => {
+      const { error } = await supabase.from('categories').delete().eq('id', id);
+      if (error) throw error;
+      return true;
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['categories'] });
       toast.success('Category deleted successfully');

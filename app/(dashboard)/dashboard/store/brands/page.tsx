@@ -7,7 +7,7 @@ import { toast } from 'sonner';
 import { DataTable, Column } from '@/components/ui/data-table';
 import { ConfirmDeleteDialog } from '@/components/ui/confirm-delete-dialog';
 import { Modal } from '@/components/ui/modal';
-import api from '@/lib/api';
+import { supabase } from '@/lib/supabase';
 
 interface Brand {
   id: number;
@@ -32,11 +32,19 @@ export default function BrandsPage() {
 
   const { data: brands = [], isLoading } = useQuery({
     queryKey: ['brands'],
-    queryFn: () => api.get('/v1/brands').then((r) => (r.data?.data || []) as Brand[]),
+    queryFn: async () => {
+      const { data, error } = await supabase.from('brands').select('*').order('created_at', { ascending: false });
+      if (error) throw error;
+      return data as Brand[];
+    },
   });
 
   const createMutation = useMutation({
-    mutationFn: (data: BrandFormData) => api.post('/v1/brands', data),
+    mutationFn: async (data: BrandFormData) => {
+      const { error } = await supabase.from('brands').insert([data]);
+      if (error) throw error;
+      return true;
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['brands'] });
       toast.success('Brand created successfully');
@@ -46,8 +54,11 @@ export default function BrandsPage() {
   });
 
   const updateMutation = useMutation({
-    mutationFn: (data: { id: number; payload: BrandFormData }) => 
-      api.put(`/v1/brands/${data.id}`, data.payload),
+    mutationFn: async (data: { id: number; payload: BrandFormData }) => {
+      const { error } = await supabase.from('brands').update(data.payload).eq('id', data.id);
+      if (error) throw error;
+      return true;
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['brands'] });
       toast.success('Brand updated successfully');
@@ -57,7 +68,11 @@ export default function BrandsPage() {
   });
 
   const deleteMutation = useMutation({
-    mutationFn: (id: number) => api.delete(`/v1/brands/${id}`),
+    mutationFn: async (id: number) => {
+      const { error } = await supabase.from('brands').delete().eq('id', id);
+      if (error) throw error;
+      return true;
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['brands'] });
       toast.success('Brand deleted successfully');

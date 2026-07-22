@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { ArrowLeft, Package, Calendar, MapPin, FileText, CheckCircle, XCircle, Edit, Printer, User, Download } from 'lucide-react';
-import api from '@/lib/api';
+import { supabase } from '@/lib/supabase';
 import Link from 'next/link';
 import { toast } from 'sonner';
 import { useEffect } from 'react';
@@ -18,12 +18,19 @@ export default function IssueViewPage() {
   const [rejectReason, setRejectReason] = useState('');
   const [isRejecting, setIsRejecting] = useState(false);
 
-  const { data, isLoading } = useQuery({
+  const { data: issue, isLoading } = useQuery({
     queryKey: ['issue', id],
-    queryFn: () => api.get(`/v1/stock/issues/${id}`).then(r => r.data),
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('stock_issues')
+        .select('*, warehouse:warehouses(id, name_en), department:departments(id, name_en), officer:users(id, name), project:projects(id, name_en), issued_by:users(id, name), items:stock_issue_items(*, item:items(*))')
+        .eq('id', id)
+        .single();
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!id,
   });
-
-  const issue = data?.data;
 
   useEffect(() => {
     if (issue && shouldPrint) {
@@ -34,22 +41,30 @@ export default function IssueViewPage() {
   }, [issue, shouldPrint]);
 
   const approveMutation = useMutation({
-    mutationFn: () => api.patch(`/v1/stock/issues/${id}/approve`),
+    mutationFn: async () => {
+      const { error } = await supabase.from('stock_issues').update({ status: 'issued' }).eq('id', id);
+      if (error) throw error;
+      return true;
+    },
     onSuccess: () => {
       toast.success('Stock issue approved successfully.');
       qc.invalidateQueries({ queryKey: ['issue', id] });
     },
-    onError: (e: any) => toast.error(e.response?.data?.message || 'Approval failed.'),
+    onError: (e: any) => toast.error(e.message || 'Approval failed.'),
   });
 
   const rejectMutation = useMutation({
-    mutationFn: () => api.patch(`/v1/stock/issues/${id}/reject`, { remarks: rejectReason }),
+    mutationFn: async () => {
+      const { error } = await supabase.from('stock_issues').update({ status: 'rejected', remarks: rejectReason }).eq('id', id);
+      if (error) throw error;
+      return true;
+    },
     onSuccess: () => {
       toast.success('Stock issue rejected.');
       qc.invalidateQueries({ queryKey: ['issue', id] });
       setIsRejecting(false);
     },
-    onError: (e: any) => toast.error(e.response?.data?.message || 'Rejection failed.'),
+    onError: (e: any) => toast.error(e.message || 'Rejection failed.'),
   });
 
 

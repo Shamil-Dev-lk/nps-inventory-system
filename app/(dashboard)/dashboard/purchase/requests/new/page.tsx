@@ -7,7 +7,7 @@ import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { ArrowLeft, Plus, Trash2, Save } from 'lucide-react';
 import Link from 'next/link';
-import api from '@/lib/api';
+import { supabase } from '@/lib/supabase';
 
 export default function NewPurchaseRequestPage() {
   const router = useRouter();
@@ -26,12 +26,37 @@ export default function NewPurchaseRequestPage() {
   
   const { fields, append, remove } = useFieldArray({ control, name: 'items' });
 
-  const { data: departments = [] } = useQuery({ queryKey: ['departments'], queryFn: () => api.get('/v1/departments').then(r => r.data.data) });
-  const { data: projects = [] } = useQuery({ queryKey: ['projects'], queryFn: () => api.get('/v1/projects').then(r => r.data.data) });
-  const { data: itemsList = [] } = useQuery({ queryKey: ['items'], queryFn: () => api.get('/v1/items?per_page=1000').then(r => r.data.data.data || []) });
+  const { data: departments = [] } = useQuery({
+    queryKey: ['departments'],
+    queryFn: async () => {
+      const { data, error } = await supabase.from('departments').select('*');
+      if (error) throw error;
+      return data || [];
+    }
+  });
+  const { data: projects = [] } = useQuery({
+    queryKey: ['projects'],
+    queryFn: async () => {
+      const { data, error } = await supabase.from('projects').select('*');
+      if (error) throw error;
+      return data || [];
+    }
+  });
+  const { data: itemsList = [] } = useQuery({
+    queryKey: ['items'],
+    queryFn: async () => {
+      const { data, error } = await supabase.from('items').select('*');
+      if (error) throw error;
+      return data || [];
+    }
+  });
 
   const createMutation = useMutation({
-    mutationFn: (data: any) => api.post('/v1/purchase-requests', data),
+    mutationFn: async (data: any) => {
+      const { data: res, error } = await supabase.from('purchase_requests').insert([data]).select().single();
+      if (error) throw error;
+      return res;
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['purchase-requests'] });
       toast.success('Purchase request created successfully');

@@ -14,6 +14,7 @@ import {
 import { toast } from 'sonner';
 import { useQuery } from '@tanstack/react-query';
 import api from '@/lib/api';
+import { supabase } from '@/lib/supabase';
 import { useAuthStore } from '@/store/auth-store';
 import { useOrgStore } from '@/store/org-store';
 import type { Organization } from '@/types';
@@ -53,21 +54,30 @@ export default function LoginPage() {
   const onSubmit = async (data: LoginForm) => {
     setIsLoading(true);
     try {
-      const response = await api.post('/v1/auth/login', data);
-      const result = response.data;
-      if (result.requires_2fa) {
-        setTwoFactorToken(result.two_factor_token);
-        setShow2FA(true);
-        toast.info('Please enter your 2FA authentication code');
-        return;
+      const { data: authData, error } = await supabase.auth.signInWithPassword({
+        email: data.email,
+        password: data.password,
+      });
+      
+      if (error) throw error;
+      
+      if (authData.session) {
+        setToken(authData.session.access_token);
+        
+        // Fetch user profile from public schema if needed, or just use auth user
+        const { data: profileData } = await supabase
+          .from('user_profiles')
+          .select('*')
+          .eq('id', authData.user.id)
+          .single();
+
+        const userData = profileData || { id: authData.user.id, name: authData.user.email?.split('@')[0] || 'User' };
+        setUser(userData as any);
+        toast.success(`Welcome back, ${userData.name}!`);
+        window.location.href = '/dashboard';
       }
-      setToken(result.token);
-      setUser(result.user);
-      toast.success(`Welcome back, ${result.user.name}!`);
-      router.replace('/dashboard');
-    } catch (error: unknown) {
-      const e = error as { response?: { data?: { message?: string } } };
-      toast.error(e.response?.data?.message || 'Invalid credentials. Please try again.');
+    } catch (error: any) {
+      toast.error(error.message || 'Invalid credentials. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -84,7 +94,7 @@ export default function LoginPage() {
       setToken(res.data.token);
       setUser(res.data.user);
       toast.success('Two-factor authentication verified!');
-      router.replace('/dashboard');
+      window.location.href = '/dashboard';
     } catch {
       toast.error('Invalid OTP code. Please try again.');
       setOtp('');

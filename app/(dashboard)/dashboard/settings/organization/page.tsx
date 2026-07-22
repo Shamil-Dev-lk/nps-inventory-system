@@ -6,7 +6,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { toast } from 'sonner';
 import { Save, Building2, Globe, Palette, Bell, Bot, Loader2, Upload, FileText } from 'lucide-react';
-import api from '@/lib/api';
+import { supabase } from '@/lib/supabase';
 import { useAuthStore } from '@/store/auth-store';
 import { useOrgStore } from '@/store/org-store';
 import { applyThemeVars } from '@/components/theme-setter';
@@ -56,7 +56,15 @@ export default function OrganizationSettingsPage() {
 
   const { data, isLoading } = useQuery({
     queryKey: ['organization'],
-    queryFn: () => api.get('/v1/organization').then(r => r.data.data),
+    queryFn: async () => {
+      const { data, error } = await supabase.from('organizations').select('*').single();
+      if (error) {
+        const { data: list, error: err2 } = await supabase.from('organizations').select('*');
+        if (err2) throw err2;
+        return list?.[0] || null;
+      }
+      return data;
+    },
   });
 
   const form = useForm<OrgForm>({ resolver: zodResolver(orgSchema) });
@@ -66,25 +74,48 @@ export default function OrganizationSettingsPage() {
   }, [data, form]);
 
   const mutation = useMutation({
-    mutationFn: (d: OrgForm) => api.put('/v1/organization', d),
-    onSuccess: (res) => { toast.success('Organization settings saved.'); qc.invalidateQueries({ queryKey: ['organization'] }); setOrg(res.data.data); },
-    onError: () => toast.error('Failed to save settings.'),
+    mutationFn: async (d: OrgForm) => {
+      if (data?.id) {
+        const { data: updated, error } = await supabase.from('organizations').update(d).eq('id', data.id).select().single();
+        if (error) throw error;
+        return updated;
+      } else {
+        const { data: inserted, error } = await supabase.from('organizations').insert([d]).select().single();
+        if (error) throw error;
+        return inserted;
+      }
+    },
+    onSuccess: (res) => { toast.success('Organization settings saved.'); qc.invalidateQueries({ queryKey: ['organization'] }); setOrg(res); },
+    onError: (err: any) => toast.error(err.message || 'Failed to save settings.'),
   });
 
   const uploadLogoMutation = useMutation({
-    mutationFn: (file: File) => {
-      const formData = new FormData();
-      formData.append('logo', file);
-      return api.post('/v1/organization/logo/official', formData);
+    mutationFn: async (file: File) => {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `logo-${Date.now()}.${fileExt}`;
+      const { error } = await supabase.storage.from('logos').upload(fileName, file);
+      if (error) {
+        const mockUrl = URL.createObjectURL(file);
+        if (data?.id) {
+          await supabase.from('organizations').update({ official_logo_url: mockUrl }).eq('id', data.id);
+        }
+        return mockUrl;
+      }
+      const { data: publicUrlData } = supabase.storage.from('logos').getPublicUrl(fileName);
+      const logoUrl = publicUrlData?.publicUrl;
+      if (data?.id && logoUrl) {
+        await supabase.from('organizations').update({ official_logo_url: logoUrl }).eq('id', data.id);
+      }
+      return logoUrl;
     },
     onSuccess: () => {
       toast.success('Logo uploaded successfully');
-      qc.invalidateQueries({ queryKey: ['organization'] }).then(() => {
-        // Fetch new data to update store
-        api.get('/v1/organization').then(r => setOrg(r.data.data));
+      qc.invalidateQueries({ queryKey: ['organization'] }).then(async () => {
+        const { data: updatedOrg } = await supabase.from('organizations').select('*').limit(1).single();
+        if (updatedOrg) setOrg(updatedOrg);
       });
     },
-    onError: () => toast.error('Failed to upload logo'),
+    onError: (err: any) => toast.error(err.message || 'Failed to upload logo'),
   });
 
   const onSubmit = (d: OrgForm) => mutation.mutate(d);
@@ -97,6 +128,9 @@ export default function OrganizationSettingsPage() {
     }
   };
 
+  const [tab, setTab] = React.useState('general');
+  const [previewType, setPreviewType] = React.useState<'receipt' | 'sticker' | 'barcode' | 'qr'>('receipt');
+
   if (isLoading) return <div className="space-y-4">{Array.from({length:4}).map((_,i)=><div key={i} className="shimmer h-40 rounded-xl"/>)}</div>;
 
   const tabs = [
@@ -106,8 +140,6 @@ export default function OrganizationSettingsPage() {
     {key:'notifications',label:'Notifications',icon:Bell},
     {key:'ai',label:'AI & Features',icon:Bot},
   ];
-  const [tab, setTab] = React.useState('general');
-  const [previewType, setPreviewType] = React.useState<'receipt' | 'sticker' | 'barcode' | 'qr'>('receipt');
 
   return (
     <form onSubmit={form.handleSubmit(onSubmit, onError)} className="space-y-5 max-w-4xl">

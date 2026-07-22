@@ -3,18 +3,32 @@ import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
 import { Plus, Search, Filter, Eye, SlidersHorizontal, Printer, FileDown } from 'lucide-react';
-import api from '@/lib/api';
+import { supabase } from '@/lib/supabase';
 
 export default function StockAdjustmentListPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [status, setStatus] = useState('');
   
-  const { data, isLoading } = useQuery({
+  const { data: adjustments = [], isLoading } = useQuery({
     queryKey: ['stock-adjustments', searchTerm, status],
-    queryFn: () => api.get(`/v1/stock/adjustments?search=${searchTerm}&status=${status}`).then(r => r.data),
-  });
+    queryFn: async () => {
+      let query = supabase
+        .from('stock_adjustments')
+        .select('*, warehouse:warehouses(id, name_en), item:items(id, name_en)')
+        .order('created_at', { ascending: false });
 
-  const adjustments = data?.data?.data || [];
+      if (searchTerm) {
+        query = query.ilike('adjustment_number', `%${searchTerm}%`);
+      }
+      if (status) {
+        query = query.eq('status', status);
+      }
+
+      const { data, error } = await query;
+      if (error) throw error;
+      return data || [];
+    },
+  });
 
   return (
     <div className="space-y-6">

@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { RefreshCw, Filter, FileText, Download, TrendingUp, FileCheck } from 'lucide-react';
-import api from '@/lib/api';
+import { supabase } from '@/lib/supabase';
 
 export default function GrnReportPage() {
   const [supplierId, setSupplierId] = useState('');
@@ -14,16 +14,53 @@ export default function GrnReportPage() {
 
   const { data, isLoading, refetch } = useQuery({
     queryKey: ['report-grn', page, supplierId, fromDate, toDate, status],
-    queryFn: () =>
-      api.get('/v1/reports/grn', {
-        params: { page, per_page: perPage, supplier_id: supplierId, from_date: fromDate, to_date: toDate, status },
-      }).then((r) => r.data),
+    queryFn: async () => {
+      let query = supabase
+        .from('grn')
+        .select('*, supplier:suppliers(id, name, company_name), warehouse:warehouses(id, name_en), received_by:users(id, name)', { count: 'exact' });
+
+      if (supplierId) query = query.eq('supplier_id', supplierId);
+      if (status) query = query.eq('status', status);
+      if (fromDate) query = query.gte('received_date', fromDate);
+      if (toDate) query = query.lte('received_date', toDate);
+
+      const from = (page - 1) * perPage;
+      const to = from + perPage - 1;
+      query = query.range(from, to).order('created_at', { ascending: false });
+
+      const { data: rawGrns, error, count } = await query;
+      if (error) throw error;
+
+      const { data: allGrns, error: summaryErr } = await supabase.from('grn').select('total_amount, status');
+      if (summaryErr) throw summaryErr;
+
+      const totalGrns = allGrns?.length || 0;
+      const totalValue = allGrns?.filter((g: any) => g.status === 'approved').reduce((sum: number, g: any) => sum + Number(g.total_amount || 0), 0) || 0;
+
+      return {
+        data: {
+          data: rawGrns || [],
+          total: count || 0,
+          from: from + 1,
+          to: Math.min(from + perPage, count || 0),
+          last_page: Math.ceil((count || 0) / perPage),
+        },
+        summary: {
+          total_grns: totalGrns,
+          total_value: totalValue,
+        }
+      };
+    },
     placeholderData: (prev) => prev,
   });
 
   const { data: suppliers } = useQuery({
     queryKey: ['suppliers'],
-    queryFn: () => api.get('/v1/suppliers', { params: { per_page: 1000 } }).then((r) => r.data.data.data),
+    queryFn: async () => {
+      const { data, error } = await supabase.from('suppliers').select('*');
+      if (error) throw error;
+      return data || [];
+    },
   });
 
   const grns = data?.data?.data || [];

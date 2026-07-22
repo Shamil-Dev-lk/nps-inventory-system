@@ -1,8 +1,8 @@
-﻿'use client';
+'use client';
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { AlertTriangle, XCircle, Download, RefreshCw } from 'lucide-react';
-import api from '@/lib/api';
+import { supabase } from '@/lib/supabase';
 import { useAuthStore } from '@/store/auth-store';
 
 export default function LowStockPage() {
@@ -10,11 +10,31 @@ export default function LowStockPage() {
   const [tab, setTab] = useState<'low'|'zero'>('low');
   const { data: lowData, isLoading: lowLoading, refetch: refetchLow } = useQuery({
     queryKey: ['low-stock'],
-    queryFn: () => api.get('/v1/reports/low-stock').then(r => r.data),
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('items')
+        .select('*, category:categories(name_en), unit:units(symbol, name_en)');
+      if (error) throw error;
+      const filtered = (data || []).filter((item: any) => Number(item.current_quantity || 0) <= Number(item.reorder_level || 0) && Number(item.current_quantity || 0) > 0);
+      return {
+        data: { data: filtered },
+        count: filtered.length,
+      };
+    },
   });
   const { data: zeroData, isLoading: zeroLoading } = useQuery({
     queryKey: ['zero-stock'],
-    queryFn: () => api.get('/v1/reports/zero-stock').then(r => r.data),
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('items')
+        .select('*, category:categories(name_en), unit:units(symbol, name_en)');
+      if (error) throw error;
+      const filtered = (data || []).filter((item: any) => Number(item.current_quantity || 0) <= 0);
+      return {
+        data: { data: filtered },
+        count: filtered.length,
+      };
+    },
   });
   const items = tab === 'low' ? (lowData?.data?.data || []) : (zeroData?.data?.data || []);
   const count = tab === 'low' ? (lowData?.count || 0) : (zeroData?.count || 0);

@@ -3,18 +3,38 @@ import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
 import { Plus, Search, ArrowRightLeft, Filter, Eye, Printer, FileDown } from 'lucide-react';
-import api from '@/lib/api';
+import { supabase } from '@/lib/supabase';
 
 export default function StockTransferListPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [status, setStatus] = useState('');
   
-  const { data, isLoading } = useQuery({
+  const { data: transfers = [], isLoading } = useQuery({
     queryKey: ['stock-transfers', searchTerm, status],
-    queryFn: () => api.get(`/v1/stock/transfers?search=${searchTerm}&status=${status}`).then(r => r.data),
-  });
+    queryFn: async () => {
+      let query = supabase
+        .from('stock_transfers')
+        .select(`
+          *,
+          from_warehouse:from_warehouse_id(id, name_en),
+          to_warehouse:to_warehouse_id(id, name_en),
+          from_department:from_department_id(id, name_en),
+          to_department:to_department_id(id, name_en)
+        `)
+        .order('created_at', { ascending: false });
 
-  const transfers = data?.data?.data || [];
+      if (searchTerm) {
+        query = query.ilike('transfer_number', `%${searchTerm}%`);
+      }
+      if (status) {
+        query = query.eq('status', status);
+      }
+
+      const { data, error } = await query;
+      if (error) throw error;
+      return data || [];
+    },
+  });
 
   return (
     <div className="space-y-6">

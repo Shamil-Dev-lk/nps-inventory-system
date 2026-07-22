@@ -7,7 +7,7 @@ import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { ArrowLeft, Save } from 'lucide-react';
 import Link from 'next/link';
-import api from '@/lib/api';
+import { supabase } from '@/lib/supabase';
 
 export default function EditPurchaseRequestPage({ params }: { params: { id: string } }) {
   const router = useRouter();
@@ -16,7 +16,11 @@ export default function EditPurchaseRequestPage({ params }: { params: { id: stri
 
   const { data: pr } = useQuery({ 
     queryKey: ['purchase_request', params.id], 
-    queryFn: () => api.get(`/v1/purchase/requests/${params.id}`).then(r => r.data.data) 
+    queryFn: async () => {
+      const { data, error } = await supabase.from('purchase_requests').select('*').eq('id', params.id).single();
+      if (error) throw error;
+      return data;
+    }
   });
 
   useEffect(() => {
@@ -33,7 +37,11 @@ export default function EditPurchaseRequestPage({ params }: { params: { id: stri
   }, [pr, reset]);
 
   const updateMutation = useMutation({
-    mutationFn: (data: any) => api.put(`/v1/purchase/requests/${params.id}`, data),
+    mutationFn: async (data: any) => {
+      const { data: res, error } = await supabase.from('purchase_requests').update(data).eq('id', params.id).select().single();
+      if (error) throw error;
+      return res;
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['purchase_requests'] });
       queryClient.invalidateQueries({ queryKey: ['purchase_request', params.id] });

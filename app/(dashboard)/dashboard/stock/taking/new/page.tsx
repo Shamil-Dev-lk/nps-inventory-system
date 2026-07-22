@@ -7,7 +7,7 @@ import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { ArrowLeft, Save } from 'lucide-react';
 import Link from 'next/link';
-import api from '@/lib/api';
+import { supabase } from '@/lib/supabase';
 
 export default function NewStockTakingPage() {
   const router = useRouter();
@@ -21,16 +21,44 @@ export default function NewStockTakingPage() {
     }
   });
 
-  const { data: warehouses = [] } = useQuery({ queryKey: ['warehouses'], queryFn: () => api.get('/v1/warehouses').then(r => r.data.data) });
+  const { data: warehouses = [] } = useQuery({ 
+    queryKey: ['warehouses'], 
+    queryFn: async () => {
+      const { data, error } = await supabase.from('warehouses').select('*');
+      if (error) throw error;
+      return data || [];
+    }
+  });
 
   const createMutation = useMutation({
-    mutationFn: (data: any) => api.post('/v1/stock/taking', data),
-    onSuccess: (res) => {
+    mutationFn: async (formData: any) => {
+      const st_number = `ST-${Date.now().toString().slice(-6)}`;
+      const { data: st, error: stError } = await supabase
+        .from('stock_takings')
+        .insert([{ ...formData, st_number, status: 'draft' }])
+        .select()
+        .single();
+      if (stError) throw stError;
+
+      // Snapshot items for this stock taking session
+      const { data: items, error: itemsError } = await supabase.from('items').select('id, current_quantity');
+      if (!itemsError && items && items.length > 0) {
+        const stItems = items.map((item: any) => ({
+          stock_taking_id: st.id,
+          item_id: item.id,
+          system_quantity: item.current_quantity || 0,
+          physical_quantity: item.current_quantity || 0,
+        }));
+        await supabase.from('stock_taking_items').insert(stItems);
+      }
+      return st;
+    },
+    onSuccess: (st) => {
       queryClient.invalidateQueries({ queryKey: ['stock-taking'] });
       toast.success('Stock taking session created successfully');
-      router.push(`/dashboard/stock/taking/${res.data.data.id}?print=true`);
+      router.push(`/dashboard/stock/taking/${st.id}?print=true`);
     },
-    onError: (err: any) => toast.error(err.response?.data?.message || 'Failed to create session'),
+    onError: (err: any) => toast.error(err.message || 'Failed to create session'),
   });
 
   const onSubmit = (data: any) => {

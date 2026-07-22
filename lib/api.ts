@@ -1,5 +1,4 @@
 import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios';
-import { initializeMockAdapter } from './mockAdapter';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api';
 
@@ -13,9 +12,6 @@ export const api = axios.create({
   },
   withCredentials: true,
 });
-
-// Initialize mock database for GitHub Pages purely static deployment
-initializeMockAdapter(api);
 
 // Attach token and language header
 api.interceptors.request.use(

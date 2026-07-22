@@ -7,7 +7,7 @@ import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { ArrowLeft, Save } from 'lucide-react';
 import Link from 'next/link';
-import api from '@/lib/api';
+import { supabase } from '@/lib/supabase';
 
 export default function NewCustomerPage() {
   const router = useRouter();
@@ -15,14 +15,18 @@ export default function NewCustomerPage() {
   const { register, handleSubmit, formState: { errors } } = useForm();
 
   const createMutation = useMutation({
-    mutationFn: (data: any) => api.post('/v1/customers', data),
+    mutationFn: async (data: any) => {
+      const { data: result, error } = await supabase.from('customers').insert([data]).select().single();
+      if (error) throw error;
+      return result;
+    },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['customers'] });
       toast.success('Customer created successfully');
       router.push('/dashboard/customers');
     },
     onError: (error: any) => {
-        const message = error.response?.data?.message || 'Failed to create customer. This customer might already exist.';
+        const message = error.message || 'Failed to create customer. This customer might already exist.';
         toast.error(message);
     },
   });

@@ -5,7 +5,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { Plus, Edit, Trash2, ListTree } from 'lucide-react';
 import Link from 'next/link';
-import api from '@/lib/api';
+import { supabase } from '@/lib/supabase';
 
 interface SubCategory {
   id: number;
@@ -20,11 +20,19 @@ export default function SubCategoriesPage() {
 
   const { data: subCategories = [], isLoading } = useQuery({
     queryKey: ['sub-categories'],
-    queryFn: () => api.get('/v1/sub-categories').then((r) => r.data?.data || []),
+    queryFn: async () => {
+      const { data, error } = await supabase.from('sub_categories').select('*, category:categories(name_en)').order('created_at', { ascending: false });
+      if (error) throw error;
+      return data as SubCategory[];
+    },
   });
 
   const deleteMutation = useMutation({
-    mutationFn: (id: number) => api.delete(`/v1/sub-categories/${id}`),
+    mutationFn: async (id: number) => {
+      const { error } = await supabase.from('sub_categories').delete().eq('id', id);
+      if (error) throw error;
+      return true;
+    },
     onSuccess: () => {
       toast.success('Sub-Category deleted successfully.');
       qc.invalidateQueries({ queryKey: ['sub-categories'] });

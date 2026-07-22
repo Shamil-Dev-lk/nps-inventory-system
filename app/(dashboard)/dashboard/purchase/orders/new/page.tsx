@@ -7,7 +7,7 @@ import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { ArrowLeft, Plus, Trash2, Save } from 'lucide-react';
 import Link from 'next/link';
-import api from '@/lib/api';
+import { supabase } from '@/lib/supabase';
 
 export default function NewPurchaseOrderPage() {
   const router = useRouter();
@@ -27,12 +27,37 @@ export default function NewPurchaseOrderPage() {
   const { fields, append, remove } = useFieldArray({ control, name: 'items' });
   const watchItems = watch('items');
 
-  const { data: suppliers = [] } = useQuery({ queryKey: ['suppliers'], queryFn: () => api.get('/v1/suppliers').then(r => r.data.data) });
-  const { data: itemsList = [] } = useQuery({ queryKey: ['items'], queryFn: () => api.get('/v1/items?per_page=1000').then(r => r.data.data.data || []) });
-  const { data: prs = [] } = useQuery({ queryKey: ['purchase-requests-approved'], queryFn: () => api.get('/v1/purchase/requests?status=approved').then(r => r.data.data.data || []) });
+  const { data: suppliers = [] } = useQuery({
+    queryKey: ['suppliers'],
+    queryFn: async () => {
+      const { data, error } = await supabase.from('suppliers').select('*');
+      if (error) throw error;
+      return data || [];
+    }
+  });
+  const { data: itemsList = [] } = useQuery({
+    queryKey: ['items'],
+    queryFn: async () => {
+      const { data, error } = await supabase.from('items').select('*');
+      if (error) throw error;
+      return data || [];
+    }
+  });
+  const { data: prs = [] } = useQuery({
+    queryKey: ['purchase-requests-approved'],
+    queryFn: async () => {
+      const { data, error } = await supabase.from('purchase_requests').select('*').eq('status', 'approved');
+      if (error) throw error;
+      return data || [];
+    }
+  });
 
   const createMutation = useMutation({
-    mutationFn: (data: any) => api.post('/v1/purchase/orders', data),
+    mutationFn: async (data: any) => {
+      const { data: res, error } = await supabase.from('purchase_orders').insert([data]).select().single();
+      if (error) throw error;
+      return res;
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['purchase-orders'] });
       toast.success('Purchase order created successfully');

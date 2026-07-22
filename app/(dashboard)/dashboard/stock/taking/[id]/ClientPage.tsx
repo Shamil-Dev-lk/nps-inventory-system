@@ -7,7 +7,7 @@ import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { ArrowLeft, Save, CheckCircle, Printer, Download } from 'lucide-react';
 import Link from 'next/link';
-import api from '@/lib/api';
+import { supabase } from '@/lib/supabase';
 
 export default function StockTakingDetailsPage({ params }: { params: { id: string } }) {
   const router = useRouter();
@@ -20,21 +20,48 @@ export default function StockTakingDetailsPage({ params }: { params: { id: strin
 
   const { data, isLoading } = useQuery({
     queryKey: ['stock-taking', params.id],
-    queryFn: () => api.get(`/v1/stock/taking/${params.id}`).then(r => {
-      const st = r.data.data;
-      reset({ items: st.items });
+    queryFn: async () => {
+      const { data: st, error } = await supabase
+        .from('stock_takings')
+        .select(`
+          *,
+          warehouse:warehouses(id, name_en),
+          items:stock_taking_items(*, item:items(*))
+        `)
+        .eq('id', params.id)
+        .single();
+      if (error) throw error;
+      reset({ items: st.items || [] });
       return st;
-    })
+    }
   });
 
   const completeMutation = useMutation({
-    mutationFn: (data: any) => api.post(`/v1/stock/taking/${params.id}/complete`, data),
+    mutationFn: async (formData: any) => {
+      if (formData.items && formData.items.length > 0) {
+        for (const item of formData.items) {
+          const { error: itemErr } = await supabase
+            .from('stock_taking_items')
+            .update({
+              physical_quantity: parseFloat(item.physical_quantity || 0),
+              variance_reason: item.variance_reason || null,
+            })
+            .eq('id', item.id);
+          if (itemErr) throw itemErr;
+        }
+      }
+      const { error } = await supabase
+        .from('stock_takings')
+        .update({ status: 'completed' })
+        .eq('id', params.id);
+      if (error) throw error;
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['stock-taking'] });
       toast.success('Stock taking completed and adjusted successfully');
       router.push('/dashboard/stock/taking');
     },
-    onError: (err: any) => toast.error(err.response?.data?.message || 'Failed to complete session'),
+    onError: (err: any) => toast.error(err.message || 'Failed to complete session'),
   });
 
   const onSubmit = (formData: any) => {
@@ -134,12 +161,19 @@ export default function StockTakingDetailsPage({ params }: { params: { id: strin
           {data.status === 'completed' && (
             <button 
               type="button" 
-              onClick={() => {
+              onClick={async () => {
                 const toastId = toast.loading('Approving and adjusting stock...');
-                api.post(`/v1/stock/taking/${params.id}/approve`).then(() => {
+                try {
+                  const { error } = await supabase
+                    .from('stock_takings')
+                    .update({ status: 'approved' })
+                    .eq('id', params.id);
+                  if (error) throw error;
                   toast.success('Stock levels adjusted successfully', { id: toastId });
                   queryClient.invalidateQueries({ queryKey: ['stock-taking'] });
-                }).catch(err => toast.error(err.response?.data?.message || 'Failed to approve', { id: toastId }));
+                } catch (err: any) {
+                  toast.error(err.message || 'Failed to approve', { id: toastId });
+                }
               }} 
               className="flex items-center gap-2 px-6 py-2 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 transition-colors shadow-sm"
             >

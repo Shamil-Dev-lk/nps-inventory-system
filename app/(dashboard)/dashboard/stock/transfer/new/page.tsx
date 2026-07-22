@@ -7,7 +7,7 @@ import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { ArrowLeft, Plus, Trash2, Save, ScanLine, QrCode } from 'lucide-react';
 import Link from 'next/link';
-import api from '@/lib/api';
+import { supabase } from '@/lib/supabase';
 import { BarcodeScannerModal } from '@/components/scanner/BarcodeScannerModal';
 
 export default function NewStockTransferPage() {
@@ -33,9 +33,30 @@ export default function NewStockTransferPage() {
 
   const transferType = watch('transfer_type');
 
-  const { data: departments = [] } = useQuery({ queryKey: ['departments'], queryFn: () => api.get('/v1/departments').then(r => r.data.data) });
-  const { data: warehouses = [] } = useQuery({ queryKey: ['warehouses'], queryFn: () => api.get('/v1/warehouses').then(r => r.data.data) });
-  const { data: itemsList = [] } = useQuery({ queryKey: ['items'], queryFn: () => api.get('/v1/items?per_page=1000').then(r => (r.data?.data?.data || r.data?.data || r.data || [])) });
+  const { data: departments = [] } = useQuery({ 
+    queryKey: ['departments'], 
+    queryFn: async () => {
+      const { data, error } = await supabase.from('departments').select('*');
+      if (error) throw error;
+      return data || [];
+    }
+  });
+  const { data: warehouses = [] } = useQuery({ 
+    queryKey: ['warehouses'], 
+    queryFn: async () => {
+      const { data, error } = await supabase.from('warehouses').select('*');
+      if (error) throw error;
+      return data || [];
+    }
+  });
+  const { data: itemsList = [] } = useQuery({ 
+    queryKey: ['items'], 
+    queryFn: async () => {
+      const { data, error } = await supabase.from('items').select('*');
+      if (error) throw error;
+      return data || [];
+    }
+  });
 
   const handleBarcodeScan = (code: string) => {
     if (!code) return;
@@ -64,14 +85,34 @@ export default function NewStockTransferPage() {
   };
 
   const createMutation = useMutation({
-    mutationFn: (data: any) => api.post('/v1/stock/transfers', data),
-    onSuccess: (data) => {
+    mutationFn: async (formData: any) => {
+      const { items, ...transferHeader } = formData;
+      const transfer_number = `STF-${Date.now().toString().slice(-6)}`;
+      const { data: transfer, error: tError } = await supabase
+        .from('stock_transfers')
+        .insert([{ ...transferHeader, transfer_number, status: 'draft' }])
+        .select()
+        .single();
+      if (tError) throw tError;
+
+      if (items && items.length > 0) {
+        const transferItems = items.map((i: any) => ({
+          stock_transfer_id: transfer.id,
+          item_id: i.item_id,
+          quantity: i.quantity,
+        }));
+        const { error: itemsError } = await supabase.from('stock_transfer_items').insert(transferItems);
+        if (itemsError) throw itemsError;
+      }
+      return transfer;
+    },
+    onSuccess: (transfer) => {
       queryClient.invalidateQueries({ queryKey: ['stock-transfers'] });
       toast.success('Stock transfer created successfully');
-      router.push(`/dashboard/stock/transfer/${data.data.data.id}?print=true`);
+      router.push(`/dashboard/stock/transfer/${transfer.id}?print=true`);
     },
     onError: (err: any) => {
-      toast.error(err.response?.data?.message || 'Failed to create stock transfer');
+      toast.error(err.message || 'Failed to create stock transfer');
     },
   });
 

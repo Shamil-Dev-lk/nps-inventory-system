@@ -5,7 +5,8 @@ import { useQuery } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, Edit, Package, Hash, Tag, Scale, Building2, AlignLeft, Receipt, Layers, BarChart, Printer, QrCode } from 'lucide-react';
 import Link from 'next/link';
-import api from '@/lib/api';
+import { supabase } from '@/lib/supabase';
+import { notFound } from 'next/navigation';
 
 import { StickerGeneratorDialog } from '@/components/print/StickerGeneratorDialog';
 
@@ -14,9 +15,18 @@ export default function ViewItemPage({ params }: { params: Promise<{ id: string 
   const { id } = React.use(params);
   const [stickerOpen, setStickerOpen] = React.useState(false);
 
-  const { data: itemData, isLoading } = useQuery({ 
-    queryKey: ['item', id], 
-    queryFn: () => api.get(`/v1/items/${id}`).then(r => r.data.data) 
+  const { data: itemData, isLoading } = useQuery({
+    queryKey: ['item', id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('items')
+        .select('*, category:categories(name_en), brand:brands(name), unit:units(name_en), warehouse:warehouses(name_en)')
+        .eq('id', id)
+        .single();
+        
+      if (error) throw error;
+      return data;
+    },
   });
 
   if (isLoading) return <div className="p-8 text-center text-muted-foreground shimmer h-32 rounded-xl" />;

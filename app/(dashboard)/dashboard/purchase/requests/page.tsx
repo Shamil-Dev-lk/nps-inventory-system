@@ -1,10 +1,10 @@
-﻿'use client';
+'use client';
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Plus, Search, Eye, CheckCircle, RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
 import Link from 'next/link';
-import api from '@/lib/api';
+import { supabase } from '@/lib/supabase';
 import { useAuthStore } from '@/store/auth-store';
 
 export default function PurchaseRequestsPage() {
@@ -13,12 +13,22 @@ export default function PurchaseRequestsPage() {
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState('');
   const [page, setPage] = useState(1);
-  const { data, isLoading, refetch } = useQuery({
+  const { data: prsData, isLoading, refetch } = useQuery({
     queryKey: ['purchase-requests', page, search, status],
-    queryFn: () => api.get('/v1/purchase/requests', { params: { page, search, status } }).then(r => r.data),
+    queryFn: async () => {
+      let query = supabase.from('purchase_requests').select('*, department:departments(name_en)').order('created_at', { ascending: false });
+      if (search) {
+        query = query.or(`pr_number.ilike.%${search}%,purpose.ilike.%${search}%`);
+      }
+      if (status) {
+        query = query.eq('status', status);
+      }
+      const { data, error } = await query;
+      if (error) throw error;
+      return data || [];
+    },
   });
-  const prs = data?.data?.data || [];
-  const meta = data?.data;
+  const prs = Array.isArray(prsData) ? prsData : (prsData as any)?.data?.data || [];
   return (
     <div className="space-y-5 max-w-[1600px]">
       <div className="page-header">

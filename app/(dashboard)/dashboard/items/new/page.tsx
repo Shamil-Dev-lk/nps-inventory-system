@@ -7,26 +7,33 @@ import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { ArrowLeft, Save } from 'lucide-react';
 import Link from 'next/link';
-import api from '@/lib/api';
+import { supabase } from '@/lib/supabase';
 
 export default function NewItemPage() {
   const router = useRouter();
   const queryClient = useQueryClient();
   const { register, handleSubmit, formState: { errors } } = useForm();
 
-  const { data: categories = [] } = useQuery({ queryKey: ['categories'], queryFn: () => api.get('/v1/categories').then(r => r.data.data) });
-  const { data: brands = [] } = useQuery({ queryKey: ['brands'], queryFn: () => api.get('/v1/brands').then(r => r.data.data) });
-  const { data: units = [] } = useQuery({ queryKey: ['units'], queryFn: () => api.get('/v1/units').then(r => r.data.data) });
-  const { data: warehouses = [] } = useQuery({ queryKey: ['warehouses'], queryFn: () => api.get('/v1/warehouses').then(r => r.data.data) });
+  const { data: categories = [] } = useQuery({ queryKey: ['categories'], queryFn: async () => { const { data } = await supabase.from('categories').select('*'); return data || []; } });
+  const { data: brands = [] } = useQuery({ queryKey: ['brands'], queryFn: async () => { const { data } = await supabase.from('brands').select('*'); return data || []; } });
+  const { data: units = [] } = useQuery({ queryKey: ['units'], queryFn: async () => { const { data } = await supabase.from('units').select('*'); return data || []; } });
+  const { data: warehouses = [] } = useQuery({ queryKey: ['warehouses'], queryFn: async () => { const { data } = await supabase.from('warehouses').select('*'); return data || []; } });
 
   const createMutation = useMutation({
-    mutationFn: (data: any) => api.post('/v1/items', data),
+    mutationFn: async (data: any) => {
+      // Generate a random item code if none provided
+      if (!data.item_code) data.item_code = 'ITEM-' + Math.floor(Math.random() * 1000000);
+      
+      const { error } = await supabase.from('items').insert([data]);
+      if (error) throw error;
+      return true;
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['items'] });
       toast.success('Item created successfully');
       router.push('/dashboard/items');
     },
-    onError: () => toast.error('Failed to create item'),
+    onError: (err: any) => toast.error(err.message || 'Failed to create item'),
   });
 
   const onSubmit = (data: any) => {
