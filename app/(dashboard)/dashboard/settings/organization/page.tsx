@@ -70,7 +70,17 @@ export default function OrganizationSettingsPage() {
   const form = useForm<OrgForm>({ resolver: zodResolver(orgSchema) });
 
   useEffect(() => {
-    if (data) { form.reset({ ...data, enable_ai_features: data.enable_ai_features || false, enable_email_notifications: data.enable_email_notifications || false }); }
+    if (data) { 
+      // Convert nulls to empty strings to satisfy Zod validation and React controlled inputs
+      const sanitizedData = Object.fromEntries(
+        Object.entries(data).map(([k, v]) => [k, v === null ? '' : v])
+      );
+      form.reset({ 
+        ...sanitizedData, 
+        enable_ai_features: data.enable_ai_features || false, 
+        enable_email_notifications: data.enable_email_notifications || false 
+      }); 
+    }
   }, [data, form]);
 
   const mutation = useMutation({
