@@ -54,7 +54,7 @@ export default function CategoriesPage() {
       toast.success('Category created successfully');
       handleCloseForm();
     },
-    onError: () => toast.error('Failed to create category'),
+    onError: (err: any) => toast.error('Failed to create category: ' + (err.message || 'Unknown error')),
   });
 
   const updateMutation = useMutation({
@@ -68,7 +68,7 @@ export default function CategoriesPage() {
       toast.success('Category updated successfully');
       handleCloseForm();
     },
-    onError: () => toast.error('Failed to update category'),
+    onError: (err: any) => toast.error('Failed to update category: ' + (err.message || 'Unknown error')),
   });
 
   const deleteMutation = useMutation({
@@ -83,7 +83,7 @@ export default function CategoriesPage() {
       setIsDeleteOpen(false);
       setDeletingCategory(null);
     },
-    onError: () => toast.error('Failed to delete category'),
+    onError: (err: any) => toast.error('Failed to delete category: ' + (err.message || 'Unknown error')),
   });
 
   // Handlers
