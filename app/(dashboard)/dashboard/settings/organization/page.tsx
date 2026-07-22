@@ -206,7 +206,7 @@ export default function OrganizationSettingsPage() {
               <div className="flex flex-col gap-4 items-start p-4 bg-muted/30 rounded-xl border border-border">
                 <div className="flex gap-4 w-full">
                   <div className="w-24 h-24 shrink-0 bg-white rounded-full p-2 flex items-center justify-center border border-border shadow-sm overflow-hidden">
-                    <img src={data?.official_logo_url || '/logo.png'} alt="Logo" className="w-full h-full object-contain mix-blend-multiply" />
+                    <img src={data?.official_logo_url || '/nps-inventory-system/logo.png'} alt="Logo" className="w-full h-full object-contain mix-blend-multiply" />
                   </div>
                   <div className="flex-1 space-y-2">
                     <h3 className="font-semibold text-sm">Official Document Logo</h3>

@@ -273,8 +273,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       >
         {/* Logo */}
         <div className="flex items-center gap-3 px-4 py-5 border-b border-sidebar-border/50">
-          <div className="w-10 h-10 shrink-0 bg-white rounded-full p-1 border border-sidebar-border shadow-sm flex items-center justify-center overflow-hidden">
-            <img src={org?.official_logo_url || '/logo.png'} alt="Logo" className="w-full h-full object-contain mix-blend-multiply" />
+          <div className="w-10 h-10 rounded-xl bg-card border border-border shadow-sm flex items-center justify-center shrink-0 overflow-hidden relative">
+            <img src={org?.official_logo_url || '/nps-inventory-system/logo.png'} alt="Logo" className="w-full h-full object-contain mix-blend-multiply" />
           </div>
           {!sidebarCollapsed && (
             <motion.div
@@ -305,11 +305,17 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         <div className="border-t border-sidebar-border/50 p-3 space-y-2">
           {!sidebarCollapsed && (
             <div className="flex items-center gap-2 px-2 py-1.5">
-              <img
-                src={user.avatar_url}
-                alt={user.name}
-                className="w-8 h-8 rounded-full object-cover"
-              />
+              {user?.avatar_url ? (
+                <img
+                  src={user.avatar_url}
+                  alt={user.name}
+                  className="w-8 h-8 rounded-full object-cover"
+                />
+              ) : (
+                <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
+                  <User2 size={16} className="text-primary" />
+                </div>
+              )}
               <div className="flex-1 min-w-0">
                 <p className="text-sidebar-foreground text-xs font-medium truncate">{user.name}</p>
                 <p className="text-sidebar-foreground/50 text-[10px] truncate">{user.roles?.[0]}</p>
@@ -374,11 +380,17 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
             {/* User avatar */}
             <button className="flex items-center gap-2 ml-1 pl-2 border-l border-border">
-              <img
-                src={user.avatar_url}
-                alt={user.name}
-                className="w-8 h-8 rounded-full object-cover border-2 border-primary/20"
-              />
+              {user?.avatar_url ? (
+                <img
+                  src={user.avatar_url}
+                  alt={user.name}
+                  className="w-8 h-8 rounded-full object-cover border-2 border-primary/20"
+                />
+              ) : (
+                <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center border-2 border-primary/20">
+                  <User2 size={16} className="text-primary" />
+                </div>
+              )}
               <div className="hidden sm:block text-left">
                 <p className="text-xs font-medium text-foreground leading-tight">{user.name}</p>
                 <p className="text-[10px] text-muted-foreground capitalize">{user.roles?.[0]?.replace(/-/g, ' ')}</p>
