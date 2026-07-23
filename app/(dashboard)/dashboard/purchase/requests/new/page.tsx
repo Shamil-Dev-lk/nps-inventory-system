@@ -53,9 +53,40 @@ export default function NewPurchaseRequestPage() {
 
   const createMutation = useMutation({
     mutationFn: async (data: any) => {
-      const { data: res, error } = await supabase.from('purchase_requests').insert([data]).select().single();
-      if (error) throw error;
-      return res;
+      const { items, ...prData } = data;
+      
+      // Clean up empty strings for nullable UUIDs
+      if (prData.project_id === '') prData.project_id = null;
+      if (prData.department_id === '') prData.department_id = null;
+      if (prData.required_date === '') prData.required_date = null;
+
+      // 1. Insert PR
+      const { data: pr, error: prError } = await supabase
+        .from('purchase_requests')
+        .insert([prData])
+        .select()
+        .single();
+      
+      if (prError) throw prError;
+
+      // 2. Insert PR Items
+      if (items && items.length > 0) {
+        const itemsToInsert = items.map((item: any) => ({
+          purchase_request_id: pr.id,
+          item_id: item.item_id === '' ? null : item.item_id,
+          quantity: item.quantity,
+          estimated_unit_price: item.estimated_unit_price,
+          specification: item.specification || null
+        }));
+
+        const { error: itemsError } = await supabase
+          .from('purchase_request_items')
+          .insert(itemsToInsert);
+          
+        if (itemsError) throw itemsError;
+      }
+
+      return pr;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['purchase-requests'] });
