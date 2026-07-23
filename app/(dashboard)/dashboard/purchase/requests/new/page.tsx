@@ -93,7 +93,10 @@ export default function NewPurchaseRequestPage() {
       toast.success('Purchase request created successfully');
       router.push('/dashboard/purchase/requests');
     },
-    onError: () => toast.error('Failed to create purchase request'),
+    onError: (error: any) => {
+      console.error(error);
+      toast.error(`Failed to create PR: ${error?.message || 'Unknown error'}`);
+    },
   });
 
   const onSubmit = (data: any) => {
