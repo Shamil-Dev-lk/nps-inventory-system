@@ -1,10 +1,12 @@
 'use client';
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Plus, Search, Edit, Trash2, RefreshCw, Shield, UserCheck, UserX } from 'lucide-react';
+import { Plus, Search, Edit, Trash2, RefreshCw, Shield, UserCheck, UserX, Eye } from 'lucide-react';
 import { toast } from 'sonner';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
+import { useAuthStore } from '@/store/auth-store';
+import UserViewModal from './UserViewModal';
 import { useAuthStore } from '@/store/auth-store';
 
 export default function UsersPage() {
@@ -12,6 +14,7 @@ export default function UsersPage() {
   const { hasPermission } = useAuthStore();
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
+  const [viewUser, setViewUser] = useState<any>(null);
   const { data, isLoading, refetch } = useQuery({
     queryKey: ['users', page, search],
     queryFn: async () => {
@@ -158,6 +161,9 @@ export default function UsersPage() {
                   <td className="text-xs text-muted-foreground">{u.last_login_at?new Date(u.last_login_at).toLocaleDateString('en-LK'):'Never'}</td>
                   <td><span className={u.is_active?'badge-success':'badge-gray'}>{u.is_active?'Active':'Inactive'}</span></td>
                   <td><div className="flex items-center justify-end gap-1">
+                    <button onClick={() => setViewUser(u)} className="p-1.5 rounded hover:bg-muted text-muted-foreground hover:text-primary transition-colors" title="View Details">
+                      <Eye size={15}/>
+                    </button>
                     {hasPermission('manage-users') && (<>
                       <Link href={`/dashboard/settings/users/${u.id}/edit`} className="p-1.5 rounded hover:bg-muted text-muted-foreground hover:text-blue-500 transition-colors"><Edit size={15}/></Link>
                       <button onClick={()=>toggleMutation.mutate(u.id)} className="p-1.5 rounded hover:bg-muted text-muted-foreground hover:text-amber-500 transition-colors" title={u.is_active?'Deactivate':'Activate'}>
@@ -173,6 +179,12 @@ export default function UsersPage() {
         </div>
         {!isLoading && users.length === 0 && <div className="text-center py-16"><p className="text-muted-foreground">No users found</p></div>}
       </div>
+      
+      <UserViewModal 
+        user={viewUser} 
+        isOpen={!!viewUser} 
+        onClose={() => setViewUser(null)} 
+      />
     </div>
   );
 }
