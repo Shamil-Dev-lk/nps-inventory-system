@@ -103,10 +103,20 @@ function NavItemComp({ item, collapsed }: { item: NavItem; collapsed: boolean })
 
   if (item.permission && !hasPermission(item.permission)) return null;
 
-  const isActive = item.href ? pathname === item.href || pathname.startsWith(item.href + '/') : false;
-  const childActive = item.children?.some((c) => c.href && (pathname === c.href || pathname.startsWith(c.href + '/')));
+  // Filter children based on permissions
+  const visibleChildren = item.children?.filter(
+    (child) => !child.permission || hasPermission(child.permission)
+  );
 
-  if (item.children) {
+  // If this item has children but ALL of them are hidden due to permissions, hide the parent too
+  if (item.children && (!visibleChildren || visibleChildren.length === 0)) {
+    return null;
+  }
+
+  const isActive = item.href ? pathname === item.href || pathname.startsWith(item.href + '/') : false;
+  const childActive = visibleChildren?.some((c) => c.href && (pathname === c.href || pathname.startsWith(c.href + '/')));
+
+  if (item.children && visibleChildren) {
     return (
       <div>
         <button
@@ -134,7 +144,7 @@ function NavItemComp({ item, collapsed }: { item: NavItem; collapsed: boolean })
               className="overflow-hidden"
             >
               <div className="ml-4 mt-1 space-y-0.5 border-l border-sidebar-border/50 pl-3">
-                {item.children.map((child) => (
+                {visibleChildren.map((child) => (
                   <NavItemComp key={child.label} item={child} collapsed={false} />
                 ))}
               </div>
