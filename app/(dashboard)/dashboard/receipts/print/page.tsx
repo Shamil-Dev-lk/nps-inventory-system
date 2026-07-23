@@ -28,7 +28,7 @@ export function DedicatedPrintReceiptPage({ isPreviewProp = false }: { isPreview
     setCurrentDate(new Date());
   }, []);
 
-  const { data: documentData, isLoading, isError } = useQuery({
+  const { data: documentData, isLoading, isError, error } = useQuery({
     queryKey: ['print-document', type, id],
     queryFn: async () => {
       if (!id) return null;
@@ -155,9 +155,18 @@ export function DedicatedPrintReceiptPage({ isPreviewProp = false }: { isPreview
   }
 
   if (isError || (!documentData && type !== 'generic')) {
-    return <div className="flex flex-col h-screen w-full items-center justify-center bg-gray-100 text-red-600 font-bold p-8 text-center">
-      <p>Failed to load receipt data.</p>
-      <p className="text-sm font-normal text-gray-600 mt-2">Please ensure the record exists and you have permission to view it.</p>
+    return <div className="flex flex-col h-screen w-full items-center justify-center bg-gray-100 text-red-600 font-bold p-8 text-center space-y-4">
+      <p className="text-xl">Failed to load receipt data.</p>
+      <p className="text-sm font-normal text-gray-600">Please ensure the record exists and you have permission to view it.</p>
+      {isError && error && (
+        <div className="bg-red-50 text-red-800 p-4 rounded-md text-left font-mono text-xs w-full max-w-2xl overflow-auto border border-red-200">
+          <p className="font-bold mb-2">Error Details:</p>
+          <pre>{JSON.stringify(error, null, 2)}</pre>
+          <pre>{(error as any)?.message}</pre>
+          <pre>{(error as any)?.details}</pre>
+          <pre>{(error as any)?.hint}</pre>
+        </div>
+      )}
     </div>;
   }
 
