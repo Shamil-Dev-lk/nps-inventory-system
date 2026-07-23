@@ -70,6 +70,7 @@ export interface User {
   phone?: string;
   mobile?: string;
   address?: string;
+  joining_date?: string;
   designation?: string;
   department_id?: number;
   department?: Department;
