@@ -45,6 +45,7 @@ export default function EditUserPage({ params }: { params: { id: string } }) {
     if (user) {
       reset({
         name: user.name,
+        employee_id: user.employee_id || '',
         email: user.email,
         role: user.roles?.[0] || user.role || '',
         designation: user.designation || '',
@@ -75,7 +76,12 @@ export default function EditUserPage({ params }: { params: { id: string } }) {
   });
 
   const onSubmit = (data: any) => {
-    updateMutation.mutate(data);
+    // Sanitize data before sending to Supabase
+    const payload = { ...data };
+    if (!payload.department_id) payload.department_id = null;
+    if (!payload.joining_date) payload.joining_date = null;
+    
+    updateMutation.mutate(payload);
   };
 
   if (isLoading) return <div className="p-10 text-center text-muted-foreground">Loading user data...</div>;
