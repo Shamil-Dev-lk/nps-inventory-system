@@ -142,7 +142,13 @@ export default function UsersPage() {
                   <td><code className="text-xs bg-muted px-1.5 py-0.5 rounded font-mono">{u.employee_id||'—'}</code></td>
                   <td>
                     <div className="flex items-center gap-2">
-                      <img src={u.avatar_url} alt={u.name} className="w-7 h-7 rounded-full object-cover" />
+                      {u.avatar_url ? (
+                        <img src={u.avatar_url} alt={u.name} className="w-7 h-7 rounded-full object-cover" />
+                      ) : (
+                        <div className="w-7 h-7 rounded-full bg-primary/10 text-primary flex items-center justify-center text-xs font-bold uppercase">
+                          {u.name?.charAt(0) || 'U'}
+                        </div>
+                      )}
                       <div><p className="text-sm font-medium">{u.name}</p>{u.designation&&<p className="text-xs text-muted-foreground">{u.designation}</p>}</div>
                     </div>
                   </td>
