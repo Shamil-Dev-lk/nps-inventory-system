@@ -69,7 +69,11 @@ export function DedicatedPrintReceiptPage({ isPreviewProp = false }: { isPreview
         return data;
       }
       if (type === 'purchase-request') {
-        const { data } = await supabase.from('purchase_requests').select('*, items:purchase_request_items(*, item:items(*))').eq('id', id).single();
+        const { data, error } = await supabase.from('purchase_requests').select('*, items:purchase_request_items(*, item:items(*))').eq('id', id).single();
+        if (error) {
+          console.error("PR Fetch Error:", error);
+          throw error;
+        }
         return data;
       }
       return null;
@@ -151,8 +155,9 @@ export function DedicatedPrintReceiptPage({ isPreviewProp = false }: { isPreview
   }
 
   if (isError || (!documentData && type !== 'generic')) {
-    return <div className="flex h-screen w-full items-center justify-center bg-gray-100 text-red-600 font-bold">
-      Failed to load receipt data.
+    return <div className="flex flex-col h-screen w-full items-center justify-center bg-gray-100 text-red-600 font-bold p-8 text-center">
+      <p>Failed to load receipt data.</p>
+      <p className="text-sm font-normal text-gray-600 mt-2">Please ensure the record exists and you have permission to view it.</p>
     </div>;
   }
 
@@ -245,7 +250,7 @@ export function DedicatedPrintReceiptPage({ isPreviewProp = false }: { isPreview
                   <tr key={idx} className="border-b border-gray-100 last:border-0 align-top">
                     <td className="py-1">{item.quantity || item.physical_quantity || 1}</td>
                     <td className="py-1 pr-1">{item.item?.name_en || 'Unknown Item'}</td>
-                    <td className="py-1 text-right">{Number((item.quantity || item.physical_quantity || 1) * (item.unit_price || item.unit_cost || 0)).toLocaleString('en-LK', { minimumFractionDigits: 2 })}</td>
+                    <td className="py-1 text-right">{Number((item.quantity || item.physical_quantity || 1) * (item.unit_price || item.unit_cost || item.estimated_unit_price || 0)).toLocaleString('en-LK', { minimumFractionDigits: 2 })}</td>
                   </tr>
                 ))
               ) : type === 'supplier' ? (
