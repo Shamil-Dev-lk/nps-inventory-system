@@ -56,32 +56,77 @@ export default function LoginPage() {
   const onSubmit = async (data: LoginForm) => {
     setIsLoading(true);
     try {
-      // Authenticate directly against the public.users table
-      // (Since users are created manually in the UI and not via Supabase Auth)
-      const { data: userData, error } = await supabase
-        .from('users')
-        .select('*')
-        .eq('email', data.email.trim())
-        .eq('password', data.password)
-        .single();
+      let userData = null;
+      let isAuthUser = false;
+      let sessionToken = `local-token-${Date.now()}`;
+
+      // First, try standard Supabase Auth (for the Super Admin)
+      const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+        email: data.email.trim(),
+        password: data.password,
+      });
+
+      if (!authError && authData.session) {
+        // Success via Supabase Auth
+        isAuthUser = true;
+        sessionToken = authData.session.access_token;
         
-      if (error || !userData) {
-        throw new Error('Invalid email or password');
+        // Fetch their profile from public.users
+        const { data: profile } = await supabase
+          .from('users')
+          .select('*')
+          .eq('email', data.email.trim())
+          .single();
+          
+        if (profile) {
+          userData = profile;
+        } else {
+          // Fallback if they are in auth but not in public.users yet
+          userData = {
+            id: authData.user.id,
+            name: authData.user.email?.split('@')[0] || 'Admin',
+            email: authData.user.email,
+            role: 'Super Admin',
+            roles: ['Super Admin'],
+            is_active: true
+          };
+        }
+      } else {
+        // Fallback: Check if they are a manually created staff member in public.users
+        const { data: manualUser, error: manualError } = await supabase
+          .from('users')
+          .select('*')
+          .eq('email', data.email.trim())
+          .eq('password', data.password)
+          .single();
+
+        if (manualError || !manualUser) {
+          throw new Error('Invalid email or password');
+        }
+        userData = manualUser;
       }
-      
+
       if (userData.is_active === false) {
         throw new Error('Your account is inactive. Please contact your administrator.');
       }
+
+      // Fetch actual permissions for their role from the roles table
+      const userRoleName = userData.roles?.[0] || userData.role || 'user';
+      const { data: roleDef } = await supabase
+        .from('roles')
+        .select('permissions')
+        .eq('name', userRoleName)
+        .single();
+
+      const actualPermissions = roleDef?.permissions || userData.permissions || [];
       
-      // Since we bypass Supabase Auth, generate a placeholder token for local session
-      const placeholderToken = `local-token-${Date.now()}`;
-      setToken(placeholderToken);
+      setToken(sessionToken);
       
       const profileData = { 
         id: userData.id, 
         name: userData.name || userData.email.split('@')[0],
-        roles: userData.roles?.length ? userData.roles : [userData.role || 'user'],
-        permissions: userData.permissions || [],
+        roles: userData.roles?.length ? userData.roles : [userRoleName],
+        permissions: actualPermissions,
         avatar_url: userData.avatar_url
       };
       
