@@ -1,7 +1,7 @@
 'use client';
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Plus, Search, Eye, CheckCircle, RefreshCw } from 'lucide-react';
+import { Plus, Search, Eye, CheckCircle, RefreshCw, Printer, Download } from 'lucide-react';
 import { toast } from 'sonner';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
@@ -69,7 +69,9 @@ export default function PurchaseRequestsPage() {
                   <td className="text-sm text-muted-foreground max-w-[150px] truncate">{pr.purpose || '—'}</td>
                   <td><span className={pr.status==='approved'?'badge-success':pr.status==='rejected'?'badge-danger':pr.status==='submitted'?'badge-info':'badge-gray'}>{pr.status}</span></td>
                   <td><div className="flex items-center justify-end gap-1">
-                    <Link href={`/dashboard/purchase/requests/${pr.id}`} className="p-1.5 rounded hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"><Eye size={15} /></Link>
+                    <Link href={`/dashboard/receipts/print?type=purchase-request&id=${pr.id}&action=download`} target="_blank" className="p-1.5 rounded hover:bg-muted text-muted-foreground hover:text-foreground transition-colors" title="Download PDF"><Download size={15} /></Link>
+                    <Link href={`/dashboard/receipts/print?type=purchase-request&id=${pr.id}`} target="_blank" className="p-1.5 rounded hover:bg-muted text-muted-foreground hover:text-foreground transition-colors" title="Print"><Printer size={15} /></Link>
+                    <Link href={`/dashboard/purchase/requests/${pr.id}`} className="p-1.5 rounded hover:bg-muted text-muted-foreground hover:text-foreground transition-colors" title="View"><Eye size={15} /></Link>
                   </div></td>
                 </tr>
               ))}
