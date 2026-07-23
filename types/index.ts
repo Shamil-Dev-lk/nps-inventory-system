@@ -69,6 +69,7 @@ export interface User {
   email_verified_at?: string;
   phone?: string;
   mobile?: string;
+  address?: string;
   designation?: string;
   department_id?: number;
   department?: Department;
