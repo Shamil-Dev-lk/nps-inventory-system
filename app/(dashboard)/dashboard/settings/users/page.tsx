@@ -62,18 +62,67 @@ export default function UsersPage() {
     onSuccess: () => { toast.success('User deleted.'); qc.invalidateQueries({ queryKey: ['users'] }); },
     onError: (err: any) => toast.error(err.message || 'Delete failed.'),
   });
+
+  const migrateMutation = useMutation({
+    mutationFn: async () => {
+      const localData = localStorage.getItem('users');
+      if (!localData) throw new Error('No old users found in your browser storage.');
+      
+      const oldUsers = JSON.parse(localData);
+      if (!Array.isArray(oldUsers) || oldUsers.length === 0) throw new Error('No old users found.');
+
+      // Format users for Supabase
+      const formattedUsers = oldUsers.map(u => ({
+        name: u.name || 'Unknown',
+        email: u.email || `${Math.random().toString(36).substring(7)}@example.com`,
+        employee_id: u.employee_id || null,
+        designation: u.designation || null,
+        phone: u.phone || null,
+        is_active: u.status === 'active' || u.is_active !== false,
+        created_at: u.created_at || new Date().toISOString(),
+        role: u.role || 'staff',
+      }));
+
+      const { error } = await supabase.from('users').insert(formattedUsers);
+      if (error) throw error;
+      
+      // Optionally remove them from localStorage so we don't migrate twice
+      localStorage.removeItem('users');
+      return formattedUsers.length;
+    },
+    onSuccess: (count) => {
+      toast.success(`Successfully migrated ${count} old user(s)!`);
+      qc.invalidateQueries({ queryKey: ['users'] });
+    },
+    onError: (err: any) => {
+      console.error(err);
+      toast.error(err.message || 'Migration failed. Make sure you ran the SQL scripts.');
+    }
+  });
+
   const users = data?.data || [];
   const meta = data?.meta;
   const roleColors: Record<string,string> = {'super-admin':'badge-danger','store-keeper':'badge-success','secretary':'badge-info','chairman':'badge-warning'};
   return (
     <div className="space-y-5 max-w-[1600px]">
-      <div className="page-header">
+      <div className="page-header flex justify-between items-center">
         <div><h1 className="text-2xl font-bold">User Management</h1><p className="text-sm text-muted-foreground mt-1">Manage system users, roles, and access control</p></div>
-        {hasPermission('manage-users') && (
-          <Link href="/dashboard/settings/users/new" className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-white gov-gradient shadow-sm hover:opacity-90">
-            <Plus size={15} /> Add User
-          </Link>
-        )}
+        <div className="flex gap-2">
+          <button 
+            onClick={() => migrateMutation.mutate()} 
+            disabled={migrateMutation.isPending}
+            className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium border hover:bg-muted shadow-sm transition-colors disabled:opacity-50"
+          >
+            <RefreshCw size={15} className={migrateMutation.isPending ? "animate-spin" : ""} /> 
+            {migrateMutation.isPending ? 'Migrating...' : 'Migrate Old Users'}
+          </button>
+          
+          {hasPermission('manage-users') && (
+            <Link href="/dashboard/settings/users/new" className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-white gov-gradient shadow-sm hover:opacity-90">
+              <Plus size={15} /> Add User
+            </Link>
+          )}
+        </div>
       </div>
       <div className="rounded-xl bg-card border border-border p-4 shadow-sm flex gap-3">
         <div className="relative flex-1">
