@@ -7,7 +7,6 @@ import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
 import { useAuthStore } from '@/store/auth-store';
 import UserViewModal from './UserViewModal';
-import { useAuthStore } from '@/store/auth-store';
 
 export default function UsersPage() {
   const qc = useQueryClient();
