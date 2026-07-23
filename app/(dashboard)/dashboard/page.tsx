@@ -297,6 +297,7 @@ export default function DashboardPage() {
           )}
         </motion.div>
       </div>
+      )}
 
       {/* ── Recent activity tables ────────────────────────────────── */}
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
