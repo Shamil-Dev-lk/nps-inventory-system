@@ -15,6 +15,7 @@ import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
 import type { DashboardAnalytics } from '@/types';
 import { useOrgStore } from '@/store/org-store';
+import { useAuthStore } from '@/store/auth-store';
 
 const COLORS = ['#006838', '#8DC63F', '#FDB913', '#00a651', '#2ecc71', '#f39c12'];
 
@@ -74,6 +75,10 @@ function SkeletonCard() {
 
 export default function DashboardPage() {
   const { org } = useOrgStore();
+  const { hasSuperAdmin, hasPermission } = useAuthStore();
+  
+  // A manager/admin is someone who can view sensitive reports
+  const isManager = hasSuperAdmin() || hasPermission('view-reports');
 
   const { data, isLoading, refetch } = useQuery({
     queryKey: ['dashboard-analytics'],
@@ -138,22 +143,26 @@ export default function DashboardPage() {
           Array.from({ length: 4 }).map((_, i) => <SkeletonCard key={i} />)
         ) : (
           <>
-            <StatCard
-              title="Total Inventory Value"
-              value={formatCurrency(data?.inventory?.total_value || 0)}
-              subtitle={`${data?.inventory?.total_items || 0} active items`}
-              icon={DollarSign}
-              color="#006838"
-            />
-            <StatCard
-              title="GRN This Month"
-              value={formatCurrency(data?.monthly_grn?.this_month || 0)}
-              subtitle={`${data?.monthly_grn?.count || 0} deliveries received`}
-              icon={ShoppingCart}
-              color="#8DC63F"
-              trend={grnTrend >= 0 ? 'up' : 'down'}
-              trendValue={`${Math.abs(grnTrend).toFixed(1)}%`}
-            />
+            {isManager && (
+              <StatCard
+                title="Total Inventory Value"
+                value={formatCurrency(data?.inventory?.total_value || 0)}
+                subtitle={`${data?.inventory?.total_items || 0} active items`}
+                icon={DollarSign}
+                color="#006838"
+              />
+            )}
+            {isManager && (
+              <StatCard
+                title="GRN This Month"
+                value={formatCurrency(data?.monthly_grn?.this_month || 0)}
+                subtitle={`${data?.monthly_grn?.count || 0} deliveries received`}
+                icon={ShoppingCart}
+                color="#8DC63F"
+                trend={grnTrend >= 0 ? 'up' : 'down'}
+                trendValue={`${Math.abs(grnTrend).toFixed(1)}%`}
+              />
+            )}
             <StatCard
               title="Issues This Month"
               value={data?.monthly_issues?.this_month || 0}
@@ -195,17 +204,18 @@ export default function DashboardPage() {
       )}
 
       {/* ── Charts Row ───────────────────────────────────────────── */}
-      <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
-        {/* Monthly trend chart */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-          className="xl:col-span-2 rounded-xl bg-card border border-border p-6 shadow-sm"
-        >
-          <div className="flex items-center justify-between mb-6">
-            <div>
-              <h3 className="font-semibold text-foreground">Monthly Overview</h3>
+      {isManager && (
+        <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
+          {/* Monthly trend chart */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+            className="xl:col-span-2 rounded-xl bg-card border border-border p-6 shadow-sm"
+          >
+            <div className="flex items-center justify-between mb-6">
+              <div>
+                <h3 className="font-semibold text-foreground">Monthly Overview</h3>
               <p className="text-xs text-muted-foreground mt-0.5">GRN value vs stock issues — 6 months</p>
             </div>
           </div>
