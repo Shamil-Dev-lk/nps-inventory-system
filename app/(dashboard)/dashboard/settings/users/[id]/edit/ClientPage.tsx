@@ -101,6 +101,10 @@ export default function EditUserPage({ params }: { params: { id: string } }) {
               {errors.name && <span className="text-xs text-red-500">Name is required</span>}
             </div>
             <div className="col-span-2 md:col-span-1">
+              <label className="text-sm font-medium">Employee ID</label>
+              <input {...register('employee_id')} className="w-full px-3 py-2 mt-1 border rounded-lg focus:ring-2 focus:ring-primary/30 outline-none" placeholder="e.g. EMP-001" />
+            </div>
+            <div className="col-span-2 md:col-span-1">
               <label className="text-sm font-medium">Email *</label>
               <input type="email" {...register('email', { required: true, pattern: /^\S+@\S+$/i })} className="w-full px-3 py-2 mt-1 border rounded-lg focus:ring-2 focus:ring-primary/30 outline-none" />
               {errors.email && <span className="text-xs text-red-500">Valid email is required</span>}

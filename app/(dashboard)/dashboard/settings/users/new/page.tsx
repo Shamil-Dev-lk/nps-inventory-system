@@ -34,17 +34,19 @@ export default function NewUserPage() {
 
   const createMutation = useMutation({
     mutationFn: async (userData: any) => {
-      // Auto-generate employee ID
-      const { data: latestUsers, error: fetchErr } = await supabase
-        .from('users')
-        .select('id')
-        .order('id', { ascending: false })
-        .limit(1);
+      // Auto-generate employee ID if not provided
+      if (!userData.employee_id) {
+        const { data: latestUsers, error: fetchErr } = await supabase
+          .from('users')
+          .select('id')
+          .order('id', { ascending: false })
+          .limit(1);
+          
+        if (fetchErr) throw fetchErr;
         
-      if (fetchErr) throw fetchErr;
-      
-      const nextId = (latestUsers?.[0]?.id || 0) + 1;
-      userData.employee_id = `EMP-${nextId.toString().padStart(4, '0')}`;
+        const nextId = (latestUsers?.[0]?.id || 0) + 1;
+        userData.employee_id = `EMP-${nextId.toString().padStart(4, '0')}`;
+      }
 
       const { data, error } = await supabase.from('users').insert([userData]).select();
       if (error) throw error;
@@ -84,6 +86,10 @@ export default function NewUserPage() {
               <label className="text-sm font-medium">Name *</label>
               <input {...register('name', { required: true, minLength: 2, maxLength: 255 })} className="w-full px-3 py-2 mt-1 border rounded-lg focus:ring-2 focus:ring-primary/30 outline-none" />
               {errors.name && <span className="text-xs text-red-500">Name is required</span>}
+            </div>
+            <div className="col-span-2 md:col-span-1">
+              <label className="text-sm font-medium">Employee ID</label>
+              <input {...register('employee_id')} className="w-full px-3 py-2 mt-1 border rounded-lg focus:ring-2 focus:ring-primary/30 outline-none" placeholder="Leave blank to auto-generate" />
             </div>
             <div className="col-span-2 md:col-span-1">
               <label className="text-sm font-medium">Email *</label>
