@@ -130,8 +130,12 @@ export default function WarehousesPage() {
   };
 
   const onSubmit = (data: WarehouseFormData) => {
-    if (editingWarehouse) updateMutation.mutate({ id: editingWarehouse.id, payload: data });
-    else createMutation.mutate(data);
+    const payload = {
+      ...data,
+      capacity: data.capacity ? Number(data.capacity) : null,
+    };
+    if (editingWarehouse) updateMutation.mutate({ id: editingWarehouse.id, payload });
+    else createMutation.mutate(payload);
   };
 
   const columns: Column<Warehouse>[] = [
