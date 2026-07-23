@@ -6,6 +6,7 @@ CREATE TABLE IF NOT EXISTS public.customers (
   phone TEXT NOT NULL,
   nic TEXT,
   designation TEXT,
+  address TEXT,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
