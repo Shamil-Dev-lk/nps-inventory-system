@@ -1,9 +1,9 @@
--- 1. Create the purchase_requests table
+-- 1. Create the purchase_requests table (using INTEGER/SERIAL for IDs to match the database)
 CREATE TABLE IF NOT EXISTS public.purchase_requests (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  pr_number TEXT UNIQUE, -- Made nullable temporarily so trigger can fill it if missing
-  department_id UUID REFERENCES public.departments(id) ON DELETE SET NULL,
-  project_id UUID REFERENCES public.projects(id) ON DELETE SET NULL,
+  id SERIAL PRIMARY KEY,
+  pr_number TEXT UNIQUE, 
+  department_id INTEGER REFERENCES public.departments(id) ON DELETE SET NULL,
+  project_id INTEGER REFERENCES public.projects(id) ON DELETE SET NULL,
   required_date DATE,
   purpose TEXT,
   priority TEXT DEFAULT 'normal',
@@ -15,9 +15,9 @@ CREATE TABLE IF NOT EXISTS public.purchase_requests (
 
 -- 2. Create the purchase_request_items table
 CREATE TABLE IF NOT EXISTS public.purchase_request_items (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  purchase_request_id UUID NOT NULL REFERENCES public.purchase_requests(id) ON DELETE CASCADE,
-  item_id UUID REFERENCES public.items(id) ON DELETE RESTRICT,
+  id SERIAL PRIMARY KEY,
+  purchase_request_id INTEGER NOT NULL REFERENCES public.purchase_requests(id) ON DELETE CASCADE,
+  item_id INTEGER REFERENCES public.items(id) ON DELETE RESTRICT,
   quantity NUMERIC NOT NULL,
   estimated_unit_price NUMERIC,
   specification TEXT,
