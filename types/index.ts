@@ -67,6 +67,7 @@ export interface User {
   name_tamil?: string;
   email: string;
   email_verified_at?: string;
+  password?: string;
   phone?: string;
   mobile?: string;
   address?: string;
@@ -79,6 +80,7 @@ export interface User {
   dark_mode: boolean;
   is_active: boolean;
   google2fa_enabled: boolean;
+  role?: string;
   roles: string[];
   permissions: string[];
   last_login_at?: string;
