@@ -56,33 +56,43 @@ export default function LoginPage() {
   const onSubmit = async (data: LoginForm) => {
     setIsLoading(true);
     try {
-      const { data: authData, error } = await supabase.auth.signInWithPassword({
-        email: data.email,
-        password: data.password,
-      });
-      
-      if (error) throw error;
-      
-      if (authData.session) {
-        setToken(authData.session.access_token);
+      // Authenticate directly against the public.users table
+      // (Since users are created manually in the UI and not via Supabase Auth)
+      const { data: userData, error } = await supabase
+        .from('users')
+        .select('*')
+        .eq('email', data.email.trim())
+        .eq('password', data.password)
+        .single();
         
-        // Fetch user profile from public schema if needed, or just use auth user
-        const { data: profileData } = await supabase
-          .from('user_profiles')
-          .select('*')
-          .eq('id', authData.user.id)
-          .single();
-
-        const userData = profileData || { 
-          id: authData.user.id, 
-          name: authData.user.email?.split('@')[0] || 'User',
-          roles: ['super-admin'],
-          permissions: []
-        };
-        setUser(userData as any);
-        toast.success(`Welcome back, ${userData.name}!`);
-        router.replace('/dashboard/');
+      if (error || !userData) {
+        throw new Error('Invalid email or password');
       }
+      
+      if (userData.is_active === false) {
+        throw new Error('Your account is inactive. Please contact your administrator.');
+      }
+      
+      // Since we bypass Supabase Auth, generate a placeholder token for local session
+      const placeholderToken = `local-token-${Date.now()}`;
+      setToken(placeholderToken);
+      
+      const profileData = { 
+        id: userData.id, 
+        name: userData.name || userData.email.split('@')[0],
+        roles: userData.roles?.length ? userData.roles : [userData.role || 'user'],
+        permissions: userData.permissions || [],
+        avatar_url: userData.avatar_url
+      };
+      
+      setUser(profileData as any);
+      toast.success(`Welcome back, ${profileData.name}!`);
+      
+      // Delay navigation slightly to let state update
+      setTimeout(() => {
+        router.replace('/dashboard');
+      }, 100);
+      
     } catch (error: any) {
       toast.error(error.message || 'Invalid credentials. Please try again.');
     } finally {
