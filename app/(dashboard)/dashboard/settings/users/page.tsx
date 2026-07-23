@@ -147,7 +147,7 @@ export default function UsersPage() {
                     <div><p className="text-sm font-medium">{u.name}</p>{u.designation&&<p className="text-xs text-muted-foreground">{u.designation}</p>}</div>
                   </td>
                   <td className="text-sm text-muted-foreground">{u.email}</td>
-                  <td><span className={`${roleColors[u.roles?.[0]] || 'badge-gray'} text-xs`}>{u.roles?.[0]?.replace(/-/g,' ')||'—'}</span></td>
+                  <td><span className={`${roleColors[u.roles?.[0] || u.role] || 'badge-gray'} text-xs`}>{(u.roles?.[0] || u.role || '—').replace(/-/g,' ')}</span></td>
                   <td className="text-sm text-muted-foreground">{u.department?.name_en||'—'}</td>
                   <td className="text-xs text-muted-foreground">{u.last_login_at?new Date(u.last_login_at).toLocaleDateString('en-LK'):'Never'}</td>
                   <td><span className={u.is_active?'badge-success':'badge-gray'}>{u.is_active?'Active':'Inactive'}</span></td>
