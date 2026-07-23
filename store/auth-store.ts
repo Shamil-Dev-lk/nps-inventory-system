@@ -40,19 +40,21 @@ export const useAuthStore = create<AuthState>()(
       hasPermission: (permission: string) => {
         const { user } = get();
         if (!user) return false;
-        // Force super-admin access for now to avoid persistent state issues
-        return true;
+        // Super admins have all permissions
+        if (user.roles?.includes('Super Admin') || user.roles?.includes('super-admin')) return true;
+        return user.permissions?.includes(permission) || false;
       },
 
       hasRole: (role: string) => {
         const { user } = get();
         if (!user) return false;
-        return true;
+        return user.roles?.includes(role) || false;
       },
 
       hasSuperAdmin: () => {
         const { user } = get();
-        return !!user;
+        if (!user) return false;
+        return user.roles?.includes('Super Admin') || user.roles?.includes('super-admin') || false;
       },
     }),
     {
