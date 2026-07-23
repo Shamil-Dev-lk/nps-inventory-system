@@ -5,6 +5,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, Edit } from 'lucide-react';
 import Link from 'next/link';
+import { Printer, Download } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 
 export default function PurchaseRequestDetailPage({ params }: { params: { id: string } }) {
@@ -34,10 +35,20 @@ export default function PurchaseRequestDetailPage({ params }: { params: { id: st
             <p className="text-sm text-muted-foreground">View purchase request details</p>
           </div>
         </div>
-        <Link href={`/dashboard/purchase/requests/${params.id}/edit`} className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90">
-          <Edit size={16} />
-          Edit Request
-        </Link>
+        <div className="flex items-center gap-2">
+          <Link href={`/dashboard/receipts/print?type=purchase-request&id=${params.id}&action=download`} target="_blank" className="flex items-center gap-2 px-4 py-2 bg-secondary text-secondary-foreground border rounded-lg hover:bg-secondary/80 transition-colors">
+            <Download size={16} />
+            Download PDF
+          </Link>
+          <Link href={`/dashboard/receipts/print?type=purchase-request&id=${params.id}`} target="_blank" className="flex items-center gap-2 px-4 py-2 bg-secondary text-secondary-foreground border rounded-lg hover:bg-secondary/80 transition-colors">
+            <Printer size={16} />
+            Print
+          </Link>
+          <Link href={`/dashboard/purchase/requests/${params.id}/edit`} className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors">
+            <Edit size={16} />
+            Edit Request
+          </Link>
+        </div>
       </div>
 
       <div className="space-y-6">
