@@ -38,7 +38,10 @@ export default function EditPurchaseRequestPage({ params }: { params: { id: stri
 
   const updateMutation = useMutation({
     mutationFn: async (data: any) => {
-      const { data: res, error } = await supabase.from('purchase_requests').update(data).eq('id', params.id).select().single();
+      const payload = { ...data };
+      if (payload.required_date === '') payload.required_date = null;
+      
+      const { data: res, error } = await supabase.from('purchase_requests').update(payload).eq('id', params.id).select().single();
       if (error) throw error;
       return res;
     },
@@ -48,7 +51,10 @@ export default function EditPurchaseRequestPage({ params }: { params: { id: stri
       toast.success('Purchase request updated successfully');
       router.push(`/dashboard/purchase/requests/${params.id}`);
     },
-    onError: () => toast.error('Failed to update purchase request'),
+    onError: (error: any) => {
+      console.error(error);
+      toast.error(`Failed to update PR: ${error?.message || 'Unknown error'}`);
+    },
   });
 
   const onSubmit = (data: any) => {
