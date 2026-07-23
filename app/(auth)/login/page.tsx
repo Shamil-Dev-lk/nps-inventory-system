@@ -142,7 +142,7 @@ export default function LoginPage() {
             transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
             className="w-28 h-28 mx-auto mb-8 rounded-3xl bg-white backdrop-blur-sm border border-white/25 shadow-2xl flex items-center justify-center overflow-hidden p-2"
           >
-            <img src="/logo.png" alt="Logo" className="w-full h-full object-contain" />
+            <img src="/nps-inventory-system/logo.png" alt="Logo" className="w-full h-full object-contain" />
           </motion.div>
 
           <h1 className="text-5xl font-black tracking-tight mb-3 drop-shadow-md">{systemName}</h1>
@@ -199,7 +199,7 @@ export default function LoginPage() {
           {/* Mobile logo */}
           <div className="lg:hidden text-center mb-8">
             <div className="w-16 h-16 rounded-2xl bg-white flex items-center justify-center mx-auto mb-4 shadow-lg p-1.5 overflow-hidden">
-              <img src="/logo.png" alt="Logo" className="w-full h-full object-contain" />
+              <img src="/nps-inventory-system/logo.png" alt="Logo" className="w-full h-full object-contain" />
             </div>
             <h1 className="text-2xl font-bold text-primary">{systemName}</h1>
             <p className="text-muted-foreground text-sm mt-1">{orgName}</p>

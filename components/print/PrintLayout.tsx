@@ -30,7 +30,7 @@ export const PrintLayout = forwardRef<HTMLDivElement, PrintLayoutProps>(
         {/* Official Government Header */}
         <div className="w-full bg-[#c21f4c] text-white p-6 flex flex-col items-center justify-center text-center rounded-t-sm shadow-sm" style={{ WebkitPrintColorAdjust: 'exact', printColorAdjust: 'exact' }}>
           
-          <img src={org?.official_logo_url || '/logo.png'} alt="Official Logo" className="w-24 h-24 mb-4 object-contain" onError={(e) => e.currentTarget.style.display = 'none'} />
+          <img src={org?.official_logo_url || '/nps-inventory-system/logo.png'} alt="Official Logo" className="w-24 h-24 mb-4 object-contain" onError={(e) => e.currentTarget.style.display = 'none'} />
           
           {org?.name_si && (
             <h1 className="text-3xl font-black tracking-wide leading-tight mb-2 drop-shadow-sm">

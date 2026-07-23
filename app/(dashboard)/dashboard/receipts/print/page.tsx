@@ -196,7 +196,7 @@ export function DedicatedPrintReceiptPage({ isPreviewProp = false }: { isPreview
           {/* Header */}
           <div className="flex flex-col items-center text-center border-b border-black border-dashed pb-3 mb-3">
             <div className="w-16 h-16 mb-2">
-              <img src="/logo.png" alt="Logo" className="w-full h-full object-contain" />
+              <img src="/nps-inventory-system/logo.png" alt="Logo" className="w-full h-full object-contain" />
             </div>
             <h1 className="text-[14px] font-bold uppercase">{orgData?.name_en || 'Pradeshiya Sabha'}</h1>
             <p className="text-[10px] uppercase font-bold mt-1">Gov Store & Inventory</p>

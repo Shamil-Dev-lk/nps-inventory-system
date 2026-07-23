@@ -112,7 +112,7 @@ export const StickerEngine = forwardRef<HTMLDivElement, StickerProps>(
         >
           {/* Official Government Branding Header */}
           <div className="w-full flex items-center justify-center gap-2 border-b-[2px] border-black/20 pb-1 mb-1 px-4 mt-1 shrink-0">
-            <img src={org?.official_logo_url || '/logo.png'} alt="Logo" className="w-[36px] h-[36px] object-contain grayscale shrink-0" onError={(e) => e.currentTarget.style.display = 'none'} />
+            <img src={org?.official_logo_url || '/nps-inventory-system/logo.png'} alt="Logo" className="w-[36px] h-[36px] object-contain grayscale shrink-0" onError={(e) => e.currentTarget.style.display = 'none'} />
             <div className="flex flex-col items-start leading-[1.1] text-left overflow-hidden w-full">
               {nameSi && <span className="font-extrabold tracking-tight truncate w-full" style={{fontSize: `${14 * fontMultiplier}px`}}>{nameSi}</span>}
               {nameTa && <span className="font-bold tracking-tight truncate w-full" style={{fontSize: `${11 * fontMultiplier}px`}}>{nameTa}</span>}

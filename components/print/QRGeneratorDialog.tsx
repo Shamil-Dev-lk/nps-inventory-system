@@ -64,7 +64,7 @@ export function QRGeneratorDialog({ items, open, onOpenChange }: QRGeneratorProp
                   items.map((item, idx) => (
                     <div key={idx} className="flex flex-col items-center border border-gray-200 p-3 rounded-lg text-black page-break-inside-avoid w-48 bg-white shadow-sm">
                       <div className="flex items-center gap-2 mb-2 w-full border-b pb-2">
-                        <img src="/logo.png" className="w-6 h-6 grayscale" alt="Logo" onError={(e) => e.currentTarget.style.display = 'none'} />
+                        <img src="/nps-inventory-system/logo.png" className="w-6 h-6 grayscale" alt="Logo" onError={(e) => e.currentTarget.style.display = 'none'} />
                         <div className="flex flex-col leading-tight">
                           <span className="text-[7px] font-bold">නිකවැරටිය ප්‍රාදේශීය සභාව</span>
                           <span className="text-[6px] font-bold uppercase text-gray-700">Nikaweratiya Pradeshiya Sabha</span>

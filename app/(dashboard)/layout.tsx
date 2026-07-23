@@ -274,7 +274,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         {/* Logo */}
         <div className="flex items-center gap-3 px-4 py-5 border-b border-sidebar-border/50">
           <div className="w-10 h-10 rounded-xl bg-card border border-border shadow-sm flex items-center justify-center shrink-0 overflow-hidden relative">
-            <img src={org?.official_logo_url || '/logo.png'} alt="Logo" className="w-full h-full object-contain mix-blend-multiply" />
+            <img src={org?.official_logo_url || '/nps-inventory-system/logo.png'} alt="Logo" className="w-full h-full object-contain mix-blend-multiply" />
           </div>
           {!sidebarCollapsed && (
             <motion.div
