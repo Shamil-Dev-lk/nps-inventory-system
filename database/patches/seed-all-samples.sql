@@ -22,6 +22,13 @@ ALTER TABLE public.projects
   ADD COLUMN IF NOT EXISTS is_active BOOLEAN DEFAULT true;
 
 
+-- Fix warehouses table to match the frontend
+ALTER TABLE public.warehouses RENAME COLUMN location TO address;
+ALTER TABLE public.warehouses
+  ADD COLUMN IF NOT EXISTS telephone TEXT,
+  ADD COLUMN IF NOT EXISTS capacity NUMERIC,
+  ADD COLUMN IF NOT EXISTS is_main BOOLEAN DEFAULT false;
+
 -- Fix suppliers table to match the frontend
 ALTER TABLE public.suppliers RENAME COLUMN name TO company_name;
 ALTER TABLE public.suppliers RENAME COLUMN phone TO telephone;
@@ -56,7 +63,7 @@ INSERT INTO public.projects (name_en, project_code, start_date, status, descript
 ON CONFLICT DO NOTHING;
 
 -- Warehouses
-INSERT INTO public.warehouses (name_en, code, location) VALUES
+INSERT INTO public.warehouses (name_en, code, address) VALUES
   ('Main Warehouse', 'WH-MAIN', 'Building A, Ground Floor'),
   ('IT Store Room', 'WH-IT', 'Building B, 3rd Floor'),
   ('Transit Hub', 'WH-TRANSIT', 'Loading Dock')
