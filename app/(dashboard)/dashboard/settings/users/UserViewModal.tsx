@@ -26,13 +26,6 @@ export default function UserViewModal({ user, isOpen, onClose }: UserViewModalPr
         
         <div className="p-6">
           <div className="flex items-center gap-4 mb-6">
-             {user.avatar_url ? (
-                <img src={user.avatar_url} alt={user.name} className="w-16 h-16 rounded-full object-cover border-2 border-primary/20" />
-              ) : (
-                <div className="w-16 h-16 rounded-full bg-primary/10 text-primary flex items-center justify-center text-2xl font-bold uppercase border-2 border-primary/20">
-                  {user.name?.charAt(0) || 'U'}
-                </div>
-             )}
             <div>
               <h3 className="text-xl font-bold">{user.name}</h3>
               <p className="text-sm text-muted-foreground flex items-center gap-1 mt-1">

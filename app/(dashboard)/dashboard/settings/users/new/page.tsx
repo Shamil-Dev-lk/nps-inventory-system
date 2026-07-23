@@ -34,6 +34,18 @@ export default function NewUserPage() {
 
   const createMutation = useMutation({
     mutationFn: async (userData: any) => {
+      // Auto-generate employee ID
+      const { data: latestUsers, error: fetchErr } = await supabase
+        .from('users')
+        .select('id')
+        .order('id', { ascending: false })
+        .limit(1);
+        
+      if (fetchErr) throw fetchErr;
+      
+      const nextId = (latestUsers?.[0]?.id || 0) + 1;
+      userData.employee_id = `EMP-${nextId.toString().padStart(4, '0')}`;
+
       const { data, error } = await supabase.from('users').insert([userData]).select();
       if (error) throw error;
       return data;
