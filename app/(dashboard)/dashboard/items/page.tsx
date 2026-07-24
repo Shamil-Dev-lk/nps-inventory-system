@@ -75,7 +75,7 @@ export default function ItemsPage() {
         .from('items')
         .select('*, category:categories(id, name_en)', { count: 'exact' });
         
-      if (search) query = query.or(`name_en.ilike.%${search}%,item_code.ilike.%${search}%,barcode.ilike.%${search}%`);
+      if (search) query = query.or(`name_en.ilike.%${search}%,name_si.ilike.%${search}%,name_ta.ilike.%${search}%,code.ilike.%${search}%,barcode.ilike.%${search}%`);
       if (categoryId) query = query.eq('category_id', categoryId);
       
       const from = (page - 1) * perPage;
