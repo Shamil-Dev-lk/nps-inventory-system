@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
@@ -9,60 +9,77 @@ import { ArrowLeft, Save } from 'lucide-react';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
 
-export default function NewItemPage() {
+export default function EditItemPage() {
   const router = useRouter();
   const queryClient = useQueryClient();
-  const { register, handleSubmit, formState: { errors } } = useForm();
+  const { register, handleSubmit, reset, formState: { errors } } = useForm();
+  
+  const searchParams = useSearchParams();
+  const itemId = searchParams.get('id');
+
+  const { data: itemData } = useQuery({ 
+    queryKey: ['item', itemId], 
+    queryFn: async () => {
+      const { data, error } = await supabase.from('items').select('*').eq('id', itemId).single();
+      if (error) throw error;
+      return data;
+    } 
+  });
 
   const { data: categories = [] } = useQuery({ queryKey: ['categories'], queryFn: async () => { const { data } = await supabase.from('categories').select('*'); return data || []; } });
   const { data: brands = [] } = useQuery({ queryKey: ['brands'], queryFn: async () => { const { data } = await supabase.from('brands').select('*'); return data || []; } });
   const { data: units = [] } = useQuery({ queryKey: ['units'], queryFn: async () => { const { data } = await supabase.from('units').select('*'); return data || []; } });
   const { data: warehouses = [] } = useQuery({ queryKey: ['warehouses'], queryFn: async () => { const { data } = await supabase.from('warehouses').select('*'); return data || []; } });
 
-  const createMutation = useMutation({
+  useEffect(() => {
+    if (itemData) {
+      reset({
+        name_en: itemData.name_en,
+        category_id: itemData.category_id || '',
+        brand_id: itemData.brand_id || '',
+        unit_id: itemData.unit_id || '',
+        warehouse_id: itemData.warehouse_id || '',
+        description: itemData.description || '',
+        purchase_price: itemData.purchase_price || 0,
+        selling_price: itemData.selling_price || 0,
+        reorder_level: itemData.reorder_level || 0,
+        minimum_stock: itemData.minimum_stock || 0,
+        maximum_stock: itemData.maximum_stock || 0,
+      });
+    }
+  }, [itemData, reset]);
+
+  const updateMutation = useMutation({
     mutationFn: async (data: any) => {
-      // Auto-generate 3-digit code
-      const { data: allItems } = await supabase.from('items').select('code');
-      let maxNum = 0;
-      if (allItems && allItems.length > 0) {
-        allItems.forEach(i => {
-          if (i.code) {
-            const num = parseInt(i.code.replace(/^ITM-?/, ''), 10);
-            if (!isNaN(num) && num > maxNum) maxNum = num;
-          }
-        });
-      }
-      data.code = data.code || String(maxNum + 1).padStart(3, '0');
-      delete data.item_code;
-      
-      const { error } = await supabase.from('items').insert([data]);
+      const { error } = await supabase.from('items').update(data).eq('id', itemId);
       if (error) throw error;
       return true;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['items'] });
-      toast.success('Item created successfully');
+      queryClient.invalidateQueries({ queryKey: ['item', itemId] });
+      toast.success('Item updated successfully');
       router.push('/dashboard/items');
     },
-    onError: (err: any) => toast.error(err.message || 'Failed to create item'),
+    onError: (err: any) => toast.error(err.message || 'Failed to update item'),
   });
 
   const onSubmit = (data: any) => {
-    // Format numeric values
     data.purchase_price = parseFloat(data.purchase_price || 0);
     data.selling_price = parseFloat(data.selling_price || 0);
     data.minimum_stock = parseFloat(data.minimum_stock || 0);
     data.maximum_stock = parseFloat(data.maximum_stock || 0);
     data.reorder_level = parseFloat(data.reorder_level || 0);
-    if (data.current_quantity) data.current_quantity = parseFloat(data.current_quantity);
     
     if (data.category_id === '') data.category_id = null;
     if (data.brand_id === '') data.brand_id = null;
     if (data.unit_id === '') data.unit_id = null;
     if (data.warehouse_id === '') data.warehouse_id = null;
     
-    createMutation.mutate(data);
+    updateMutation.mutate(data);
   };
+
+  if (!itemData) return <div className="p-8 text-center text-muted-foreground">Loading...</div>;
 
   return (
     <div className="max-w-4xl mx-auto pb-10">
@@ -71,8 +88,8 @@ export default function NewItemPage() {
           <ArrowLeft size={20} />
         </Link>
         <div>
-          <h1 className="text-2xl font-bold">Add New Item</h1>
-          <p className="text-sm text-muted-foreground">Create a new inventory item</p>
+          <h1 className="text-2xl font-bold">Edit Item: {itemData.code || itemData.item_code}</h1>
+          <p className="text-sm text-muted-foreground">Update inventory item details</p>
         </div>
       </div>
 
@@ -142,10 +159,6 @@ export default function NewItemPage() {
               <input type="number" step="0.01" {...register('reorder_level')} className="w-full px-3 py-2 mt-1 border rounded-lg" />
             </div>
             <div>
-              <label className="text-sm font-medium text-foreground">Current Stock (Opening Stock)</label>
-              <input type="number" step="0.01" {...register('current_quantity')} placeholder="Optional" className="w-full px-3 py-2 mt-1 border rounded-lg" />
-            </div>
-            <div>
               <label className="text-sm font-medium">Minimum Stock</label>
               <input type="number" step="0.01" {...register('minimum_stock')} className="w-full px-3 py-2 mt-1 border rounded-lg" />
             </div>
@@ -158,12 +171,14 @@ export default function NewItemPage() {
 
         <div className="flex justify-end gap-3">
           <Link href="/dashboard/items" className="px-4 py-2 border rounded-lg hover:bg-muted">Cancel</Link>
-          <button type="submit" disabled={createMutation.isPending} className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 disabled:opacity-50">
+          <button type="submit" disabled={updateMutation.isPending} className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 disabled:opacity-50">
             <Save size={16} />
-            {createMutation.isPending ? 'Saving...' : 'Save Item'}
+            {updateMutation.isPending ? 'Updating...' : 'Update Item'}
           </button>
         </div>
       </form>
     </div>
   );
 }
+
+
