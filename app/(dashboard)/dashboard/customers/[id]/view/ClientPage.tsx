@@ -44,13 +44,13 @@ export default function ViewCustomerPage() {
         
         <div className="flex gap-2">
           <button 
-            onClick={() => window.open(`${window.location.pathname.split('/dashboard')[0] || ''}/dashboard/receipts/print?type=customer&id=${customer.id}&action=download`, '_blank')}
+            onClick={() => window.open(`${window.location.pathname.split('/dashboard')[0] || ''}/dashboard/receipts/print/?type=customer&id=${customer.id}&action=download`, '_blank')}
             className="flex items-center gap-2 px-4 py-2 border border-border rounded-lg bg-card hover:bg-muted font-medium transition-colors"
           >
             <Download size={16} /> Download PDF
           </button>
           <button 
-            onClick={() => window.open(`${window.location.pathname.split('/dashboard')[0] || ''}/dashboard/receipts/print?type=customer&id=${customer.id}`, '_blank')} 
+            onClick={() => window.open(`${window.location.pathname.split('/dashboard')[0] || ''}/dashboard/receipts/print/?type=customer&id=${customer.id}`, '_blank')} 
             className="flex items-center gap-2 px-4 py-2 border border-border rounded-lg bg-card hover:bg-muted font-medium transition-colors"
           >
             <Printer size={16} /> Print Document

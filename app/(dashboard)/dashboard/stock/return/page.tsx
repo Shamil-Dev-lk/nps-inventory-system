@@ -114,8 +114,8 @@ export default function StockReturnListPage() {
                     </td>
                     <td className="px-5 py-3 text-center">
                       <div className="flex items-center justify-center gap-1">
-                        <button onClick={() => window.open(`${window.location.pathname.split('/dashboard')[0] || ''}/dashboard/receipts/print?type=stock-return&id=${ret.id}&action=download`, '_blank')} className="p-1.5 rounded text-indigo-400 hover:text-indigo-600 hover:bg-indigo-50 transition-colors" title="Download PDF"><FileDown size={18} /></button>
-                        <button onClick={() => window.open(`${window.location.pathname.split('/dashboard')[0] || ''}/dashboard/receipts/print?type=stock-return&id=${ret.id}`, '_blank')} className="p-1.5 rounded text-emerald-400 hover:text-emerald-600 hover:bg-emerald-50 transition-colors" title="Print Document"><Printer size={18} /></button>
+                        <button onClick={() => window.open(`${window.location.pathname.split('/dashboard')[0] || ''}/dashboard/receipts/print/?type=stock-return&id=${ret.id}&action=download`, '_blank')} className="p-1.5 rounded text-indigo-400 hover:text-indigo-600 hover:bg-indigo-50 transition-colors" title="Download PDF"><FileDown size={18} /></button>
+                        <button onClick={() => window.open(`${window.location.pathname.split('/dashboard')[0] || ''}/dashboard/receipts/print/?type=stock-return&id=${ret.id}`, '_blank')} className="p-1.5 rounded text-emerald-400 hover:text-emerald-600 hover:bg-emerald-50 transition-colors" title="Print Document"><Printer size={18} /></button>
                         <Link href={`/dashboard/stock/return/${ret.id}`} className="inline-flex p-1.5 text-muted-foreground hover:text-primary hover:bg-primary/10 rounded-md transition-colors" title="View Details">
                           <Eye size={18} />
                         </Link>

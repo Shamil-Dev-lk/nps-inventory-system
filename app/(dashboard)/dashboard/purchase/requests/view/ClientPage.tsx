@@ -36,11 +36,11 @@ export default function PurchaseRequestDetailPage() {
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <Link href={`/dashboard/receipts/print?type=purchase-request&id=${params.id}&action=download`} target="_blank" className="flex items-center gap-2 px-4 py-2 bg-secondary text-secondary-foreground border rounded-lg hover:bg-secondary/80 transition-colors">
+          <Link href={`/dashboard/receipts/print/?type=purchase-request&id=${params.id}&action=download`} target="_blank" className="flex items-center gap-2 px-4 py-2 bg-secondary text-secondary-foreground border rounded-lg hover:bg-secondary/80 transition-colors">
             <Download size={16} />
             Download PDF
           </Link>
-          <Link href={`/dashboard/receipts/print?type=purchase-request&id=${params.id}`} target="_blank" className="flex items-center gap-2 px-4 py-2 bg-secondary text-secondary-foreground border rounded-lg hover:bg-secondary/80 transition-colors">
+          <Link href={`/dashboard/receipts/print/?type=purchase-request&id=${params.id}`} target="_blank" className="flex items-center gap-2 px-4 py-2 bg-secondary text-secondary-foreground border rounded-lg hover:bg-secondary/80 transition-colors">
             <Printer size={16} />
             Print
           </Link>
