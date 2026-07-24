@@ -325,7 +325,7 @@ export default function ItemsPage() {
                         <td>
                           <div className="flex items-center justify-end gap-1">
                             <Link
-                              href={`/dashboard/items/${item.id}`}
+                              href={`/dashboard/items/view?id=${item.id}`}
                               className="p-1.5 rounded hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
                               title="View"
                             >
@@ -333,7 +333,7 @@ export default function ItemsPage() {
                             </Link>
                             {hasPermission('edit-items') && (
                               <Link
-                                href={`/dashboard/items/${item.id}/edit`}
+                                href={`/dashboard/items/edit?id=${item.id}`}
                                 className="p-1.5 rounded hover:bg-muted text-muted-foreground hover:text-blue-500 transition-colors"
                                 title="Edit"
                               >
