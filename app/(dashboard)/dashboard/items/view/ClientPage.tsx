@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { ArrowLeft, Edit, Package, Hash, Tag, Scale, Building2, AlignLeft, Receipt, Layers, BarChart, Printer, QrCode } from 'lucide-react';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
