@@ -3,24 +3,28 @@
 import React, { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { toast } from 'sonner';
 import { ArrowLeft, Save } from 'lucide-react';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
 
-export default function EditAssetPage({ params }: { params: { id: string } }) {
+export default function EditAssetPage({ params }: { params?: { id?: string } }) {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const id = searchParams.get('id') || params?.id;
   const qc = useQueryClient();
   const { register, handleSubmit, reset, formState: { errors } } = useForm();
 
   const { data: asset, isLoading } = useQuery({
-    queryKey: ['asset', params.id],
+    queryKey: ['asset', id],
     queryFn: async () => {
-      const { data, error } = await supabase.from('assets').select('*').eq('id', params.id).single();
+      if (!id) return null;
+      const { data, error } = await supabase.from('assets').select('*').eq('id', id).single();
       if (error) throw error;
       return data;
     },
+    enabled: !!id,
   });
 
   useEffect(() => {
@@ -30,7 +34,7 @@ export default function EditAssetPage({ params }: { params: { id: string } }) {
   const updateMutation = useMutation({
     mutationFn: async (data: any) => {
       const { id, created_at, updated_at, ...updateData } = data;
-      const { data: result, error } = await supabase.from('assets').update(updateData).eq('id', params.id).select().single();
+      const { data: result, error } = await supabase.from('assets').update(updateData).eq('id', id).select().single();
       if (error) throw error;
       return result;
     },

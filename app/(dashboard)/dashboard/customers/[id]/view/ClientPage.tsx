@@ -8,19 +8,20 @@ import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
 
-export default function ViewCustomerPage() {
-  const params = useParams();
+export default function ViewCustomerPage({ params }: { params?: { id?: string } } = {}) {
   const searchParams = useSearchParams();
   const router = useRouter();
-  const id = params.id;
+  const id = searchParams.get('id') || params?.id;
   
   const { data: customer, isLoading } = useQuery({
     queryKey: ['customer', id],
     queryFn: async () => {
+      if (!id) return null;
       const { data, error } = await supabase.from('customers').select('*').eq('id', id).single();
       if (error) throw error;
       return data;
     },
+    enabled: !!id,
   });
   if (isLoading) return <div className="p-8 text-center text-muted-foreground shimmer h-32 rounded-xl max-w-2xl mx-auto" />;
   if (!customer) return <div className="p-8 text-center text-red-500 font-bold">Customer not found</div>;
