@@ -11,7 +11,6 @@ export default function StockReturnViewPage() {
   const params = useParams();
   const searchParams = useSearchParams();
   const router = useRouter();
-  const searchParams = useSearchParams();
   const id = searchParams.get('id');
   const shouldPrint = searchParams.get('print') === 'true';
 

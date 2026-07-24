@@ -10,7 +10,6 @@ import { PrintLayout } from '@/components/print/PrintLayout';
 export default function StockTransferViewPage() {
   const params = useParams();
   const searchParams = useSearchParams();
-  const searchParams = useSearchParams();
   const id = searchParams.get('id');
   const shouldPrint = searchParams.get('print') === 'true';
 

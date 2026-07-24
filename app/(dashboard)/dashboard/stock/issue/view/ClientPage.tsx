@@ -13,7 +13,6 @@ export default function IssueViewPage() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const qc = useQueryClient();
-  const searchParams = useSearchParams();
   const id = searchParams.get('id');
   const shouldPrint = searchParams.get('print') === 'true';
   const [rejectReason, setRejectReason] = useState('');
