@@ -11,6 +11,7 @@ import { Download, Printer, Share2, Mail, FileText } from 'lucide-react';
 import { toast } from 'sonner';
 import html2canvas from 'html2canvas';
 import { jsPDF } from 'jspdf';
+import { supabase } from '@/lib/supabase';
 
 export function DedicatedPrintReceiptPage({ isPreviewProp = false }: { isPreviewProp?: boolean }) {
   const searchParams = useSearchParams();
