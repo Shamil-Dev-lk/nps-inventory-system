@@ -98,18 +98,11 @@ export function DedicatedPrintReceiptPage({ isPreviewProp = false }: { isPreview
       const action = searchParams.get('action');
       
       if (action === 'download') {
-        handleDownloadPDF().then(() => {
-          if (window.opener) {
-            setTimeout(() => window.close(), 1000);
-          }
-        });
+        handleDownloadPDF();
       } else {
         setTimeout(() => {
           window.print();
-          if (window.opener) {
-            window.close();
-          }
-        }, 800);
+        }, 500);
       }
     }
   }, [isLoading, documentData, autoPrintTriggered, type, searchParams]);
