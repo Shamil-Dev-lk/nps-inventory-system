@@ -21,6 +21,14 @@ function Redirector() {
       }
 
       // Convert legacy [id] URL paths into query param routes for GitHub Pages compatibility
+      target = target.replace(/\/dashboard\/customers\/([^/]+)\/edit\/?$/, '/dashboard/customers/edit/?id=$1');
+      target = target.replace(/\/dashboard\/customers\/([^/]+)\/view\/?$/, '/dashboard/customers/view/?id=$1');
+      target = target.replace(/\/dashboard\/customers\/([^/]+)\/?$/, '/dashboard/customers/view/?id=$1');
+
+      target = target.replace(/\/dashboard\/assets\/([^/]+)\/edit\/?$/, '/dashboard/assets/edit/?id=$1');
+      target = target.replace(/\/dashboard\/assets\/([^/]+)\/view\/?$/, '/dashboard/assets/view/?id=$1');
+      target = target.replace(/\/dashboard\/assets\/([^/]+)\/?$/, '/dashboard/assets/view/?id=$1');
+
       target = target.replace(/\/dashboard\/items\/([^/]+)\/edit\/?$/, '/dashboard/items/edit/?id=$1');
       target = target.replace(/\/dashboard\/items\/([^/]+)\/?$/, '/dashboard/items/view/?id=$1');
 
