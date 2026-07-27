@@ -288,7 +288,7 @@ export default function ItemsPage() {
                           <input type="checkbox" className="rounded" checked={selectedItems.some(i => i.id === item.id)} onChange={() => toggleSelectItem(item)} />
                         </td>
                         <td>
-                          <code className="text-xs bg-muted px-1.5 py-0.5 rounded font-mono">{item.code || item.item_code}</code>
+                          <code className="text-xs bg-muted px-1.5 py-0.5 rounded font-mono whitespace-nowrap">{item.code || item.item_code}</code>
                         </td>
                         <td>
                           <div>
