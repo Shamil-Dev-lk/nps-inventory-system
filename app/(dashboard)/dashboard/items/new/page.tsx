@@ -21,7 +21,7 @@ export default function NewItemPage() {
 
   const createMutation = useMutation({
     mutationFn: async (data: any) => {
-      // Auto-generate 3-digit code
+      // Auto-generate ITM-00000 format code
       const { data: allItems } = await supabase.from('items').select('code');
       let maxNum = 0;
       if (allItems && allItems.length > 0) {
@@ -32,7 +32,7 @@ export default function NewItemPage() {
           }
         });
       }
-      data.code = data.code || String(maxNum + 1).padStart(3, '0');
+      data.code = data.code || `ITM-${String(maxNum + 1).padStart(5, '0')}`;
       delete data.item_code;
       
       const { error } = await supabase.from('items').insert([data]);
