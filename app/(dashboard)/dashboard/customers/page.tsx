@@ -109,16 +109,23 @@ export default function CustomersPage() {
               ) : (
                 filteredCustomers.map((customer: Customer) => (
                   <tr key={customer.id}>
-                    <td className="font-medium">{customer.name}</td>
+                    <td className="font-medium">
+                      <Link 
+                        href={`/dashboard/customers/view/?id=${customer.id}`} 
+                        className="hover:underline hover:text-primary transition-colors text-foreground font-semibold"
+                      >
+                        {customer.name}
+                      </Link>
+                    </td>
                     <td>{customer.email || '—'}</td>
                     <td>{customer.phone || '—'}</td>
                     <td>{customer.nic || '—'}</td>
                     <td>{customer.designation || '—'}</td>
                     <td>
                       <div className="flex items-center justify-end gap-1">
-                        <a href={`/dashboard/customers/${customer.id}/view`} className="p-1.5 rounded hover:bg-muted text-muted-foreground hover:text-green-500" title="View Customer" rel="noopener noreferrer">
+                        <Link href={`/dashboard/customers/view/?id=${customer.id}`} className="p-1.5 rounded hover:bg-muted text-muted-foreground hover:text-green-500" title="View Customer">
                           <Eye size={15} />
-                        </a>
+                        </Link>
                         <button onClick={() => window.open(`${window.location.pathname.split('/dashboard')[0] || ''}/dashboard/receipts/print/?type=customer&id=${customer.id}`, '_blank')} className="p-1.5 rounded hover:bg-muted text-muted-foreground hover:text-purple-500" title="Print Receipt">
                           <Printer size={15} />
                         </button>
@@ -128,7 +135,7 @@ export default function CustomersPage() {
                         >
                           <Download size={15} />
                         </button>
-                        <Link href={`/dashboard/customers/${customer.id}`} className="p-1.5 rounded hover:bg-muted text-muted-foreground hover:text-blue-500" title="Edit Customer">
+                        <Link href={`/dashboard/customers/edit/?id=${customer.id}`} className="p-1.5 rounded hover:bg-muted text-muted-foreground hover:text-blue-500" title="Edit Customer">
                           <Edit size={15} />
                         </Link>
                         <button
