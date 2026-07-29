@@ -8,6 +8,7 @@ import { toast } from 'sonner';
 import { ArrowLeft, Plus, Trash2, Save, ScanLine, QrCode } from 'lucide-react';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
+import { useNotificationStore } from '@/store/notification-store';
 import { BarcodeScannerModal } from '@/components/scanner/BarcodeScannerModal';
 
 export default function NewStockTransferPage() {
@@ -106,10 +107,17 @@ export default function NewStockTransferPage() {
       }
       return transfer;
     },
-    onSuccess: (transfer) => {
+    onSuccess: (transfer: any) => {
       queryClient.invalidateQueries({ queryKey: ['stock-transfers'] });
       toast.success('Stock transfer created successfully');
-      router.push(`/dashboard/stock/transfer/${transfer.id}?print=true`);
+      useNotificationStore.getState().addNotification({
+        title: 'New Stock Transfer Created',
+        description: `Stock Transfer #${transfer.transfer_number || transfer.id} created.`,
+        type: 'info',
+        link: `/dashboard/stock/transfer/view/?id=${transfer.id}`,
+        module: 'Stock Transfer',
+      });
+      router.push(`/dashboard/stock/transfer/view/?id=${transfer.id}&print=true`);
     },
     onError: (err: any) => {
       toast.error(err.message || 'Failed to create stock transfer');

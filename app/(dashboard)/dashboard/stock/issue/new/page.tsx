@@ -8,6 +8,7 @@ import { toast } from 'sonner';
 import { ArrowLeft, Plus, Trash2, Save, ScanLine, QrCode, Search } from 'lucide-react';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
+import { useNotificationStore } from '@/store/notification-store';
 import { BarcodeScannerModal } from '@/components/scanner/BarcodeScannerModal';
 import { Modal } from '@/components/ui/modal';
 
@@ -140,7 +141,14 @@ export default function NewStockIssuePage() {
     onSuccess: (data: any) => {
       queryClient.invalidateQueries({ queryKey: ['stock-issues'] });
       toast.success('Stock issue created successfully');
-      router.push(`/dashboard/stock/issue/${data.id}?print=true`);
+      useNotificationStore.getState().addNotification({
+        title: 'New Stock Issue Created',
+        description: `Stock Issue #${data.issue_number || data.id} created successfully.`,
+        type: 'info',
+        link: `/dashboard/stock/issue/view/?id=${data.id}`,
+        module: 'Stock Issue',
+      });
+      router.push(`/dashboard/stock/issue/view/?id=${data.id}&print=true`);
     },
     onError: (err: any) => {
       toast.error(err.message || 'Failed to create stock issue');

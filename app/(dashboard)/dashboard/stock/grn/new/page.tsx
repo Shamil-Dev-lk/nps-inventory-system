@@ -9,6 +9,7 @@ import { ArrowLeft, Save, Plus, Trash2, Package } from 'lucide-react';
 import Link from 'next/link';
 import { toast } from 'sonner';
 import { supabase } from '@/lib/supabase';
+import { useNotificationStore } from '@/store/notification-store';
 
 const grnSchema = z.object({
   supplier_id: z.string().min(1, 'Supplier is required'),
@@ -122,6 +123,13 @@ function NewGRNPage() {
       }
 
       toast.success('Goods Receive Note created successfully');
+      useNotificationStore.getState().addNotification({
+        title: 'New GRN Created',
+        description: `Goods Receive Note #${grn.grn_number || grn.id} recorded with total amount LKR ${totalVal.toLocaleString()}.`,
+        type: 'info',
+        link: '/dashboard/stock/grn',
+        module: 'GRN',
+      });
       router.push('/dashboard/stock/grn');
     } catch (error: any) {
       toast.error(error.message || 'Failed to create GRN');

@@ -5,28 +5,22 @@ import { useRouter } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
 import { 
   Bell, AlertTriangle, PackageX, ShoppingBag, 
-  CheckCheck, ShieldCheck, ArrowRight, X 
+  CheckCheck, ShieldCheck, ArrowRight, PackagePlus,
+  ArrowRightLeft, RotateCcw, Sliders, ClipboardCheck, Trash2
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
-
-interface NotificationItem {
-  id: string;
-  title: string;
-  description: string;
-  time: string;
-  type: 'warning' | 'error' | 'info' | 'success';
-  link: string;
-  read: boolean;
-}
+import { useNotificationStore, NotificationItem } from '@/store/notification-store';
 
 export function NotificationCenter() {
   const [isOpen, setIsOpen] = useState(false);
-  const [readIds, setReadIds] = useState<string[]>([]);
+  const [mounted, setMounted] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
 
-  // Close dropdown when clicking outside
+  const { notifications, markAsRead, markAllAsRead, clearAll } = useNotificationStore();
+
   useEffect(() => {
+    setMounted(true);
     function handleClickOutside(event: MouseEvent) {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
         setIsOpen(false);
@@ -36,9 +30,9 @@ export function NotificationCenter() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // Fetch low stock / out of stock items
-  const { data: stockAlerts = [] } = useQuery({
-    queryKey: ['notification-stock-alerts'],
+  // Live database alerts (Low stock & Out of stock)
+  const { data: dbStockAlerts = [] } = useQuery({
+    queryKey: ['notification-db-stock'],
     queryFn: async () => {
       const { data } = await supabase
         .from('items')
@@ -47,55 +41,23 @@ export function NotificationCenter() {
         .limit(10);
       return data || [];
     },
-    refetchInterval: 30000,
+    refetchInterval: 15000,
   });
 
-  // Fetch pending POs
-  const { data: pendingPOs = [] } = useQuery({
-    queryKey: ['notification-pending-pos'],
-    queryFn: async () => {
-      const { data } = await supabase
-        .from('purchase_orders')
-        .select('id, po_number, total_amount, created_at')
-        .eq('status', 'pending')
-        .limit(5);
-      return data || [];
-    },
-    refetchInterval: 30000,
-  });
+  // Combine DB alerts with store notifications
+  const dbNotifications: NotificationItem[] = dbStockAlerts.map((item: any) => ({
+    id: `db-stock-${item.id}`,
+    title: item.current_quantity === 0 ? 'Out of Stock Alert' : 'Low Stock Warning',
+    description: `${item.name_en} (${item.code || 'N/A'}) is ${item.current_quantity === 0 ? 'out of stock' : `low in stock (${item.current_quantity} remaining)`}`,
+    time: 'Live System Alert',
+    type: item.current_quantity === 0 ? 'error' : 'warning',
+    link: '/dashboard/items',
+    read: false,
+    module: 'Inventory',
+  }));
 
-  // Construct notification list
-  const notifications: NotificationItem[] = [
-    ...stockAlerts.map((item: any) => ({
-      id: `stock-${item.id}`,
-      title: item.current_quantity === 0 ? 'Out of Stock Alert' : 'Low Stock Warning',
-      description: `${item.name_en} (${item.code}) is ${item.current_quantity === 0 ? 'out of stock' : `low in stock (${item.current_quantity} left)`}`,
-      time: 'Just now',
-      type: (item.current_quantity === 0 ? 'error' : 'warning') as 'error' | 'warning',
-      link: '/dashboard/items',
-      read: readIds.includes(`stock-${item.id}`),
-    })),
-    ...pendingPOs.map((po: any) => ({
-      id: `po-${po.id}`,
-      title: 'Pending Purchase Order',
-      description: `PO #${po.po_number} requires review and approval`,
-      time: new Date(po.created_at || Date.now()).toLocaleDateString(),
-      type: 'info' as 'info',
-      link: '/dashboard/purchase/orders',
-      read: readIds.includes(`po-${po.id}`),
-    })),
-    {
-      id: 'system-log',
-      title: 'System Audit Log Active',
-      description: 'All system activities and stock movements are being recorded.',
-      time: 'Today',
-      type: 'success',
-      link: '/dashboard/settings/audit-log',
-      read: readIds.includes('system-log'),
-    }
-  ];
-
-  const unreadCount = notifications.filter(n => !n.read).length;
+  const allNotifications = [...dbNotifications, ...notifications];
+  const unreadCount = allNotifications.filter((n) => !n.read).length;
 
   const playChime = () => {
     try {
@@ -122,15 +84,30 @@ export function NotificationCenter() {
     setIsOpen(!isOpen);
   };
 
-  const markAllAsRead = () => {
-    setReadIds(notifications.map(n => n.id));
+  const handleNotificationClick = (item: NotificationItem) => {
+    markAsRead(item.id);
+    setIsOpen(false);
+    if (item.link) {
+      router.push(item.link);
+    }
   };
 
-  const handleNotificationClick = (item: NotificationItem) => {
-    setReadIds(prev => [...prev, item.id]);
-    setIsOpen(false);
-    router.push(item.link);
+  const getIcon = (item: NotificationItem) => {
+    if (item.module === 'Items' || item.module === 'Inventory') {
+      if (item.type === 'error') return <PackageX size={16} className="text-red-500" />;
+      if (item.type === 'warning') return <AlertTriangle size={16} className="text-amber-500" />;
+      return <PackagePlus size={16} className="text-emerald-500" />;
+    }
+    if (item.module === 'GRN') return <ShoppingBag size={16} className="text-blue-500" />;
+    if (item.module === 'Stock Issue') return <ArrowRightLeft size={16} className="text-indigo-500" />;
+    if (item.module === 'Stock Return') return <RotateCcw size={16} className="text-amber-500" />;
+    if (item.module === 'Stock Adjustment') return <Sliders size={16} className="text-purple-500" />;
+    if (item.module === 'Stock Taking') return <ClipboardCheck size={16} className="text-cyan-500" />;
+
+    return <ShieldCheck size={16} className="text-emerald-500" />;
   };
+
+  if (!mounted) return null;
 
   return (
     <div className="relative" ref={dropdownRef}>
@@ -172,24 +149,21 @@ export function NotificationCenter() {
           </div>
 
           <div className="max-h-80 overflow-y-auto divide-y divide-border">
-            {notifications.length === 0 ? (
+            {allNotifications.length === 0 ? (
               <div className="p-6 text-center text-muted-foreground text-xs">
                 No notifications right now
               </div>
             ) : (
-              notifications.map((item) => (
+              allNotifications.map((item) => (
                 <div
                   key={item.id}
                   onClick={() => handleNotificationClick(item)}
                   className={`p-3 text-xs cursor-pointer hover:bg-muted/50 transition-colors flex items-start gap-3 ${
-                    !item.read ? 'bg-primary/5 font-medium' : 'opacity-70'
+                    !item.read ? 'bg-primary/5 font-semibold' : 'opacity-70'
                   }`}
                 >
                   <div className="mt-0.5 shrink-0">
-                    {item.type === 'error' && <PackageX size={16} className="text-red-500" />}
-                    {item.type === 'warning' && <AlertTriangle size={16} className="text-amber-500" />}
-                    {item.type === 'info' && <ShoppingBag size={16} className="text-blue-500" />}
-                    {item.type === 'success' && <ShieldCheck size={16} className="text-emerald-500" />}
+                    {getIcon(item)}
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between">
@@ -203,12 +177,19 @@ export function NotificationCenter() {
             )}
           </div>
 
-          <div className="p-2.5 border-t border-border bg-muted/20 text-center">
+          <div className="p-2.5 border-t border-border bg-muted/20 flex items-center justify-between text-xs">
+            <button
+              onClick={clearAll}
+              className="text-muted-foreground hover:text-destructive flex items-center gap-1 transition-colors"
+            >
+              <Trash2 size={13} /> Clear history
+            </button>
+
             <button
               onClick={() => { setIsOpen(false); router.push('/dashboard/settings/audit-log'); }}
-              className="text-xs text-primary font-medium hover:underline inline-flex items-center gap-1"
+              className="text-primary font-medium hover:underline inline-flex items-center gap-1"
             >
-              View System Audit Logs <ArrowRight size={12} />
+              Audit Log <ArrowRight size={12} />
             </button>
           </div>
         </div>

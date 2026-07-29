@@ -8,6 +8,7 @@ import { toast } from 'sonner';
 import { ArrowLeft, Save } from 'lucide-react';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
+import { useNotificationStore } from '@/store/notification-store';
 
 export default function NewItemPage() {
   const router = useRouter();
@@ -37,11 +38,17 @@ export default function NewItemPage() {
       
       const { error } = await supabase.from('items').insert([data]);
       if (error) throw error;
-      return true;
+      return data;
     },
-    onSuccess: () => {
+    onSuccess: (newItem: any) => {
       queryClient.invalidateQueries({ queryKey: ['items'] });
-      toast.success('Item created successfully');
+      useNotificationStore.getState().addNotification({
+        title: 'New Item Added',
+        description: `Item "${newItem.name_en || 'New Item'}" (${newItem.code || ''}) has been added to inventory.`,
+        type: 'success',
+        link: '/dashboard/items',
+        module: 'Items',
+      });
       router.push('/dashboard/items');
     },
     onError: (err: any) => toast.error(err.message || 'Failed to create item'),

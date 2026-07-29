@@ -8,6 +8,7 @@ import { toast } from 'sonner';
 import { ArrowLeft, Save } from 'lucide-react';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
+import { useNotificationStore } from '@/store/notification-store';
 
 export default function NewStockTakingPage() {
   const router = useRouter();
@@ -53,10 +54,17 @@ export default function NewStockTakingPage() {
       }
       return st;
     },
-    onSuccess: (st) => {
+    onSuccess: (st: any) => {
       queryClient.invalidateQueries({ queryKey: ['stock-taking'] });
       toast.success('Stock taking session created successfully');
-      router.push(`/dashboard/stock/taking/${st.id}?print=true`);
+      useNotificationStore.getState().addNotification({
+        title: 'New Stock Taking Started',
+        description: `Stock taking session "${st.title || st.st_number || st.id}" initiated.`,
+        type: 'info',
+        link: `/dashboard/stock/taking/view/?id=${st.id}`,
+        module: 'Stock Taking',
+      });
+      router.push(`/dashboard/stock/taking/view/?id=${st.id}&print=true`);
     },
     onError: (err: any) => toast.error(err.message || 'Failed to create session'),
   });
