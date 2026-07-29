@@ -100,7 +100,7 @@ export default function GrnPage() {
                   <td><div className="flex items-center justify-end gap-1">
                     <button onClick={() => window.open(`${window.location.pathname.split('/dashboard')[0] || ''}/dashboard/receipts/print/?type=grn&id=${g.id}&action=download`, '_blank')} className="p-1.5 rounded hover:bg-indigo-50 text-indigo-400 hover:text-indigo-600 transition-colors" title="Download PDF"><FileDown size={15} /></button>
                     <button onClick={() => window.open(`${window.location.pathname.split('/dashboard')[0] || ''}/dashboard/receipts/print/?type=grn&id=${g.id}`, '_blank')} className="p-1.5 rounded hover:bg-emerald-50 text-emerald-400 hover:text-emerald-600 transition-colors" title="Print Document"><Printer size={15} /></button>
-                    <Link href={`/dashboard/stock/grn/${g.id}`} className="p-1.5 rounded hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"><Eye size={15} /></Link>
+                    <Link href={`/dashboard/stock/grn/view/?id=${g.id}`} className="p-1.5 rounded hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"><Eye size={15} /></Link>
                     {hasPermission('approve-grn') && g.status === 'draft' && (
                       <button onClick={() => approveMutation.mutate(g.id)} className="p-1.5 rounded hover:bg-green-50 text-muted-foreground hover:text-green-500 transition-colors" title="Approve"><CheckCircle size={15} /></button>
                     )}

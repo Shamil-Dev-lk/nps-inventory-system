@@ -103,7 +103,7 @@ export default function IssueViewPage() {
           
           {issue.status === 'draft' && (
             <>
-              <Link href={`/dashboard/stock/issue/${id}/edit`} className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium border border-border hover:bg-muted transition-colors">
+              <Link href={`/dashboard/stock/issue/edit/?id=${id}`} className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium border border-border hover:bg-muted transition-colors">
                 <Edit size={16} /> Edit
               </Link>
               <button onClick={() => setIsRejecting(true)} className="flex items-center gap-2 px-4 py-2 bg-red-50 text-red-600 border border-red-200 rounded-lg hover:bg-red-100 transition-colors">

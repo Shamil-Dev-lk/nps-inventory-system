@@ -84,7 +84,7 @@ export default function StockIssuePage() {
                   <td><div className="flex items-center justify-end gap-1">
                     <button onClick={() => window.open(`${window.location.pathname.split('/dashboard')[0] || ''}/dashboard/receipts/print/?type=stock-issue&id=${issue.id}&action=download`, '_blank')} className="p-1.5 rounded hover:bg-indigo-50 text-indigo-400 hover:text-indigo-600 transition-colors" title="Download PDF"><FileDown size={15} /></button>
                     <button onClick={() => window.open(`${window.location.pathname.split('/dashboard')[0] || ''}/dashboard/receipts/print/?type=stock-issue&id=${issue.id}`, '_blank')} className="p-1.5 rounded hover:bg-emerald-50 text-emerald-400 hover:text-emerald-600 transition-colors" title="Print Document"><Printer size={15} /></button>
-                    <Link href={`/dashboard/stock/issue/${issue.id}`} className="p-1.5 rounded hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"><Eye size={15} /></Link>
+                    <Link href={`/dashboard/stock/issue/view/?id=${issue.id}`} className="p-1.5 rounded hover:bg-muted text-muted-foreground hover:text-foreground transition-colors" title="View Details"><Eye size={15} /></Link>
                     {hasPermission('approve-stock-issues') && issue.status === 'draft' && (
                       <button onClick={() => approveMutation.mutate(issue.id)} className="p-1.5 rounded hover:bg-green-50 text-muted-foreground hover:text-green-500 transition-colors" title="Approve"><CheckCircle size={15} /></button>
                     )}

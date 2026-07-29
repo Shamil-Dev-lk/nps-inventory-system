@@ -121,7 +121,7 @@ export default function SubCategoriesPage() {
                     </td>
                     <td>
                       <div className="flex items-center justify-end gap-1">
-                        <Link href={`/dashboard/store/sub-categories/${sc.id}`} className="p-1.5 rounded hover:bg-muted text-muted-foreground hover:text-blue-500">
+                        <Link href={`/dashboard/store/sub-categories/view/?id=${sc.id}`} className="p-1.5 rounded hover:bg-muted text-muted-foreground hover:text-blue-500">
                           <Edit size={15} />
                         </Link>
                         <button

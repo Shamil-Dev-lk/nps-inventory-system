@@ -53,7 +53,7 @@ export default function EditSupplierPage() {
   return (
     <div className="max-w-2xl mx-auto pb-10">
       <div className="flex items-center gap-4 mb-6">
-        <Link href={`/dashboard/store/suppliers/${params.id}/view`} className="p-2 rounded-lg hover:bg-muted transition-colors border bg-card">
+        <Link href={`/dashboard/store/suppliers/view/?id=${params.id}`} className="p-2 rounded-lg hover:bg-muted transition-colors border bg-card">
           <ArrowLeft size={20} />
         </Link>
         <div>
@@ -99,7 +99,7 @@ export default function EditSupplierPage() {
         </div>
 
         <div className="flex justify-end gap-3">
-          <Link href={`/dashboard/store/suppliers/${params.id}/view`} className="px-4 py-2 border rounded-lg hover:bg-muted">Cancel</Link>
+          <Link href={`/dashboard/store/suppliers/view/?id=${params.id}`} className="px-4 py-2 border rounded-lg hover:bg-muted">Cancel</Link>
           <button type="submit" disabled={updateMutation.isPending} className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 disabled:opacity-50 shadow-sm">
             <Save size={16} />
             {updateMutation.isPending ? 'Saving...' : 'Update Supplier'}

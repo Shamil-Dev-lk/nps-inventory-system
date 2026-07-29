@@ -78,7 +78,7 @@ export default function IssueEditPage() {
   return (
     <div className="space-y-6 max-w-[1000px]">
       <div className="flex items-center gap-4">
-        <Link href={`/dashboard/stock/issue/${id}`} className="p-2 border border-border rounded-lg hover:bg-muted transition-colors">
+        <Link href={`/dashboard/stock/issue/view/?id=${id}`} className="p-2 border border-border rounded-lg hover:bg-muted transition-colors">
           <ArrowLeft size={18} />
         </Link>
         <div>
@@ -141,7 +141,7 @@ export default function IssueEditPage() {
         </div>
 
         <div className="flex justify-end gap-3">
-          <Link href={`/dashboard/stock/issue/${id}`} className="px-4 py-2 rounded-lg border border-border hover:bg-muted text-sm font-medium">
+          <Link href={`/dashboard/stock/issue/view/?id=${id}`} className="px-4 py-2 rounded-lg border border-border hover:bg-muted text-sm font-medium">
             Cancel
           </Link>
           <button type="submit" disabled={updateMutation.isPending} className="flex items-center gap-2 px-4 py-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 text-sm font-medium">

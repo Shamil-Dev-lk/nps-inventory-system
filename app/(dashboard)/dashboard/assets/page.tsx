@@ -3,9 +3,10 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { Plus, Eye, Edit, Trash2, Package } from 'lucide-react';
+import { Plus, Eye, Edit, Trash2, Package, Printer, FileDown, Download } from 'lucide-react';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
+import { exportToCsv } from '@/lib/export-utils';
 
 interface Asset {
   id: number;
@@ -31,12 +32,15 @@ export default function AssetsPage() {
     mutationFn: async (id: number) => {
       const { error } = await supabase.from('assets').delete().eq('id', id);
       if (error) throw error;
+      return true;
     },
     onSuccess: () => {
       toast.success('Asset deleted successfully.');
       qc.invalidateQueries({ queryKey: ['assets'] });
     },
-    onError: (error: any) => toast.error(error?.message || 'Failed to delete asset.'),
+    onError: (err: any) => {
+      toast.error(err.message || 'Failed to delete asset.');
+    },
   });
 
   const handleDelete = (asset: Asset) => {
@@ -57,13 +61,21 @@ export default function AssetsPage() {
           <h1 className="text-2xl font-bold text-foreground">Assets</h1>
           <p className="text-sm text-muted-foreground mt-1">Manage all company assets</p>
         </div>
-        <Link
-          href="/dashboard/assets/new"
-          className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-white gov-gradient hover:opacity-90 transition-all shadow-sm"
-        >
-          <Plus size={15} />
-          Add Asset
-        </Link>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => exportToCsv('assets', filteredAssets)}
+            className="flex items-center gap-2 px-3 py-2 rounded-lg border border-border bg-card text-sm font-medium hover:bg-muted transition-colors"
+          >
+            <Download size={15} /> Export
+          </button>
+          <Link
+            href="/dashboard/assets/new"
+            className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-white gov-gradient hover:opacity-90 transition-all shadow-sm"
+          >
+            <Plus size={15} />
+            Add Asset
+          </Link>
+        </div>
       </div>
 
       <div className="rounded-xl bg-card border border-border p-4 shadow-sm flex gap-3">
@@ -115,14 +127,32 @@ export default function AssetsPage() {
                     </td>
                     <td>
                       <div className="flex items-center justify-end gap-1">
-                        <Link href={`/dashboard/assets/${asset.id}`} className="p-1.5 rounded hover:bg-muted text-muted-foreground hover:text-blue-500">
-                          <Edit size={15} />
+                        <button 
+                          onClick={() => window.open(`${window.location.pathname.split('/dashboard')[0] || ''}/dashboard/receipts/print/?type=asset&id=${asset.id}&action=download`, '_blank')} 
+                          className="p-1.5 rounded text-indigo-400 hover:text-indigo-600 hover:bg-indigo-50 transition-colors" 
+                          title="Download PDF"
+                        >
+                          <FileDown size={16} />
+                        </button>
+                        <button 
+                          onClick={() => window.open(`${window.location.pathname.split('/dashboard')[0] || ''}/dashboard/receipts/print/?type=asset&id=${asset.id}`, '_blank')} 
+                          className="p-1.5 rounded text-emerald-400 hover:text-emerald-600 hover:bg-emerald-50 transition-colors" 
+                          title="Print Asset Label"
+                        >
+                          <Printer size={16} />
+                        </button>
+                        <Link href={`/dashboard/assets/view/?id=${asset.id}`} className="p-1.5 rounded hover:bg-muted text-muted-foreground hover:text-primary transition-colors" title="View Details">
+                          <Eye size={16} />
+                        </Link>
+                        <Link href={`/dashboard/assets/edit/?id=${asset.id}`} className="p-1.5 rounded hover:bg-muted text-muted-foreground hover:text-blue-500 transition-colors" title="Edit Asset">
+                          <Edit size={16} />
                         </Link>
                         <button
                           onClick={() => handleDelete(asset)}
-                          className="p-1.5 rounded hover:bg-red-50 text-muted-foreground hover:text-red-500"
+                          className="p-1.5 rounded hover:bg-red-50 text-muted-foreground hover:text-red-500 transition-colors"
+                          title="Delete Asset"
                         >
-                          <Trash2 size={15} />
+                          <Trash2 size={16} />
                         </button>
                       </div>
                     </td>

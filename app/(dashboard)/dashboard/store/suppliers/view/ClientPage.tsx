@@ -57,7 +57,7 @@ export default function ViewSupplierPage() {
             <Printer size={16} /> Print Document
           </button>
           <Link 
-            href={`/dashboard/store/suppliers/${supplier.id}/edit`} 
+            href={`/dashboard/store/suppliers/edit/?id=${supplier.id}`} 
             className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 font-medium transition-colors shadow-sm"
           >
             <Edit size={16} /> Edit Supplier
