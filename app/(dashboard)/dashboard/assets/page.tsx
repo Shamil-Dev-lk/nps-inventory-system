@@ -6,7 +6,7 @@ import { toast } from 'sonner';
 import { Plus, Eye, Edit, Trash2, Package, Printer, FileDown, Download } from 'lucide-react';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
-import { exportToCsv } from '@/lib/export-utils';
+import { exportToCsv } from '@/lib/export';
 
 interface Asset {
   id: number;

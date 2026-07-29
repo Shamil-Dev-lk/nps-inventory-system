@@ -5,7 +5,7 @@ import { Plus, Search, Eye, RefreshCw, Printer, FileDown, Download, Edit } from 
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
 import { useAuthStore } from '@/store/auth-store';
-import { exportToCsv } from '@/lib/export-utils';
+import { exportToCsv } from '@/lib/export';
 
 export default function PurchaseOrdersPage() {
   const { hasPermission } = useAuthStore();
