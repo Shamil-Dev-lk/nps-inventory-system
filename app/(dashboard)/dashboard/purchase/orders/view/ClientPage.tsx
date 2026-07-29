@@ -3,20 +3,24 @@
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { ArrowLeft, Edit } from 'lucide-react';
+import { ArrowLeft, Edit, Printer, FileDown } from 'lucide-react';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
 
 export default function PurchaseOrderDetailPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const id = searchParams.get('id');
 
   const { data: po, isLoading } = useQuery({
-    queryKey: ['purchase_order', params.id],
+    queryKey: ['purchase_order', id],
     queryFn: async () => {
-      const { data, error } = await supabase.from('purchase_orders').select('*, supplier:suppliers(name)').eq('id', params.id).single();
+      if (!id) return null;
+      const { data, error } = await supabase.from('purchase_orders').select('*, supplier:suppliers(name)').eq('id', id).single();
       if (error) throw error;
       return data;
-    }
+    },
+    enabled: !!id,
   });
 
   if (isLoading) return <div className="p-8 text-center text-muted-foreground">Loading...</div>;
@@ -34,10 +38,23 @@ export default function PurchaseOrderDetailPage() {
             <p className="text-sm text-muted-foreground">View purchase order details</p>
           </div>
         </div>
-        <Link href={`/dashboard/purchase/orders/${params.id}/edit`} className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90">
-          <Edit size={16} />
-          Edit Order
-        </Link>
+        <div className="flex items-center gap-2">
+          <button 
+            onClick={() => window.open(`${window.location.pathname.split('/dashboard')[0] || ''}/dashboard/receipts/print/?type=purchase-order&id=${id}&action=download`, '_blank')} 
+            className="flex items-center gap-2 px-3 py-2 bg-secondary text-secondary-foreground border border-border rounded-lg hover:bg-secondary/80 transition-colors text-sm font-medium"
+          >
+            <FileDown size={16} /> Download PDF
+          </button>
+          <button 
+            onClick={() => window.open(`${window.location.pathname.split('/dashboard')[0] || ''}/dashboard/receipts/print/?type=purchase-order&id=${id}`, '_blank')} 
+            className="flex items-center gap-2 px-3 py-2 bg-secondary text-secondary-foreground border border-border rounded-lg hover:bg-secondary/80 transition-colors text-sm font-medium"
+          >
+            <Printer size={16} /> Print
+          </button>
+          <Link href={`/dashboard/purchase/orders/edit/?id=${id}`} className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 text-sm font-medium">
+            <Edit size={16} /> Edit Order
+          </Link>
+        </div>
       </div>
 
       <div className="space-y-6">

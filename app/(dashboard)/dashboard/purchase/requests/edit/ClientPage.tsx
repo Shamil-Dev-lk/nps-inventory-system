@@ -12,15 +12,20 @@ import { supabase } from '@/lib/supabase';
 export default function EditPurchaseRequestPage() {
   const router = useRouter();
   const queryClient = useQueryClient();
+  const searchParams = useSearchParams();
+  const id = searchParams.get('id');
+
   const { register, handleSubmit, reset, formState: { errors } } = useForm();
 
   const { data: pr } = useQuery({ 
-    queryKey: ['purchase_request', params.id], 
+    queryKey: ['purchase_request', id], 
     queryFn: async () => {
-      const { data, error } = await supabase.from('purchase_requests').select('*').eq('id', params.id).single();
+      if (!id) return null;
+      const { data, error } = await supabase.from('purchase_requests').select('*').eq('id', id).single();
       if (error) throw error;
       return data;
-    }
+    },
+    enabled: !!id,
   });
 
   useEffect(() => {
@@ -31,25 +36,25 @@ export default function EditPurchaseRequestPage() {
         required_date: pr.required_date || '',
         purpose: pr.purpose || '',
         remarks: pr.remarks || '',
-        approval_remarks: pr.approval_remarks || '',
       });
     }
   }, [pr, reset]);
 
   const updateMutation = useMutation({
     mutationFn: async (data: any) => {
+      if (!id) return;
       const payload = { ...data };
       if (payload.required_date === '') payload.required_date = null;
       
-      const { data: res, error } = await supabase.from('purchase_requests').update(payload).eq('id', params.id).select().single();
+      const { data: res, error } = await supabase.from('purchase_requests').update(payload).eq('id', id).select().single();
       if (error) throw error;
       return res;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['purchase_requests'] });
-      queryClient.invalidateQueries({ queryKey: ['purchase_request', params.id] });
+      queryClient.invalidateQueries({ queryKey: ['purchase_request', id] });
       toast.success('Purchase request updated successfully');
-      router.push(`/dashboard/purchase/requests/${params.id}`);
+      router.push(`/dashboard/purchase/requests/view/?id=${id}`);
     },
     onError: (error: any) => {
       console.error(error);
@@ -66,7 +71,7 @@ export default function EditPurchaseRequestPage() {
   return (
     <div className="max-w-4xl mx-auto pb-10">
       <div className="flex items-center gap-4 mb-6">
-        <Link href={`/dashboard/purchase/requests/${params.id}`} className="p-2 rounded-lg hover:bg-muted transition-colors">
+        <Link href={`/dashboard/purchase/requests/view/?id=${id}`} className="p-2 rounded-lg hover:bg-muted transition-colors">
           <ArrowLeft size={20} />
         </Link>
         <div>
@@ -83,10 +88,9 @@ export default function EditPurchaseRequestPage() {
               <label className="text-sm font-medium">Status</label>
               <select {...register('status')} className="w-full px-3 py-2 mt-1 border rounded-lg">
                 <option value="draft">Draft</option>
-                <option value="pending">Pending</option>
+                <option value="submitted">Submitted</option>
                 <option value="approved">Approved</option>
                 <option value="rejected">Rejected</option>
-                <option value="completed">Completed</option>
                 <option value="cancelled">Cancelled</option>
               </select>
             </div>
@@ -105,21 +109,17 @@ export default function EditPurchaseRequestPage() {
             </div>
             <div className="md:col-span-2">
               <label className="text-sm font-medium">Purpose</label>
-              <textarea {...register('purpose')} rows={2} className="w-full px-3 py-2 mt-1 border rounded-lg"></textarea>
+              <textarea {...register('purpose')} rows={3} className="w-full px-3 py-2 mt-1 border rounded-lg"></textarea>
             </div>
             <div className="md:col-span-2">
-              <label className="text-sm font-medium">General Remarks</label>
+              <label className="text-sm font-medium">Remarks</label>
               <textarea {...register('remarks')} rows={3} className="w-full px-3 py-2 mt-1 border rounded-lg"></textarea>
-            </div>
-            <div className="md:col-span-2">
-              <label className="text-sm font-medium">Approval Remarks</label>
-              <textarea {...register('approval_remarks')} rows={2} className="w-full px-3 py-2 mt-1 border rounded-lg"></textarea>
             </div>
           </div>
         </div>
 
         <div className="flex justify-end gap-3">
-          <Link href={`/dashboard/purchase/requests/${params.id}`} className="px-4 py-2 border rounded-lg hover:bg-muted">Cancel</Link>
+          <Link href={`/dashboard/purchase/requests/view/?id=${id}`} className="px-4 py-2 border rounded-lg hover:bg-muted">Cancel</Link>
           <button type="submit" disabled={updateMutation.isPending} className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 disabled:opacity-50">
             <Save size={16} />
             {updateMutation.isPending ? 'Updating...' : 'Update Request'}

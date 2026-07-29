@@ -1,11 +1,12 @@
 'use client';
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Plus, Search, Eye, CheckCircle, RefreshCw, Printer, Download } from 'lucide-react';
+import { Plus, Search, Eye, CheckCircle, RefreshCw, Printer, Download, FileDown, Edit } from 'lucide-react';
 import { toast } from 'sonner';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
 import { useAuthStore } from '@/store/auth-store';
+import { exportToCsv } from '@/lib/export-utils';
 
 export default function PurchaseRequestsPage() {
   const qc = useQueryClient();
@@ -69,9 +70,10 @@ export default function PurchaseRequestsPage() {
                   <td className="text-sm text-muted-foreground max-w-[150px] truncate">{pr.purpose || '—'}</td>
                   <td><span className={pr.status==='approved'?'badge-success':pr.status==='rejected'?'badge-danger':pr.status==='submitted'?'badge-info':'badge-gray'}>{pr.status}</span></td>
                   <td><div className="flex items-center justify-end gap-1">
-                    <Link href={`/dashboard/receipts/print/?type=purchase-request&id=${pr.id}&action=download`} target="_blank" className="p-1.5 rounded hover:bg-muted text-muted-foreground hover:text-foreground transition-colors" title="Download PDF"><Download size={15} /></Link>
-                    <Link href={`/dashboard/receipts/print/?type=purchase-request&id=${pr.id}`} target="_blank" className="p-1.5 rounded hover:bg-muted text-muted-foreground hover:text-foreground transition-colors" title="Print"><Printer size={15} /></Link>
-                    <Link href={`/dashboard/purchase/requests/${pr.id}`} className="p-1.5 rounded hover:bg-muted text-muted-foreground hover:text-foreground transition-colors" title="View"><Eye size={15} /></Link>
+                    <Link href={`/dashboard/receipts/print/?type=purchase-request&id=${pr.id}&action=download`} target="_blank" className="p-1.5 rounded hover:bg-indigo-50 text-indigo-400 hover:text-indigo-600 transition-colors" title="Download PDF"><FileDown size={15} /></Link>
+                    <Link href={`/dashboard/receipts/print/?type=purchase-request&id=${pr.id}`} target="_blank" className="p-1.5 rounded hover:bg-emerald-50 text-emerald-400 hover:text-emerald-600 transition-colors" title="Print"><Printer size={15} /></Link>
+                    <Link href={`/dashboard/purchase/requests/view/?id=${pr.id}`} className="p-1.5 rounded hover:bg-muted text-muted-foreground hover:text-foreground transition-colors" title="View"><Eye size={15} /></Link>
+                    <Link href={`/dashboard/purchase/requests/edit/?id=${pr.id}`} className="p-1.5 rounded hover:bg-muted text-muted-foreground hover:text-blue-500 transition-colors" title="Edit"><Edit size={15} /></Link>
                   </div></td>
                 </tr>
               ))}

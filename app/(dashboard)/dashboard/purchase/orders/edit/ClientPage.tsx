@@ -12,15 +12,20 @@ import { supabase } from '@/lib/supabase';
 export default function EditPurchaseOrderPage() {
   const router = useRouter();
   const queryClient = useQueryClient();
+  const searchParams = useSearchParams();
+  const id = searchParams.get('id');
+
   const { register, handleSubmit, reset, formState: { errors } } = useForm();
 
   const { data: po } = useQuery({ 
-    queryKey: ['purchase_order', params.id], 
+    queryKey: ['purchase_order', id], 
     queryFn: async () => {
-      const { data, error } = await supabase.from('purchase_orders').select('*').eq('id', params.id).single();
+      if (!id) return null;
+      const { data, error } = await supabase.from('purchase_orders').select('*').eq('id', id).single();
       if (error) throw error;
       return data;
-    }
+    },
+    enabled: !!id,
   });
 
   useEffect(() => {
@@ -36,15 +41,16 @@ export default function EditPurchaseOrderPage() {
 
   const updateMutation = useMutation({
     mutationFn: async (data: any) => {
-      const { data: res, error } = await supabase.from('purchase_orders').update(data).eq('id', params.id).select().single();
+      if (!id) return;
+      const { data: res, error } = await supabase.from('purchase_orders').update(data).eq('id', id).select().single();
       if (error) throw error;
       return res;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['purchase_orders'] });
-      queryClient.invalidateQueries({ queryKey: ['purchase_order', params.id] });
+      queryClient.invalidateQueries({ queryKey: ['purchase_order', id] });
       toast.success('Purchase order updated successfully');
-      router.push(`/dashboard/purchase/orders/${params.id}`);
+      router.push(`/dashboard/purchase/orders/view/?id=${id}`);
     },
     onError: () => toast.error('Failed to update purchase order'),
   });
@@ -58,7 +64,7 @@ export default function EditPurchaseOrderPage() {
   return (
     <div className="max-w-4xl mx-auto pb-10">
       <div className="flex items-center gap-4 mb-6">
-        <Link href={`/dashboard/purchase/orders/${params.id}`} className="p-2 rounded-lg hover:bg-muted transition-colors">
+        <Link href={`/dashboard/purchase/orders/view/?id=${id}`} className="p-2 rounded-lg hover:bg-muted transition-colors">
           <ArrowLeft size={20} />
         </Link>
         <div>
@@ -98,7 +104,7 @@ export default function EditPurchaseOrderPage() {
         </div>
 
         <div className="flex justify-end gap-3">
-          <Link href={`/dashboard/purchase/orders/${params.id}`} className="px-4 py-2 border rounded-lg hover:bg-muted">Cancel</Link>
+          <Link href={`/dashboard/purchase/orders/view/?id=${id}`} className="px-4 py-2 border rounded-lg hover:bg-muted">Cancel</Link>
           <button type="submit" disabled={updateMutation.isPending} className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 disabled:opacity-50">
             <Save size={16} />
             {updateMutation.isPending ? 'Updating...' : 'Update Order'}

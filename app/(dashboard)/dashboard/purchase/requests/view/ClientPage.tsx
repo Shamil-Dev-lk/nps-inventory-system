@@ -44,7 +44,7 @@ export default function PurchaseRequestDetailPage() {
             <Printer size={16} />
             Print
           </Link>
-          <Link href={`/dashboard/purchase/requests/${params.id}/edit`} className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors">
+          <Link href={`/dashboard/purchase/requests/edit/?id=${id}`} className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors">
             <Edit size={16} />
             Edit Request
           </Link>
