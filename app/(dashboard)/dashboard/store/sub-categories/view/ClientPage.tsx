@@ -11,6 +11,8 @@ import { supabase } from '@/lib/supabase';
 
 export default function EditSubCategoryPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const id = searchParams.get('id');
   const qc = useQueryClient();
   const { register, handleSubmit, reset, formState: { errors } } = useForm();
 
@@ -24,9 +26,9 @@ export default function EditSubCategoryPage() {
   });
 
   const { data: subCategory, isLoading } = useQuery({
-    queryKey: ['sub-category', params.id],
+    queryKey: ['sub-category', id],
     queryFn: async () => {
-      const { data, error } = await supabase.from('sub_categories').select('*').eq('id', params.id).single();
+      const { data, error } = await supabase.from('sub_categories').select('*').eq('id', id).single();
       if (error) throw error;
       return data;
     },
@@ -38,7 +40,7 @@ export default function EditSubCategoryPage() {
 
   const updateMutation = useMutation({
     mutationFn: async (data: any) => {
-      const { error } = await supabase.from('sub_categories').update(data).eq('id', params.id);
+      const { error } = await supabase.from('sub_categories').update(data).eq('id', id);
       if (error) throw error;
       return true;
     },

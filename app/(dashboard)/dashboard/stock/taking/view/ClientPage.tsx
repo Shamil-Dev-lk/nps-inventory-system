@@ -11,6 +11,8 @@ import { supabase } from '@/lib/supabase';
 
 export default function StockTakingDetailsPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const id = searchParams.get('id');
   const queryClient = useQueryClient();
   const { register, control, handleSubmit, reset } = useForm<any>({
     defaultValues: { items: [] }
@@ -19,7 +21,7 @@ export default function StockTakingDetailsPage() {
   const { fields } = useFieldArray({ control, name: 'items' });
 
   const { data, isLoading } = useQuery({
-    queryKey: ['stock-taking', params.id],
+    queryKey: ['stock-taking', id],
     queryFn: async () => {
       const { data: st, error } = await supabase
         .from('stock_takings')
@@ -28,7 +30,7 @@ export default function StockTakingDetailsPage() {
           warehouse:warehouses(id, name_en),
           items:stock_taking_items(*, item:items(*))
         `)
-        .eq('id', params.id)
+        .eq('id', id)
         .single();
       if (error) throw error;
       reset({ items: st.items || [] });
@@ -53,7 +55,7 @@ export default function StockTakingDetailsPage() {
       const { error } = await supabase
         .from('stock_takings')
         .update({ status: 'completed' })
-        .eq('id', params.id);
+        .eq('id', id);
       if (error) throw error;
     },
     onSuccess: () => {
@@ -167,7 +169,7 @@ export default function StockTakingDetailsPage() {
                   const { error } = await supabase
                     .from('stock_takings')
                     .update({ status: 'approved' })
-                    .eq('id', params.id);
+                    .eq('id', id);
                   if (error) throw error;
                   toast.success('Stock levels adjusted successfully', { id: toastId });
                   queryClient.invalidateQueries({ queryKey: ['stock-taking'] });

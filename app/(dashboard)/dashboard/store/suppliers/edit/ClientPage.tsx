@@ -11,13 +11,15 @@ import { supabase } from '@/lib/supabase';
 
 export default function EditSupplierPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const id = searchParams.get('id');
   const qc = useQueryClient();
   const { register, handleSubmit, reset, formState: { errors } } = useForm();
 
   const { data: supplier, isLoading } = useQuery({
-    queryKey: ['supplier', params.id],
+    queryKey: ['supplier', id],
     queryFn: async () => {
-      const { data, error } = await supabase.from('suppliers').select('*').eq('id', params.id).single();
+      const { data, error } = await supabase.from('suppliers').select('*').eq('id', id).single();
       if (error) throw error;
       return data;
     },
@@ -30,15 +32,15 @@ export default function EditSupplierPage() {
   const updateMutation = useMutation({
     mutationFn: async (data: any) => {
       const { id, created_at, ...updateData } = data;
-      const { data: result, error } = await supabase.from('suppliers').update(updateData).eq('id', params.id).select().single();
+      const { data: result, error } = await supabase.from('suppliers').update(updateData).eq('id', id).select().single();
       if (error) throw error;
       return result;
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['suppliers'] });
-      qc.invalidateQueries({ queryKey: ['supplier', params.id] });
+      qc.invalidateQueries({ queryKey: ['supplier', id] });
       toast.success('Supplier updated successfully');
-      router.push(`/dashboard/store/suppliers/${params.id}/view`);
+      router.push(`/dashboard/store/suppliers/${id}/view`);
     },
     onError: (error: any) => toast.error(error?.message || 'Failed to update supplier'),
   });
@@ -53,7 +55,7 @@ export default function EditSupplierPage() {
   return (
     <div className="max-w-2xl mx-auto pb-10">
       <div className="flex items-center gap-4 mb-6">
-        <Link href={`/dashboard/store/suppliers/view/?id=${params.id}`} className="p-2 rounded-lg hover:bg-muted transition-colors border bg-card">
+        <Link href={`/dashboard/store/suppliers/view/?id=${id}`} className="p-2 rounded-lg hover:bg-muted transition-colors border bg-card">
           <ArrowLeft size={20} />
         </Link>
         <div>
@@ -99,7 +101,7 @@ export default function EditSupplierPage() {
         </div>
 
         <div className="flex justify-end gap-3">
-          <Link href={`/dashboard/store/suppliers/view/?id=${params.id}`} className="px-4 py-2 border rounded-lg hover:bg-muted">Cancel</Link>
+          <Link href={`/dashboard/store/suppliers/view/?id=${id}`} className="px-4 py-2 border rounded-lg hover:bg-muted">Cancel</Link>
           <button type="submit" disabled={updateMutation.isPending} className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 disabled:opacity-50 shadow-sm">
             <Save size={16} />
             {updateMutation.isPending ? 'Saving...' : 'Update Supplier'}

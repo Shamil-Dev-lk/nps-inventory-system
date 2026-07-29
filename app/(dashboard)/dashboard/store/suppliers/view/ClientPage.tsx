@@ -9,11 +9,13 @@ import { supabase } from '@/lib/supabase';
 
 export default function ViewSupplierPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const id = searchParams.get('id');
 
   const { data: supplier, isLoading } = useQuery({
-    queryKey: ['supplier', params.id],
+    queryKey: ['supplier', id],
     queryFn: async () => {
-      const { data, error } = await supabase.from('suppliers').select('*').eq('id', params.id).single();
+      const { data, error } = await supabase.from('suppliers').select('*').eq('id', id).single();
       if (error) throw error;
       return data;
     },

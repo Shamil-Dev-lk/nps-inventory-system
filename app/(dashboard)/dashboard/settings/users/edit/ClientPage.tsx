@@ -11,13 +11,15 @@ import { supabase } from '@/lib/supabase';
 
 export default function EditUserPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const id = searchParams.get('id');
   const qc = useQueryClient();
   const { register, handleSubmit, reset, formState: { errors } } = useForm();
 
   const { data: user, isLoading } = useQuery({
-    queryKey: ['user', params.id],
+    queryKey: ['user', id],
     queryFn: async () => {
-      const { data, error } = await supabase.from('users').select('*').eq('id', params.id).single();
+      const { data, error } = await supabase.from('users').select('*').eq('id', id).single();
       if (error) throw error;
       return data;
     },
@@ -59,13 +61,13 @@ export default function EditUserPage() {
 
   const updateMutation = useMutation({
     mutationFn: async (userData: any) => {
-      const { data, error } = await supabase.from('users').update(userData).eq('id', params.id).select();
+      const { data, error } = await supabase.from('users').update(userData).eq('id', id).select();
       if (error) throw error;
       return data;
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['users'] });
-      qc.invalidateQueries({ queryKey: ['user', params.id] });
+      qc.invalidateQueries({ queryKey: ['user', id] });
       toast.success('User updated successfully');
       router.push('/dashboard/settings/users');
     },

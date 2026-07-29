@@ -10,14 +10,18 @@ import { supabase } from '@/lib/supabase';
 
 export default function PurchaseRequestDetailPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const id = searchParams.get('id');
 
   const { data: pr, isLoading } = useQuery({
-    queryKey: ['purchase_request', params.id],
+    queryKey: ['purchase_request', id],
     queryFn: async () => {
-      const { data, error } = await supabase.from('purchase_requests').select('*, department:departments(name_en)').eq('id', params.id).single();
+      if (!id) return null;
+      const { data, error } = await supabase.from('purchase_requests').select('*, department:departments(name_en)').eq('id', id).single();
       if (error) throw error;
       return data;
-    }
+    },
+    enabled: !!id,
   });
 
   if (isLoading) return <div className="p-8 text-center text-muted-foreground">Loading...</div>;
@@ -36,11 +40,11 @@ export default function PurchaseRequestDetailPage() {
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <Link href={`/dashboard/receipts/print/?type=purchase-request&id=${params.id}&action=download`} target="_blank" className="flex items-center gap-2 px-4 py-2 bg-secondary text-secondary-foreground border rounded-lg hover:bg-secondary/80 transition-colors">
+          <Link href={`/dashboard/receipts/print/?type=purchase-request&id=${id}&action=download`} target="_blank" className="flex items-center gap-2 px-4 py-2 bg-secondary text-secondary-foreground border rounded-lg hover:bg-secondary/80 transition-colors">
             <Download size={16} />
             Download PDF
           </Link>
-          <Link href={`/dashboard/receipts/print/?type=purchase-request&id=${params.id}`} target="_blank" className="flex items-center gap-2 px-4 py-2 bg-secondary text-secondary-foreground border rounded-lg hover:bg-secondary/80 transition-colors">
+          <Link href={`/dashboard/receipts/print/?type=purchase-request&id=${id}`} target="_blank" className="flex items-center gap-2 px-4 py-2 bg-secondary text-secondary-foreground border rounded-lg hover:bg-secondary/80 transition-colors">
             <Printer size={16} />
             Print
           </Link>
