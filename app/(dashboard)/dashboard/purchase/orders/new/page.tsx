@@ -53,17 +53,46 @@ export default function NewPurchaseOrderPage() {
   });
 
   const createMutation = useMutation({
-    mutationFn: async (data: any) => {
-      const { data: res, error } = await supabase.from('purchase_orders').insert([data]).select().single();
+    mutationFn: async (formData: any) => {
+      const { items, purchase_request_id, expected_delivery_date, terms_conditions, ...poHeader } = formData;
+      const po_number = `PO-${Date.now().toString().slice(-6)}`;
+      const total_amount = (items || []).reduce((sum: number, item: any) => sum + (parseFloat(item.quantity || 0) * parseFloat(item.unit_price || 0)), 0);
+      
+      const sId = poHeader.supplier_id && poHeader.supplier_id !== '' ? parseInt(String(poHeader.supplier_id)) : null;
+      
+      const { data: po, error } = await supabase.from('purchase_orders').insert([{
+        supplier_id: sId,
+        po_number,
+        order_date: poHeader.order_date || new Date().toISOString().split('T')[0],
+        delivery_date: expected_delivery_date || null,
+        total_amount,
+        terms: terms_conditions || null,
+        remarks: poHeader.remarks || null,
+        status: 'draft'
+      }]).select().single();
+      
       if (error) throw error;
-      return res;
+
+      if (items && items.length > 0) {
+        const poItems = items.map((i: any) => ({
+          purchase_order_id: po.id,
+          item_id: i.item_id && i.item_id !== '' ? parseInt(String(i.item_id)) : null,
+          quantity: parseFloat(i.quantity || 0),
+          unit_price: parseFloat(i.unit_price || 0),
+          total_price: (parseFloat(i.quantity || 0) * parseFloat(i.unit_price || 0)),
+          remarks: i.specification || null
+        }));
+        const { error: itemsErr } = await supabase.from('purchase_order_items').insert(poItems);
+        if (itemsErr) throw itemsErr;
+      }
+      return po;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['purchase-orders'] });
       toast.success('Purchase order created successfully');
       router.push('/dashboard/purchase/orders');
     },
-    onError: () => toast.error('Failed to create purchase order'),
+    onError: (err: any) => toast.error(err.message || 'Failed to create purchase order'),
   });
 
   const onSubmit = (data: any) => {

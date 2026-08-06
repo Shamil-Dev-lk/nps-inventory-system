@@ -92,9 +92,22 @@ export default function NewStockReturnPage() {
     mutationFn: async (formData: any) => {
       const { items, ...returnHeader } = formData;
       const return_number = `RET-${Date.now().toString().slice(-6)}`;
+      
+      const sanitizedHeader = {
+        ...returnHeader,
+        department_id: returnHeader.department_id && returnHeader.department_id !== '' ? parseInt(String(returnHeader.department_id)) : null,
+        supplier_id: returnHeader.supplier_id && returnHeader.supplier_id !== '' ? parseInt(String(returnHeader.supplier_id)) : null,
+        warehouse_id: returnHeader.warehouse_id && returnHeader.warehouse_id !== '' ? parseInt(String(returnHeader.warehouse_id)) : null,
+        issue_id: returnHeader.issue_id && returnHeader.issue_id !== '' ? parseInt(String(returnHeader.issue_id)) : null,
+        grn_id: returnHeader.grn_id && returnHeader.grn_id !== '' ? parseInt(String(returnHeader.grn_id)) : null,
+        created_by: returnHeader.created_by && returnHeader.created_by !== '' ? parseInt(String(returnHeader.created_by)) : null,
+        return_number,
+        status: 'draft'
+      };
+
       const { data: ret, error: retError } = await supabase
         .from('stock_returns')
-        .insert([{ ...returnHeader, return_number, status: 'draft' }])
+        .insert([sanitizedHeader])
         .select()
         .single();
       if (retError) throw retError;

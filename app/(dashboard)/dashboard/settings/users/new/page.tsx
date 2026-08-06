@@ -64,7 +64,11 @@ export default function NewUserPage() {
   });
 
   const onSubmit = (data: any) => {
-    createMutation.mutate(data);
+    const payload = {
+      ...data,
+      department_id: data.department_id && data.department_id !== '' ? parseInt(String(data.department_id)) : null
+    };
+    createMutation.mutate(payload);
   };
 
   return (

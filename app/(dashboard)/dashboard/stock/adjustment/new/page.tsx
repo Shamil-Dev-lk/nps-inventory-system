@@ -67,7 +67,15 @@ export default function NewStockAdjustmentPage() {
 
   const createMutation = useMutation({
     mutationFn: async (data: any) => {
-      const { data: res, error } = await supabase.from('stock_adjustments').insert([data]).select().single();
+      const payload = {
+        ...data,
+        item_id: data.item_id && data.item_id !== '' ? parseInt(String(data.item_id)) : null,
+        warehouse_id: data.warehouse_id && data.warehouse_id !== '' ? parseInt(String(data.warehouse_id)) : null,
+        approved_by: data.approved_by && data.approved_by !== '' ? parseInt(String(data.approved_by)) : null,
+        adjustment_number: `SA-${Date.now().toString().slice(-6)}`,
+        status: 'completed'
+      };
+      const { data: res, error } = await supabase.from('stock_adjustments').insert([payload]).select().single();
       if (error) throw error;
       return res;
     },

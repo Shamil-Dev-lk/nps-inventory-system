@@ -38,7 +38,11 @@ export default function NewSubCategoryPage() {
   });
 
   const onSubmit = (data: any) => {
-    createMutation.mutate(data);
+    const payload = {
+      ...data,
+      category_id: data.category_id && data.category_id !== '' ? parseInt(String(data.category_id)) : null
+    };
+    createMutation.mutate(payload);
   };
 
   return (

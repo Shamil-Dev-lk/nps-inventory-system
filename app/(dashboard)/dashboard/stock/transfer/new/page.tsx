@@ -135,11 +135,13 @@ export default function NewStockTransferPage() {
       quantity: parseFloat(item.quantity || 0),
     }));
 
-    // Cleanup unnecessary fields based on transfer type
     if (data.transfer_type === 'warehouse_to_warehouse') {
       data.from_department_id = null;
       data.to_department_id = null;
     } else if (data.transfer_type === 'department_to_warehouse') {
+      data.from_warehouse_id = null;
+      data.to_department_id = null;
+    }
     if (!data.from_warehouse_id || data.from_warehouse_id === '') data.from_warehouse_id = null;
     if (!data.to_warehouse_id || data.to_warehouse_id === '') data.to_warehouse_id = null;
 

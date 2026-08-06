@@ -34,9 +34,10 @@ export default function NewStockTakingPage() {
   const createMutation = useMutation({
     mutationFn: async (formData: any) => {
       const st_number = `ST-${Date.now().toString().slice(-6)}`;
+      const wId = formData.warehouse_id && formData.warehouse_id !== '' ? parseInt(String(formData.warehouse_id)) : null;
       const { data: st, error: stError } = await supabase
         .from('stock_takings')
-        .insert([{ ...formData, st_number, status: 'draft' }])
+        .insert([{ ...formData, warehouse_id: wId, st_number, status: 'draft' }])
         .select()
         .single();
       if (stError) throw stError;
