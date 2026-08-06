@@ -20,10 +20,12 @@ export default function EditItemPage() {
   const { data: itemData } = useQuery({ 
     queryKey: ['item', itemId], 
     queryFn: async () => {
+      if (!itemId) return null;
       const { data, error } = await supabase.from('items').select('*').eq('id', itemId).single();
       if (error) throw error;
       return data;
-    } 
+    },
+    enabled: !!itemId,
   });
 
   const { data: categories = [] } = useQuery({ queryKey: ['categories'], queryFn: async () => { const { data } = await supabase.from('categories').select('*'); return data || []; } });
@@ -34,7 +36,8 @@ export default function EditItemPage() {
   useEffect(() => {
     if (itemData) {
       reset({
-        name_en: itemData.name_en,
+        code: itemData.code || itemData.item_code || '',
+        name_en: itemData.name_en || '',
         category_id: itemData.category_id || '',
         brand_id: itemData.brand_id || '',
         unit_id: itemData.unit_id || '',
@@ -42,6 +45,7 @@ export default function EditItemPage() {
         description: itemData.description || '',
         purchase_price: itemData.purchase_price || 0,
         selling_price: itemData.selling_price || 0,
+        current_quantity: itemData.current_quantity ?? 0,
         reorder_level: itemData.reorder_level || 0,
         minimum_stock: itemData.minimum_stock || 0,
         maximum_stock: itemData.maximum_stock || 0,
@@ -67,6 +71,7 @@ export default function EditItemPage() {
   const onSubmit = (data: any) => {
     data.purchase_price = parseFloat(data.purchase_price || 0);
     data.selling_price = parseFloat(data.selling_price || 0);
+    data.current_quantity = parseFloat(data.current_quantity || 0);
     data.minimum_stock = parseFloat(data.minimum_stock || 0);
     data.maximum_stock = parseFloat(data.maximum_stock || 0);
     data.reorder_level = parseFloat(data.reorder_level || 0);
@@ -79,7 +84,7 @@ export default function EditItemPage() {
     updateMutation.mutate(data);
   };
 
-  if (!itemData) return <div className="p-8 text-center text-muted-foreground">Loading...</div>;
+  if (!itemData) return <div className="p-8 text-center text-muted-foreground">Loading item details...</div>;
 
   return (
     <div className="max-w-4xl mx-auto pb-10">
@@ -89,7 +94,7 @@ export default function EditItemPage() {
         </Link>
         <div>
           <h1 className="text-2xl font-bold">Edit Item: {itemData.code || itemData.item_code}</h1>
-          <p className="text-sm text-muted-foreground">Update inventory item details</p>
+          <p className="text-sm text-muted-foreground">Update inventory item details and current stock</p>
         </div>
       </div>
 
@@ -154,6 +159,13 @@ export default function EditItemPage() {
                 {warehouses.map((w: any) => <option key={w.id} value={w.id}>{w.name_en}</option>)}
               </select>
             </div>
+            <div className="p-3 bg-amber-500/10 border border-amber-500/30 rounded-lg">
+              <label className="text-sm font-bold text-amber-700 dark:text-amber-400 flex items-center gap-1.5">
+                Current Stock (Quantity)
+              </label>
+              <input type="number" step="0.01" {...register('current_quantity')} placeholder="0" className="w-full px-3 py-2 mt-1 border border-amber-500/40 rounded-lg font-bold bg-white dark:bg-background text-foreground" />
+              <p className="text-[11px] text-muted-foreground mt-1">Directly edit the current available stock quantity.</p>
+            </div>
             <div>
               <label className="text-sm font-medium">Reorder Level</label>
               <input type="number" step="0.01" {...register('reorder_level')} className="w-full px-3 py-2 mt-1 border rounded-lg" />
@@ -171,7 +183,7 @@ export default function EditItemPage() {
 
         <div className="flex justify-end gap-3">
           <Link href="/dashboard/items" className="px-4 py-2 border rounded-lg hover:bg-muted">Cancel</Link>
-          <button type="submit" disabled={updateMutation.isPending} className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 disabled:opacity-50">
+          <button type="submit" disabled={updateMutation.isPending} className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 disabled:opacity-50 font-medium">
             <Save size={16} />
             {updateMutation.isPending ? 'Updating...' : 'Update Item'}
           </button>
@@ -180,5 +192,3 @@ export default function EditItemPage() {
     </div>
   );
 }
-
-
