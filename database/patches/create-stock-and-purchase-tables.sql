@@ -1,6 +1,6 @@
 -- =========================================================
 -- Complete Database Schema for Stock, Purchases, Assets, and Receipts
--- Execute this SQL in your Supabase SQL Editor to create any missing tables
+-- Execute this SQL in your Supabase SQL Editor to create missing tables
 -- =========================================================
 
 -- 1. Customers Table
@@ -38,15 +38,15 @@ CREATE TABLE IF NOT EXISTS public.stock_issues (
     issue_number VARCHAR(100) UNIQUE,
     issue_date DATE DEFAULT CURRENT_DATE,
     warehouse_id BIGINT REFERENCES public.warehouses(id) ON DELETE SET NULL,
-    issue_to_type VARCHAR(50) DEFAULT 'department', -- department, project, officer, customer
+    issue_to_type VARCHAR(50) DEFAULT 'department',
     department_id BIGINT REFERENCES public.departments(id) ON DELETE SET NULL,
     project_id BIGINT REFERENCES public.projects(id) ON DELETE SET NULL,
-    officer_id BIGINT REFERENCES public.user_profiles(id) ON DELETE SET NULL,
+    officer_id BIGINT,
     customer_id BIGINT REFERENCES public.customers(id) ON DELETE SET NULL,
     purpose TEXT,
-    status VARCHAR(50) DEFAULT 'pending', -- pending, approved, issued, rejected
-    approved_by BIGINT REFERENCES public.user_profiles(id) ON DELETE SET NULL,
-    issued_by BIGINT REFERENCES public.user_profiles(id) ON DELETE SET NULL,
+    status VARCHAR(50) DEFAULT 'pending',
+    approved_by BIGINT,
+    issued_by BIGINT,
     remarks TEXT,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
@@ -72,8 +72,8 @@ CREATE TABLE IF NOT EXISTS public.grns (
     po_number VARCHAR(100),
     invoice_number VARCHAR(100),
     total_amount DECIMAL(15,2) DEFAULT 0,
-    status VARCHAR(50) DEFAULT 'received', -- pending, received, verified, rejected
-    received_by BIGINT REFERENCES public.user_profiles(id) ON DELETE SET NULL,
+    status VARCHAR(50) DEFAULT 'received',
+    received_by BIGINT,
     remarks TEXT,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
@@ -103,9 +103,9 @@ CREATE TABLE IF NOT EXISTS public.stock_transfers (
     from_warehouse_id BIGINT REFERENCES public.warehouses(id) ON DELETE SET NULL,
     to_warehouse_id BIGINT REFERENCES public.warehouses(id) ON DELETE SET NULL,
     reason TEXT,
-    status VARCHAR(50) DEFAULT 'completed', -- pending, in_transit, completed, cancelled
-    transferred_by BIGINT REFERENCES public.user_profiles(id) ON DELETE SET NULL,
-    received_by BIGINT REFERENCES public.user_profiles(id) ON DELETE SET NULL,
+    status VARCHAR(50) DEFAULT 'completed',
+    transferred_by BIGINT,
+    received_by BIGINT,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
@@ -127,10 +127,10 @@ CREATE TABLE IF NOT EXISTS public.stock_adjustments (
     adjustment_date DATE DEFAULT CURRENT_DATE,
     warehouse_id BIGINT REFERENCES public.warehouses(id) ON DELETE SET NULL,
     item_id BIGINT REFERENCES public.items(id) ON DELETE CASCADE,
-    adjustment_type VARCHAR(50) DEFAULT 'increase', -- increase, decrease
+    adjustment_type VARCHAR(50) DEFAULT 'increase',
     quantity DECIMAL(15,3) NOT NULL DEFAULT 0,
     reason TEXT,
-    adjusted_by BIGINT REFERENCES public.user_profiles(id) ON DELETE SET NULL,
+    adjusted_by BIGINT,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
@@ -141,10 +141,10 @@ CREATE TABLE IF NOT EXISTS public.stock_returns (
     return_number VARCHAR(100) UNIQUE,
     return_date DATE DEFAULT CURRENT_DATE,
     department_id BIGINT REFERENCES public.departments(id) ON DELETE SET NULL,
-    returned_by_id BIGINT REFERENCES public.user_profiles(id) ON DELETE SET NULL,
+    returned_by_id BIGINT,
     reason TEXT,
-    status VARCHAR(50) DEFAULT 'received', -- pending, received, rejected
-    received_by BIGINT REFERENCES public.user_profiles(id) ON DELETE SET NULL,
+    status VARCHAR(50) DEFAULT 'received',
+    received_by BIGINT,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
@@ -166,8 +166,8 @@ CREATE TABLE IF NOT EXISTS public.stock_taking (
     reference_number VARCHAR(100) UNIQUE,
     taking_date DATE DEFAULT CURRENT_DATE,
     warehouse_id BIGINT REFERENCES public.warehouses(id) ON DELETE SET NULL,
-    status VARCHAR(50) DEFAULT 'completed', -- in_progress, completed, verified
-    conducted_by BIGINT REFERENCES public.user_profiles(id) ON DELETE SET NULL,
+    status VARCHAR(50) DEFAULT 'completed',
+    conducted_by BIGINT,
     notes TEXT,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
@@ -193,9 +193,9 @@ CREATE TABLE IF NOT EXISTS public.purchase_orders (
     delivery_date DATE,
     supplier_id BIGINT REFERENCES public.suppliers(id) ON DELETE SET NULL,
     total_amount DECIMAL(15,2) DEFAULT 0,
-    status VARCHAR(50) DEFAULT 'pending', -- pending, approved, ordered, received, cancelled
+    status VARCHAR(50) DEFAULT 'pending',
     terms TEXT,
-    created_by BIGINT REFERENCES public.user_profiles(id) ON DELETE SET NULL,
+    created_by BIGINT,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
@@ -218,9 +218,9 @@ CREATE TABLE IF NOT EXISTS public.purchase_requests (
     pr_number VARCHAR(100) UNIQUE,
     request_date DATE DEFAULT CURRENT_DATE,
     department_id BIGINT REFERENCES public.departments(id) ON DELETE SET NULL,
-    requested_by BIGINT REFERENCES public.user_profiles(id) ON DELETE SET NULL,
-    priority VARCHAR(50) DEFAULT 'medium', -- low, medium, high, urgent
-    status VARCHAR(50) DEFAULT 'pending', -- pending, approved, rejected, ordered
+    requested_by BIGINT,
+    priority VARCHAR(50) DEFAULT 'medium',
+    status VARCHAR(50) DEFAULT 'pending',
     approval_remarks TEXT,
     purpose TEXT,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
@@ -237,10 +237,6 @@ CREATE TABLE IF NOT EXISTS public.purchase_request_items (
     specification TEXT,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
-
--- Grant full permissions on all public tables to anon & authenticated roles
-GRANT ALL ON ALL TABLES IN SCHEMA public TO anon, authenticated, service_role;
-GRANT ALL ON ALL SEQUENCES IN SCHEMA public TO anon, authenticated, service_role;
 
 -- Enable RLS and add open policies for testing/demo mode
 ALTER TABLE public.customers ENABLE ROW LEVEL SECURITY;
@@ -261,7 +257,26 @@ ALTER TABLE public.purchase_order_items ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.purchase_requests ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.purchase_request_items ENABLE ROW LEVEL SECURITY;
 
--- Allow all operations policy for development/demo
+-- Drop existing policies if any to prevent duplicate policy errors
+DROP POLICY IF EXISTS "Allow all access to customers" ON public.customers;
+DROP POLICY IF EXISTS "Allow all access to assets" ON public.assets;
+DROP POLICY IF EXISTS "Allow all access to stock_issues" ON public.stock_issues;
+DROP POLICY IF EXISTS "Allow all access to stock_issue_items" ON public.stock_issue_items;
+DROP POLICY IF EXISTS "Allow all access to grns" ON public.grns;
+DROP POLICY IF EXISTS "Allow all access to grn_items" ON public.grn_items;
+DROP POLICY IF EXISTS "Allow all access to stock_transfers" ON public.stock_transfers;
+DROP POLICY IF EXISTS "Allow all access to stock_transfer_items" ON public.stock_transfer_items;
+DROP POLICY IF EXISTS "Allow all access to stock_adjustments" ON public.stock_adjustments;
+DROP POLICY IF EXISTS "Allow all access to stock_returns" ON public.stock_returns;
+DROP POLICY IF EXISTS "Allow all access to stock_return_items" ON public.stock_return_items;
+DROP POLICY IF EXISTS "Allow all access to stock_taking" ON public.stock_taking;
+DROP POLICY IF EXISTS "Allow all access to stock_taking_items" ON public.stock_taking_items;
+DROP POLICY IF EXISTS "Allow all access to purchase_orders" ON public.purchase_orders;
+DROP POLICY IF EXISTS "Allow all access to purchase_order_items" ON public.purchase_order_items;
+DROP POLICY IF EXISTS "Allow all access to purchase_requests" ON public.purchase_requests;
+DROP POLICY IF EXISTS "Allow all access to purchase_request_items" ON public.purchase_request_items;
+
+-- Create policies
 CREATE POLICY "Allow all access to customers" ON public.customers FOR ALL USING (true);
 CREATE POLICY "Allow all access to assets" ON public.assets FOR ALL USING (true);
 CREATE POLICY "Allow all access to stock_issues" ON public.stock_issues FOR ALL USING (true);
@@ -279,3 +294,7 @@ CREATE POLICY "Allow all access to purchase_orders" ON public.purchase_orders FO
 CREATE POLICY "Allow all access to purchase_order_items" ON public.purchase_order_items FOR ALL USING (true);
 CREATE POLICY "Allow all access to purchase_requests" ON public.purchase_requests FOR ALL USING (true);
 CREATE POLICY "Allow all access to purchase_request_items" ON public.purchase_request_items FOR ALL USING (true);
+
+-- Grant full permissions on all public tables
+GRANT ALL ON ALL TABLES IN SCHEMA public TO anon, authenticated, service_role;
+GRANT ALL ON ALL SEQUENCES IN SCHEMA public TO anon, authenticated, service_role;
