@@ -140,10 +140,9 @@ export default function NewStockTransferPage() {
       data.from_department_id = null;
       data.to_department_id = null;
     } else if (data.transfer_type === 'department_to_warehouse') {
-      data.from_warehouse_id = null;
-      data.to_department_id = null;
-    }
-    
+    if (!data.from_warehouse_id || data.from_warehouse_id === '') data.from_warehouse_id = null;
+    if (!data.to_warehouse_id || data.to_warehouse_id === '') data.to_warehouse_id = null;
+
     createMutation.mutate(data);
   };
 

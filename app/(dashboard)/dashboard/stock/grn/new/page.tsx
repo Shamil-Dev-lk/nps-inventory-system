@@ -96,9 +96,12 @@ function NewGRNPage() {
       setIsSubmitting(true);
       const totalVal = data.items.reduce((sum, item) => sum + (Number(item.accepted_quantity) || 0) * (Number(item.unit_price) || 0), 0);
       
+      const sId = data.supplier_id ? parseInt(String(data.supplier_id)) || null : null;
+      const wId = data.warehouse_id ? parseInt(String(data.warehouse_id)) || null : null;
+
       const { data: grn, error } = await supabase.from('grns').insert([{
-        supplier_id: data.supplier_id,
-        warehouse_id: data.warehouse_id,
+        supplier_id: sId,
+        warehouse_id: wId,
         received_date: data.received_date,
         invoice_number: data.invoice_number,
         remarks: data.remarks,

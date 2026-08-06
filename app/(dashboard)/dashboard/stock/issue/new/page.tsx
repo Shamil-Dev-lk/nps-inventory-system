@@ -178,6 +178,13 @@ export default function NewStockIssuePage() {
       data.remarks = `[Person Details] ${pd}\n${data.remarks || ''}`;
     }
     
+    // Clean empty string IDs to null for Postgres BigInt compatibility
+    if (!data.department_id || data.department_id === '') data.department_id = null;
+    if (!data.project_id || data.project_id === '') data.project_id = null;
+    if (!data.warehouse_id || data.warehouse_id === '') data.warehouse_id = null;
+    if (!data.officer_id || data.officer_id === '') data.officer_id = null;
+    if (!data.customer_id || data.customer_id === '') data.customer_id = null;
+    
     createMutation.mutate(data);
   };
 
