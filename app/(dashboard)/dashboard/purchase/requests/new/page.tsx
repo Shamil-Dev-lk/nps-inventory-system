@@ -197,7 +197,7 @@ export default function NewPurchaseRequestPage() {
                     <td className="px-4 py-3">
                       <select {...register(`items.${index}.item_id`, { required: true })} className="w-full px-2 py-1.5 border rounded-md bg-background">
                         <option value="">Select Item</option>
-                        {itemsList.map((item: any) => <option key={item.id} value={item.id}>{item.item_code} - {item.name_en}</option>)}
+                        {itemsList.map((item: any) => <option key={item.id} value={item.id}>{item.item_code} - {item.name_en} (Current Stock: {item.current_quantity ?? 0})</option>)}
                       </select>
                     </td>
                     <td className="px-4 py-3">

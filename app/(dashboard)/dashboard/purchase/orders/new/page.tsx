@@ -177,8 +177,13 @@ export default function NewPurchaseOrderPage() {
                       <td className="px-4 py-3">
                         <select {...register(`items.${index}.item_id`, { required: true })} className="w-full px-2 py-1.5 border rounded-md bg-background">
                           <option value="">Select Item</option>
-                          {itemsList.map((item: any) => <option key={item.id} value={item.id}>{item.item_code} - {item.name_en}</option>)}
+                          {itemsList.map((item: any) => <option key={item.id} value={item.id}>{item.item_code} - {item.name_en} (Stock: {item.current_quantity ?? item.available_quantity ?? 0})</option>)}
                         </select>
+                        {selectedItem && (
+                          <div className="text-xs text-muted-foreground mt-1">
+                            Current Stock: <span className="font-semibold text-foreground">{selectedItem.current_quantity ?? selectedItem.available_quantity ?? 0}</span>
+                          </div>
+                        )}
                       </td>
                       <td className="px-4 py-3">
                         <input type="number" step="0.001" min="0.001" {...register(`items.${index}.quantity`, { required: true })} className="w-full px-2 py-1.5 border rounded-md bg-background" />

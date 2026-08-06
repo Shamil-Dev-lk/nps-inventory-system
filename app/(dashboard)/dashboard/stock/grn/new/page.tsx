@@ -222,7 +222,7 @@ function NewGRNPage() {
                         className="w-full p-2 rounded-md border bg-background text-sm"
                       >
                         <option value="">Select Item</option>
-                        {itemsList.map(i => <option key={i.id} value={i.id}>{i.name_en}</option>)}
+                        {itemsList.map(i => <option key={i.id} value={i.id}>{i.item_code || i.code ? `${i.item_code || i.code} - ` : ''}{i.name_en} (Current Stock: {i.current_quantity ?? 0})</option>)}
                       </select>
                       {errors.items?.[index]?.item_id && <p className="text-red-500 text-xs mt-1">{errors.items[index].item_id?.message}</p>}
                     </td>

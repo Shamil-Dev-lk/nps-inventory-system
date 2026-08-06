@@ -174,10 +174,10 @@ export default function NewStockAdjustmentPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="md:col-span-2">
               <label className="text-sm font-medium">Item *</label>
-              <select {...register('item_id', { required: true })} className="w-full px-3 py-2 mt-1 border rounded-lg bg-background">
-                <option value="">Select Item</option>
-                {itemsList.map((item: any) => <option key={item.id} value={item.id}>{item.item_code} - {item.name_en}</option>)}
-              </select>
+                <select {...register('item_id', { required: true })} className="w-full px-3 py-2 mt-1 border rounded-lg bg-background">
+                  <option value="">Select Item</option>
+                  {itemsList.map((item: any) => <option key={item.id} value={item.id}>{item.item_code} - {item.name_en} (Current Stock: {item.current_quantity ?? 0})</option>)}
+                </select>
             </div>
 
             <div>

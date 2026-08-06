@@ -64,7 +64,7 @@ export default function ViewItemPage() {
           <button onClick={() => window.print()} className="flex items-center gap-1.5 px-3 py-1.5 border rounded-md hover:bg-muted text-sm font-medium">
             <Printer size={14} /> Print
           </button>
-          <Link href={`/dashboard/items/${id}/edit`} className="flex items-center gap-1.5 px-3 py-1.5 bg-[#c21f4c] text-white rounded-md hover:bg-[#a0183e] text-sm font-medium shadow-sm">
+          <Link href={`/dashboard/items/edit/?id=${id}`} className="flex items-center gap-1.5 px-3 py-1.5 bg-[#c21f4c] text-white rounded-md hover:bg-[#a0183e] text-sm font-medium shadow-sm">
             <Edit size={14} /> Edit Item
           </Link>
         </div>
