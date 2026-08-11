@@ -184,6 +184,8 @@ export default function IssueViewPage() {
                 <CheckCircle size={16} /> {approveMutation.isPending ? 'Approving...' : 'Approve & Issue'}
               </button>
             </>
+          )}
+
           {isAdmin && (
             <button onClick={handleDelete} disabled={deleteMutation.isPending} className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50 font-medium">
               <Trash2 size={16} /> {deleteMutation.isPending ? 'Deleting...' : 'Delete'}

@@ -1,0 +1,9 @@
+▲ Next.js 16.2.10 (Turbopack)
+- Environments: .env.local, .env.production
+
+  Creating an optimized production build ...
+✓ Compiled successfully in 8.7s
+  Skipping validation of types
+  Finished TypeScript config validation in 82ms ...
+  Collecting page data using 15 workers ...
+^C^CTerminate batch job (Y/N)? 
