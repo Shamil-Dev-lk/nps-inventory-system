@@ -23,7 +23,7 @@ export default function IssueViewPage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('stock_issues')
-        .select('*, warehouse:warehouses(id, name_en), department:departments(id, name_en), officer:users(id, name), project:projects(id, name_en), issued_by:users(id, name), items:stock_issue_items(*, item:items(*))')
+        .select('*, warehouse:warehouses(id, name_en), department:departments(id, name_en), project:projects(id, name_en), items:stock_issue_items(*, item:items(*))')
         .eq('id', id)
         .single();
       if (error) throw error;

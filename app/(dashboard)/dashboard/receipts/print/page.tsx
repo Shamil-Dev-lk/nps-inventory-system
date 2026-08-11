@@ -38,7 +38,7 @@ export function DedicatedPrintReceiptPage({ isPreviewProp = false }: { isPreview
         return data;
       }
       if (type === 'stock-issue') {
-        const { data } = await supabase.from('stock_issues').select('*, department:departments(id, name_en), officer:users(id, name), project:projects(id, name_en), items:stock_issue_items(*, item:items(*))').eq('id', id).single();
+        const { data } = await supabase.from('stock_issues').select('*, department:departments(id, name_en), project:projects(id, name_en), items:stock_issue_items(*, item:items(*))').eq('id', id).single();
         return data;
       }
       if (type === 'grn') {
@@ -50,7 +50,7 @@ export function DedicatedPrintReceiptPage({ isPreviewProp = false }: { isPreview
         return data;
       }
       if (type === 'stock-return') {
-        const { data } = await supabase.from('stock_returns').select('*, department:departments(id, name_en), returned_by:users(id, name), items:stock_return_items(*, item:items(*))').eq('id', id).single();
+        const { data } = await supabase.from('stock_returns').select('*, department:departments(id, name_en), items:stock_return_items(*, item:items(*))').eq('id', id).single();
         return data;
       }
       if (type === 'stock-transfer') {

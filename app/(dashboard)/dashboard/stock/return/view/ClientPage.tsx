@@ -23,7 +23,6 @@ export default function StockReturnViewPage() {
           *,
           warehouse:warehouses(id, name_en),
           department:departments(id, name_en),
-          officer:users(id, name),
           items:stock_return_items(*, item:items(*, unit:units(*)))
         `)
         .eq('id', id)

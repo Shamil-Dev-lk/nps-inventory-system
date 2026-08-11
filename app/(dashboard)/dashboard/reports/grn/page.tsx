@@ -17,7 +17,7 @@ export default function GrnReportPage() {
     queryFn: async () => {
       let query = supabase
         .from('grn')
-        .select('*, supplier:suppliers(id, name, company_name), warehouse:warehouses(id, name_en), received_by:users(id, name)', { count: 'exact' });
+        .select('*, supplier:suppliers(id, company_name), warehouse:warehouses(id, name_en)', { count: 'exact' });
 
       if (supplierId) query = query.eq('supplier_id', supplierId);
       if (status) query = query.eq('status', status);

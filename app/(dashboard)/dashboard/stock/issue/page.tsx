@@ -18,7 +18,7 @@ export default function StockIssuePage() {
     queryFn: async () => {
       let query = supabase
         .from('stock_issues')
-        .select('*, department:departments(id, name_en), officer:users(id, name), project:projects(id, name_en), customer:customers(id, name), warehouse:warehouses(id, name_en), issued_by:users(id, name)')
+        .select('*, department:departments(id, name_en), project:projects(id, name_en), customer:customers(id, name), warehouse:warehouses(id, name_en)')
         .order('created_at', { ascending: false });
 
       if (search) {

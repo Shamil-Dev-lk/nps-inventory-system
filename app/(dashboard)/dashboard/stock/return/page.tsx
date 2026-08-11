@@ -17,8 +17,7 @@ export default function StockReturnListPage() {
         .select(`
           *,
           warehouse:warehouses(id, name_en),
-          department:departments(id, name_en),
-          officer:users(id, name)
+          department:departments(id, name_en)
         `)
         .order('created_at', { ascending: false });
 
