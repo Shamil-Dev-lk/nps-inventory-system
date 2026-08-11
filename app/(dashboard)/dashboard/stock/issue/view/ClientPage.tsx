@@ -2,17 +2,20 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
-import { ArrowLeft, Package, Calendar, MapPin, FileText, CheckCircle, XCircle, Edit, Printer, User, Download } from 'lucide-react';
+import { ArrowLeft, Package, Calendar, MapPin, FileText, CheckCircle, XCircle, Edit, Printer, User, Download, Trash2 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import Link from 'next/link';
 import { toast } from 'sonner';
 import { useEffect } from 'react';
+import { useAuthStore } from '@/store/auth-store';
 
 export default function IssueViewPage() {
   const params = useParams();
   const searchParams = useSearchParams();
   const router = useRouter();
   const qc = useQueryClient();
+  const { user, hasSuperAdmin, hasPermission } = useAuthStore();
+  const isAdmin = hasSuperAdmin() || user?.roles?.some((r: string) => r.toLowerCase().includes('admin')) || hasPermission('delete-stock-issues') || hasPermission('delete-all');
   const id = searchParams.get('id');
   const shouldPrint = searchParams.get('print') === 'true';
   const [rejectReason, setRejectReason] = useState('');
@@ -44,14 +47,82 @@ export default function IssueViewPage() {
     mutationFn: async () => {
       const { error } = await supabase.from('stock_issues').update({ status: 'issued' }).eq('id', id);
       if (error) throw error;
+
+      // Auto update / deduct item stock counts
+      if (issue?.items && issue.items.length > 0) {
+        for (const issueItem of issue.items) {
+          if (!issueItem.item_id || !issueItem.quantity) continue;
+          
+          const { data: itemData } = await supabase
+            .from('items')
+            .select('current_quantity')
+            .eq('id', issueItem.item_id)
+            .single();
+
+          if (itemData) {
+            const currentQty = Number(itemData.current_quantity || 0);
+            const deductQty = Number(issueItem.quantity || 0);
+            const newQty = Math.max(0, currentQty - deductQty);
+
+            await supabase
+              .from('items')
+              .update({ current_quantity: newQty })
+              .eq('id', issueItem.item_id);
+          }
+
+          if (issue.warehouse_id) {
+            const { data: stockData } = await supabase
+              .from('stock')
+              .select('id, quantity')
+              .eq('item_id', issueItem.item_id)
+              .eq('warehouse_id', issue.warehouse_id)
+              .maybeSingle();
+
+            if (stockData) {
+              const currentStockQty = Number(stockData.quantity || 0);
+              const newStockQty = Math.max(0, currentStockQty - Number(issueItem.quantity || 0));
+              await supabase
+                .from('stock')
+                .update({ quantity: newStockQty })
+                .eq('id', stockData.id);
+            }
+          }
+        }
+      }
+
       return true;
     },
     onSuccess: () => {
-      toast.success('Stock issue approved successfully.');
+      toast.success('Stock issue approved & item quantities deducted successfully.');
       qc.invalidateQueries({ queryKey: ['issue', id] });
+      qc.invalidateQueries({ queryKey: ['items'] });
+      qc.invalidateQueries({ queryKey: ['stock'] });
     },
     onError: (e: any) => toast.error(e.message || 'Approval failed.'),
   });
+
+  const deleteMutation = useMutation({
+    mutationFn: async () => {
+      if (!id) return;
+      await supabase.from('stock_issue_items').delete().eq('stock_issue_id', id);
+      const { error } = await supabase.from('stock_issues').delete().eq('id', id);
+      if (error) throw error;
+      return true;
+    },
+    onSuccess: () => {
+      toast.success('Stock issue deleted successfully');
+      qc.invalidateQueries({ queryKey: ['stock-issues'] });
+      qc.invalidateQueries({ queryKey: ['items'] });
+      router.push('/dashboard/stock/issue');
+    },
+    onError: (e: any) => toast.error(e.message || 'Failed to delete stock issue'),
+  });
+
+  const handleDelete = () => {
+    if (window.confirm('Are you sure you want to delete this Stock Issue? This action cannot be undone.')) {
+      deleteMutation.mutate();
+    }
+  };
 
   const rejectMutation = useMutation({
     mutationFn: async () => {
@@ -113,6 +184,10 @@ export default function IssueViewPage() {
                 <CheckCircle size={16} /> {approveMutation.isPending ? 'Approving...' : 'Approve & Issue'}
               </button>
             </>
+          {isAdmin && (
+            <button onClick={handleDelete} disabled={deleteMutation.isPending} className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50 font-medium">
+              <Trash2 size={16} /> {deleteMutation.isPending ? 'Deleting...' : 'Delete'}
+            </button>
           )}
         </div>
       </div>

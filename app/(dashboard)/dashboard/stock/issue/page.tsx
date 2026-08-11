@@ -1,7 +1,7 @@
 'use client';
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Plus, Search, Eye, CheckCircle, RefreshCw, Printer, FileDown } from 'lucide-react';
+import { Plus, Search, Eye, CheckCircle, RefreshCw, Printer, FileDown, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
@@ -9,7 +9,8 @@ import { useAuthStore } from '@/store/auth-store';
 
 export default function StockIssuePage() {
   const qc = useQueryClient();
-  const { hasPermission } = useAuthStore();
+  const { user, hasPermission, hasSuperAdmin } = useAuthStore();
+  const isAdmin = hasSuperAdmin() || user?.roles?.some((r: string) => r.toLowerCase().includes('admin')) || hasPermission('delete-stock-issues') || hasPermission('delete-all');
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState('');
   const [page, setPage] = useState(1);
@@ -33,15 +34,91 @@ export default function StockIssuePage() {
       return data || [];
     },
   });
+
   const approveMutation = useMutation({
     mutationFn: async (id: number) => {
-      const { error } = await supabase.from('stock_issues').update({ status: 'approved' }).eq('id', id);
+      const { error } = await supabase.from('stock_issues').update({ status: 'issued' }).eq('id', id);
+      if (error) throw error;
+
+      // Auto update / deduct item stock counts
+      const { data: issue } = await supabase
+        .from('stock_issues')
+        .select('warehouse_id, items:stock_issue_items(*)')
+        .eq('id', id)
+        .single();
+
+      if (issue?.items && issue.items.length > 0) {
+        for (const issueItem of issue.items) {
+          if (!issueItem.item_id || !issueItem.quantity) continue;
+          
+          const { data: itemData } = await supabase
+            .from('items')
+            .select('current_quantity')
+            .eq('id', issueItem.item_id)
+            .single();
+
+          if (itemData) {
+            const currentQty = Number(itemData.current_quantity || 0);
+            const deductQty = Number(issueItem.quantity || 0);
+            const newQty = Math.max(0, currentQty - deductQty);
+
+            await supabase
+              .from('items')
+              .update({ current_quantity: newQty })
+              .eq('id', issueItem.item_id);
+          }
+
+          if (issue.warehouse_id) {
+            const { data: stockData } = await supabase
+              .from('stock')
+              .select('id, quantity')
+              .eq('item_id', issueItem.item_id)
+              .eq('warehouse_id', issue.warehouse_id)
+              .maybeSingle();
+
+            if (stockData) {
+              const currentStockQty = Number(stockData.quantity || 0);
+              const newStockQty = Math.max(0, currentStockQty - Number(issueItem.quantity || 0));
+              await supabase
+                .from('stock')
+                .update({ quantity: newStockQty })
+                .eq('id', stockData.id);
+            }
+          }
+        }
+      }
+
+      return true;
+    },
+    onSuccess: () => { 
+      toast.success('Stock issue approved & item quantities deducted.'); 
+      qc.invalidateQueries({ queryKey: ['stock-issues'] }); 
+      qc.invalidateQueries({ queryKey: ['items'] });
+      qc.invalidateQueries({ queryKey: ['stock'] });
+    },
+    onError: (err: any) => toast.error(err.message || 'Approval failed.'),
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async (id: number) => {
+      await supabase.from('stock_issue_items').delete().eq('stock_issue_id', id);
+      const { error } = await supabase.from('stock_issues').delete().eq('id', id);
       if (error) throw error;
       return true;
     },
-    onSuccess: () => { toast.success('Issue approved.'); qc.invalidateQueries({ queryKey: ['stock-issues'] }); },
-    onError: (err: any) => toast.error(err.message || 'Approval failed.'),
+    onSuccess: () => {
+      toast.success('Stock issue deleted successfully.');
+      qc.invalidateQueries({ queryKey: ['stock-issues'] });
+      qc.invalidateQueries({ queryKey: ['items'] });
+    },
+    onError: (err: any) => toast.error(err.message || 'Delete failed.'),
   });
+
+  const handleDelete = (id: number) => {
+    if (window.confirm('Are you sure you want to delete this stock issue?')) {
+      deleteMutation.mutate(id);
+    }
+  };
   return (
     <div className="space-y-5 max-w-[1600px]">
       <div className="page-header">
@@ -87,6 +164,9 @@ export default function StockIssuePage() {
                     <Link href={`/dashboard/stock/issue/view/?id=${issue.id}`} className="p-1.5 rounded hover:bg-muted text-muted-foreground hover:text-foreground transition-colors" title="View Details"><Eye size={15} /></Link>
                     {hasPermission('approve-stock-issues') && issue.status === 'draft' && (
                       <button onClick={() => approveMutation.mutate(issue.id)} className="p-1.5 rounded hover:bg-green-50 text-muted-foreground hover:text-green-500 transition-colors" title="Approve"><CheckCircle size={15} /></button>
+                    )}
+                    {isAdmin && (
+                      <button onClick={() => handleDelete(issue.id)} className="p-1.5 rounded hover:bg-red-50 text-red-400 hover:text-red-600 transition-colors" title="Delete Stock Issue"><Trash2 size={15} /></button>
                     )}
                   </div></td>
                 </tr>
