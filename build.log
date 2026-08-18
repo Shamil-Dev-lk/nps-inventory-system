@@ -1,9 +1,6 @@
-▲ Next.js 16.2.10 (Turbopack)
-- Environments: .env.local, .env.production
-
-  Creating an optimized production build ...
-✓ Compiled successfully in 8.7s
-  Skipping validation of types
-  Finished TypeScript config validation in 82ms ...
-  Collecting page data using 15 workers ...
-^C^CTerminate batch job (Y/N)? 
+^Cnpm notice
+npm notice New major version of npm available! 10.9.2 -> 12.0.2
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.0.2
+npm notice To update run: npm install -g npm@12.0.2
+npm notice
+^CTerminate batch job (Y/N)? 

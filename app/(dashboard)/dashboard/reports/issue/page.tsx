@@ -12,12 +12,34 @@ export default function IssueReportPage() {
   const [page, setPage] = useState(1);
   const [perPage] = useState(20);
 
+  const getIssueNumber = (issue: any) => issue.issue_number || `IS-${String(issue.id || 0).padStart(4, '0')}`;
+  const getOfficerName = (issue: any) => {
+    if (issue.customer?.name) return issue.customer.name;
+    if (issue.officer?.name) return issue.officer.name;
+    if (issue.remarks && issue.remarks.includes('[Person Details]')) {
+      const match = issue.remarks.match(/Name:\s*([^|\n]+)/);
+      if (match && match[1]) return match[1].trim();
+    }
+    return '—';
+  };
+  const getDepartmentName = (issue: any) => {
+    if (issue.department?.name_en) return issue.department.name_en;
+    if (issue.project?.name_en) return issue.project.name_en;
+    if (issue.purpose) return issue.purpose;
+    return '—';
+  };
+  const getIssuedBy = (issue: any) => {
+    if (issue.issued_by?.name) return issue.issued_by.name;
+    if (issue.created_by) return issue.created_by;
+    return 'Store Admin';
+  };
+
   const { data, isLoading, refetch } = useQuery({
     queryKey: ['report-issue', page, departmentId, fromDate, toDate, status],
     queryFn: async () => {
       let query = supabase
         .from('stock_issues')
-        .select('*, department:departments(id, name_en), warehouse:warehouses(id, name_en)', { count: 'exact' });
+        .select('*, department:departments(id, name_en), project:projects(id, name_en), customer:customers(id, name), warehouse:warehouses(id, name_en)', { count: 'exact' });
 
       if (departmentId) query = query.eq('department_id', departmentId);
       if (status) query = query.eq('status', status);
@@ -61,14 +83,14 @@ export default function IssueReportPage() {
       window.print();
     } else {
       if (!issues || issues.length === 0) return;
-      const headers = ['Date', 'Issue Number', 'Issue To Type', 'Warehouse', 'Items', 'Total Amount', 'Status'];
+      const headers = ['Date', 'Issue Number', 'Department', 'Officer', 'Warehouse', 'Issued By', 'Status'];
       const rows = issues.map((row: any) => [
         row.issue_date,
-        row.issue_number,
-        row.issue_to_type,
+        getIssueNumber(row),
+        getDepartmentName(row),
+        getOfficerName(row),
         row.warehouse?.name_en || 'N/A',
-        row.items?.length || 0,
-        row.total_amount || 0,
+        getIssuedBy(row),
         row.status || 'draft'
       ]);
       const csvContent = [headers, ...rows].map(e => e.join(",")).join("\n");
@@ -141,12 +163,12 @@ export default function IssueReportPage() {
                 <tr key={i}>{Array.from({length: 7}).map((_, j) => <td key={j}><div className="shimmer h-4 rounded w-full max-w-[100px]" /></td>)}</tr>
               )) : issues.map((issue: any) => (
                 <tr key={issue.id}>
-                  <td><code className="text-xs bg-muted px-1.5 py-0.5 rounded font-mono">{issue.issue_number}</code></td>
+                  <td><code className="text-xs bg-muted px-1.5 py-0.5 rounded font-mono">{getIssueNumber(issue)}</code></td>
                   <td className="text-sm text-muted-foreground">{issue.issue_date ? new Date(issue.issue_date).toLocaleDateString('en-LK') : '—'}</td>
-                  <td className="text-sm font-medium">{issue.department?.name_en || '—'}</td>
-                  <td className="text-sm">{issue.officer?.name || '—'}</td>
+                  <td className="text-sm font-medium">{getDepartmentName(issue)}</td>
+                  <td className="text-sm">{getOfficerName(issue)}</td>
                   <td className="text-sm text-muted-foreground">{issue.warehouse?.name_en || '—'}</td>
-                  <td className="text-sm text-muted-foreground">{issue.issued_by?.name || '—'}</td>
+                  <td className="text-sm text-muted-foreground">{getIssuedBy(issue)}</td>
                   <td>
                     <span className={`badge-sm ${issue.status === 'issued' ? 'badge-success' : issue.status === 'rejected' ? 'badge-danger' : issue.status === 'approved' ? 'badge-info' : 'badge-warning'}`}>
                       {issue.status}

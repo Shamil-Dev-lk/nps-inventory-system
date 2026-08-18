@@ -14,6 +14,24 @@ export default function StockIssuePage() {
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState('');
   const [page, setPage] = useState(1);
+  const getIssueNumber = (issue: any) => issue.issue_number || `IS-${String(issue.id || 0).padStart(4, '0')}`;
+  const getIssuedToName = (issue: any) => {
+    if (issue.customer?.name) return issue.customer.name;
+    if (issue.department?.name_en) return issue.department.name_en;
+    if (issue.officer?.name) return issue.officer.name;
+    if (issue.project?.name_en) return issue.project.name_en;
+    if (issue.remarks && issue.remarks.includes('[Person Details]')) {
+      const match = issue.remarks.match(/Name:\s*([^|\n]+)/);
+      if (match && match[1]) return match[1].trim();
+    }
+    return '—';
+  };
+  const getIssuedBy = (issue: any) => {
+    if (issue.issued_by?.name) return issue.issued_by.name;
+    if (issue.created_by) return issue.created_by;
+    return 'Store Admin';
+  };
+
   const { data: issues = [], isLoading, refetch } = useQuery({
     queryKey: ['stock-issues', page, search, status],
     queryFn: async () => {
@@ -151,12 +169,12 @@ export default function StockIssuePage() {
               {isLoading ? Array.from({length:6}).map((_,i) => <tr key={i}>{Array.from({length:8}).map((_,j) => <td key={j}><div className="shimmer h-3.5 rounded w-full max-w-[80px]" /></td>)}</tr>) :
               issues.map((issue: any) => (
                 <tr key={issue.id}>
-                  <td><code className="text-xs bg-muted px-1.5 py-0.5 rounded font-mono">{issue.issue_number}</code></td>
-                  <td className="text-sm font-medium">{issue.department?.name_en || issue.officer?.name || issue.project?.name_en || issue.customer?.name || '—'}</td>
+                  <td><code className="text-xs bg-muted px-1.5 py-0.5 rounded font-mono">{getIssueNumber(issue)}</code></td>
+                  <td className="text-sm font-medium">{getIssuedToName(issue)}</td>
                   <td><span className="badge-info capitalize text-xs">{issue.issue_to_type?.replace(/_/g,' ')}</span></td>
                   <td className="text-sm text-muted-foreground">{issue.warehouse?.name_en || '—'}</td>
                   <td className="text-sm text-muted-foreground">{issue.issue_date ? new Date(issue.issue_date).toLocaleDateString('en-LK') : '—'}</td>
-                  <td className="text-sm text-muted-foreground">{issue.issued_by?.name || '—'}</td>
+                  <td className="text-sm text-muted-foreground">{getIssuedBy(issue)}</td>
                   <td><span className={issue.status==='issued'?'badge-success':issue.status==='rejected'?'badge-danger':issue.status==='approved'?'badge-info':'badge-warning'}>{issue.status}</span></td>
                   <td><div className="flex items-center justify-end gap-1">
                     <button onClick={() => window.open(`${window.location.pathname.split('/dashboard')[0] || ''}/dashboard/receipts/print/?type=stock-issue&id=${issue.id}&action=download`, '_blank')} className="p-1.5 rounded hover:bg-indigo-50 text-indigo-400 hover:text-indigo-600 transition-colors" title="Download PDF"><FileDown size={15} /></button>
