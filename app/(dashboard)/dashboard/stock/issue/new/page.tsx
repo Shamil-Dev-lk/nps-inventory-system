@@ -11,6 +11,7 @@ import { supabase } from '@/lib/supabase';
 import { useNotificationStore } from '@/store/notification-store';
 import { BarcodeScannerModal } from '@/components/scanner/BarcodeScannerModal';
 import { Modal } from '@/components/ui/modal';
+import { SearchableItemSelect } from '@/components/ui/SearchableItemSelect';
 
 export default function NewStockIssuePage() {
   const router = useRouter();
@@ -343,15 +344,12 @@ export default function NewStockIssuePage() {
                   return (
                     <tr key={field.id}>
                       <td className="px-4 py-3">
-                        <select {...register(`items.${index}.item_id`, { required: true })} className="w-full px-2 py-1.5 border rounded-md bg-background">
-                          <option value="">Select Item</option>
-                          {itemsList.map((item: any) => <option key={item.id} value={item.id}>{item.item_code} - {item.name_en} ({item.available_quantity} available)</option>)}
-                        </select>
-                        {selectedItem && (
-                          <div className="text-xs text-muted-foreground mt-1 px-1">
-                            Stock: {selectedItem.available_quantity} {selectedItem.unit?.symbol}
-                          </div>
-                        )}
+                        <SearchableItemSelect
+                          items={itemsList}
+                          value={watch(`items.${index}.item_id`)}
+                          onChange={(val) => setValue(`items.${index}.item_id`, val)}
+                          placeholder="Search item by name, code, or barcode..."
+                        />
                       </td>
                       <td className="px-4 py-3 align-top pt-3">
                         <input type="number" step="0.001" min="0.001" {...register(`items.${index}.quantity`, { required: true })} className="w-full px-2 py-1.5 border rounded-md bg-background" />

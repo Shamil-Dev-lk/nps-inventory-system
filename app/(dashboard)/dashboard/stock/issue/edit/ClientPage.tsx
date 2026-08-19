@@ -7,6 +7,8 @@ import { toast } from 'sonner';
 import { supabase } from '@/lib/supabase';
 import Link from 'next/link';
 
+import { SearchableItemSelect } from '@/components/ui/SearchableItemSelect';
+
 export default function IssueEditPage() {
   const params = useParams();
   const router = useRouter();
@@ -16,6 +18,15 @@ export default function IssueEditPage() {
 
   const [notes, setNotes] = useState('');
   const [items, setItems] = useState<any[]>([]);
+
+  const { data: itemsList = [] } = useQuery({
+    queryKey: ['items'],
+    queryFn: async () => {
+      const { data, error } = await supabase.from('items').select('*');
+      if (error) throw error;
+      return data || [];
+    }
+  });
 
   const { data: issue, isLoading } = useQuery({
     queryKey: ['issue', id],
@@ -53,7 +64,7 @@ export default function IssueEditPage() {
     onSuccess: () => {
       toast.success('Issue updated successfully');
       qc.invalidateQueries({ queryKey: ['issue', id] });
-      router.push(`/dashboard/stock/issue/${id}`);
+      router.push(`/dashboard/stock/issue/view/?id=${id}`);
     },
     onError: (err: any) => toast.error(err.message || 'Failed to update issue'),
   });
@@ -70,6 +81,24 @@ export default function IssueEditPage() {
     const newItems = [...items];
     newItems[index].quantity = qty;
     setItems(newItems);
+  };
+
+  const updateItemId = (index: number, newItemId: string) => {
+    const selected = itemsList.find((i: any) => String(i.id) === String(newItemId));
+    const newItems = [...items];
+    newItems[index].item_id = newItemId;
+    if (selected) {
+      newItems[index].item_name = selected.name_en;
+    }
+    setItems(newItems);
+  };
+
+  const addItemRow = () => {
+    setItems([...items, { item_id: '', item_name: '', quantity: 1 }]);
+  };
+
+  const removeItemRow = (index: number) => {
+    setItems(items.filter((_, i) => i !== index));
   };
 
   if (isLoading) return <div className="p-8 text-center">Loading...</div>;
@@ -115,24 +144,45 @@ export default function IssueEditPage() {
         <div className="bg-card border border-border rounded-xl shadow-sm overflow-hidden">
           <div className="px-5 py-4 border-b border-border flex justify-between items-center">
             <h3 className="text-lg font-semibold">Issue Items</h3>
+            <button
+              type="button"
+              onClick={addItemRow}
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-primary/10 text-primary hover:bg-primary/20 rounded-md text-sm font-medium transition-colors"
+            >
+              <Plus size={15} /> Add Item
+            </button>
           </div>
           <div className="p-5">
             <div className="space-y-3">
               {items.map((item, index) => (
-                <div key={index} className="flex gap-4 items-center">
+                <div key={index} className="flex gap-3 items-center">
                   <div className="flex-1">
-                    <input type="text" value={item.item_name} disabled className="w-full px-3 py-2 rounded-lg border border-input bg-muted" />
+                    <SearchableItemSelect
+                      items={itemsList}
+                      value={item.item_id}
+                      onChange={(val) => updateItemId(index, val)}
+                      placeholder="Search item by name or code..."
+                    />
                   </div>
                   <div className="w-32">
                     <input 
                       type="number" 
-                      min="1" 
+                      min="0.001" 
+                      step="0.001"
                       value={item.quantity} 
-                      onChange={e => updateItemQty(index, parseInt(e.target.value) || 0)}
+                      onChange={e => updateItemQty(index, parseFloat(e.target.value) || 0)}
                       className="w-full px-3 py-2 rounded-lg border border-input bg-background"
                       required
                     />
                   </div>
+                  <button
+                    type="button"
+                    onClick={() => removeItemRow(index)}
+                    className="p-2 text-muted-foreground hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                    title="Remove item"
+                  >
+                    <Trash2 size={16} />
+                  </button>
                 </div>
               ))}
               {items.length === 0 && <div className="text-center py-4 text-muted-foreground text-sm">No items added</div>}
