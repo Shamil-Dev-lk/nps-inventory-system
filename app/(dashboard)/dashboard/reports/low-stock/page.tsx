@@ -43,13 +43,38 @@ export default function LowStockPage() {
   const items = tab === 'low' ? (lowData?.data?.data || []) : (zeroData?.data?.data || []);
   const count = tab === 'low' ? (lowData?.count || 0) : (zeroData?.count || 0);
   const isLoading = tab === 'low' ? lowLoading : zeroLoading;
+  const handleExportCSV = () => {
+    if (!items || items.length === 0) return;
+    const headers = ['Code', 'Item Name', 'Category', 'Current Stock', 'Min Stock', 'Reorder Level', 'Max Stock', 'Unit'];
+    const rows = items.map((item: any) => [
+      item.code || item.item_code || `ITM-${String(item.id).padStart(4, '0')}`,
+      item.name_en,
+      item.category?.name_en || '—',
+      item.current_quantity || 0,
+      item.minimum_stock || 0,
+      item.reorder_level || 0,
+      item.maximum_stock || 0,
+      item.unit?.symbol || item.unit?.name_en || '—'
+    ]);
+    const csvContent = [headers, ...rows].map(e => e.join(",")).join("\n");
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement("a");
+    const url = URL.createObjectURL(blob);
+    link.setAttribute("href", url);
+    link.setAttribute("download", `${tab}_stock_report.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   return (
     <div className="space-y-5 max-w-[1600px]">
       <div className="page-header">
         <div><h1 className="text-2xl font-bold">Stock Alerts</h1><p className="text-sm text-muted-foreground mt-1">Items requiring urgent attention and replenishment</p></div>
         <div className="flex gap-2">
           {hasPermission('export-reports') && (
-            <button className="flex items-center gap-2 px-4 py-2 rounded-lg border border-border text-sm hover:bg-muted transition-all"><Download size={14} /> Export CSV</button>
+            <button onClick={handleExportCSV} className="flex items-center gap-2 px-4 py-2 rounded-lg border border-border text-sm hover:bg-muted transition-all"><Download size={14} /> Export CSV</button>
           )}
           <button onClick={() => refetchLow()} className="flex items-center gap-2 px-4 py-2 rounded-lg border border-border text-sm hover:bg-muted transition-all"><RefreshCw size={14} /> Refresh</button>
         </div>
@@ -85,7 +110,7 @@ export default function LowStockPage() {
               {isLoading ? Array.from({length:6}).map((_,i) => <tr key={i}>{Array.from({length:8}).map((_,j) => <td key={j}><div className="shimmer h-3.5 rounded w-full max-w-[80px]" /></td>)}</tr>) :
               items.map((item:any) => (
                 <tr key={item.id}>
-                  <td><code className="text-xs bg-muted px-1.5 py-0.5 rounded font-mono">{item.item_code}</code></td>
+                  <td><code className="text-xs bg-muted px-1.5 py-0.5 rounded font-mono">{item.code || item.item_code || `ITM-${String(item.id).padStart(4, '0')}`}</code></td>
                   <td><p className="font-medium text-sm">{item.name_en}</p>{item.name_si && <p className="text-xs text-muted-foreground">{item.name_si}</p>}</td>
                   <td className="text-sm text-muted-foreground">{item.category?.name_en||'—'}</td>
                   <td><span className={`font-bold text-sm ${Number(item.current_quantity)===0?'text-red-500':'text-amber-500'}`}>{Number(item.current_quantity).toLocaleString()}</span></td>

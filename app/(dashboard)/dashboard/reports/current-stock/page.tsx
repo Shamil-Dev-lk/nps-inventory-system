@@ -89,12 +89,12 @@ export default function CurrentStockPage() {
       if (!items || items.length === 0) return;
       const headers = ['Item Code', 'Item Name', 'Category', 'Stock Qty', 'Unit Value', 'Total Value'];
       const rows = items.map((row: any) => [
-        row.item_code,
+        row.code || row.item_code || `ITM-${String(row.id).padStart(4, '0')}`,
         row.name_en,
         row.category?.name_en || '-',
-        row.stock_quantity || 0,
-        row.unit_price || 0,
-        (row.stock_quantity || 0) * (row.unit_price || 0)
+        row.current_quantity || row.stock_quantity || 0,
+        row.purchase_price || row.price || row.average_cost || 0,
+        (row.current_quantity || row.stock_quantity || 0) * (row.purchase_price || row.price || row.average_cost || 0)
       ]);
       const csvContent = [headers, ...rows].map(e => e.join(",")).join("\n");
       const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
@@ -188,7 +188,7 @@ export default function CurrentStockPage() {
                 <tr key={i}>{Array.from({length: 8}).map((_, j) => <td key={j}><div className="shimmer h-4 rounded w-full max-w-[100px]" /></td>)}</tr>
               )) : items.map((item: any) => (
                 <tr key={item.id}>
-                  <td><code className="text-xs bg-muted px-1.5 py-0.5 rounded font-mono">{item.item_code}</code></td>
+                  <td><code className="text-xs bg-muted px-1.5 py-0.5 rounded font-mono">{item.code || item.item_code || `ITM-${String(item.id).padStart(4, '0')}`}</code></td>
                   <td className="text-sm font-medium">{item.name_en}</td>
                   <td className="text-sm text-muted-foreground">{item.category?.name_en || '—'}</td>
                   <td className="text-sm text-muted-foreground">{item.warehouse?.name_en || '—'}</td>
