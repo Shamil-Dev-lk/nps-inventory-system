@@ -5,8 +5,9 @@ import { useQuery } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import {
   Package, TrendingUp, TrendingDown, AlertTriangle, ShoppingCart,
-  PackageMinus, ArrowRight, DollarSign, RefreshCw, Activity, Camera, Sparkles,
+  PackageMinus, ArrowRight, DollarSign, RefreshCw, Activity, Camera, Sparkles, Aperture,
 } from 'lucide-react';
+import { PhotographyStudioModal } from '@/components/common/PhotographyStudioModal';
 import {
   AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell,
   XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend,
@@ -76,6 +77,7 @@ function SkeletonCard() {
 export default function DashboardPage() {
   const { org } = useOrgStore();
   const { hasSuperAdmin, hasPermission } = useAuthStore();
+  const [isStudioOpen, setIsStudioOpen] = React.useState(false);
   
   // A manager/admin is someone who can view sensitive reports
   const isManager = hasSuperAdmin() || hasPermission('view-reports');
@@ -148,6 +150,12 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-6 max-w-[1600px]">
+      <PhotographyStudioModal
+        isOpen={isStudioOpen}
+        onClose={() => setIsStudioOpen(false)}
+        orgName={org?.name_en || 'ANTIGRAVITY Inventory System'}
+      />
+
       {/* Page header */}
       <div className="page-header">
         <div>
@@ -186,12 +194,19 @@ export default function DashboardPage() {
               &quot;A photograph is the pause button of life.&quot; Today we celebrate photographers, visual storytellers, and precision asset management across every department.
             </p>
           </div>
-          <div className="flex items-center gap-2 shrink-0">
+          <div className="flex items-center gap-2.5 shrink-0 flex-wrap">
+            <button
+              type="button"
+              onClick={() => setIsStudioOpen(true)}
+              className="px-4 py-2 bg-gradient-to-r from-amber-500 to-amber-400 hover:from-amber-400 hover:to-amber-300 text-slate-950 font-bold text-xs rounded-xl shadow-lg transition-all hover:scale-105 active:scale-95 flex items-center gap-1.5"
+            >
+              <Aperture size={15} /> Open Photo Studio 📸
+            </button>
             <Link
               href="/dashboard/assets"
-              className="px-4 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs rounded-xl shadow-lg transition-all hover:scale-105 active:scale-95 flex items-center gap-1.5"
+              className="px-4 py-2 bg-white/10 hover:bg-white/20 text-white font-semibold text-xs rounded-xl border border-white/10 transition-all flex items-center gap-1.5"
             >
-              <Camera size={15} /> View Equipment & Assets
+              <Camera size={15} /> View Equipment
             </Link>
           </div>
         </div>
