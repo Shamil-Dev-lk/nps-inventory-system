@@ -77,7 +77,7 @@ export default function ItemsPage() {
         
       if (search.trim()) {
         const term = search.trim();
-        query = query.or(`name_en.ilike.%${term}%,code.ilike.%${term}%,item_code.ilike.%${term}%`);
+        query = query.or(`name_en.ilike.%${term}%,code.ilike.%${term}%,name_si.ilike.%${term}%`);
       }
       if (categoryId) query = query.eq('category_id', categoryId);
       

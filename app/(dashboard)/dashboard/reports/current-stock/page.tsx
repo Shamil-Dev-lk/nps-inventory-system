@@ -18,7 +18,10 @@ export default function CurrentStockPage() {
         .from('items')
         .select('*, category:categories(id, name_en), warehouse:warehouses(id, name_en), unit:units(id, short_name)', { count: 'exact' });
 
-      if (search) query = query.or(`name_en.ilike.%${search}%,item_code.ilike.%${search}%`);
+      if (search.trim()) {
+        const term = search.trim();
+        query = query.or(`name_en.ilike.%${term}%,code.ilike.%${term}%`);
+      }
       if (categoryId) query = query.eq('category_id', categoryId);
       if (warehouseId) query = query.eq('warehouse_id', warehouseId);
 
