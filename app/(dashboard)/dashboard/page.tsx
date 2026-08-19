@@ -8,6 +8,7 @@ import {
   PackageMinus, ArrowRight, DollarSign, RefreshCw, Activity, Camera, Sparkles, Aperture,
 } from 'lucide-react';
 import { PhotographyStudioModal } from '@/components/common/PhotographyStudioModal';
+import { SpecialDaysRegistry, SpecialDay } from '@/lib/special-days';
 import {
   AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell,
   XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend,
@@ -78,6 +79,11 @@ export default function DashboardPage() {
   const { org } = useOrgStore();
   const { hasSuperAdmin, hasPermission } = useAuthStore();
   const [isStudioOpen, setIsStudioOpen] = React.useState(false);
+  const [specialDay, setSpecialDay] = React.useState<SpecialDay | null>(null);
+
+  React.useEffect(() => {
+    setSpecialDay(SpecialDaysRegistry.getCurrentSpecialDay());
+  }, []);
   
   // A manager/admin is someone who can view sensitive reports
   const isManager = hasSuperAdmin() || hasPermission('view-reports');
@@ -173,44 +179,57 @@ export default function DashboardPage() {
         </button>
       </div>
 
-      {/* World Photography Day Hero Card */}
-      <motion.div
-        initial={{ opacity: 0, scale: 0.98 }}
-        animate={{ opacity: 1, scale: 1 }}
-        className="rounded-2xl bg-gradient-to-r from-slate-900 via-indigo-950 to-purple-950 p-6 text-white shadow-xl relative overflow-hidden border border-indigo-500/30"
-      >
-        <div className="absolute right-0 top-0 translate-x-6 -translate-y-6 w-48 h-48 rounded-full bg-amber-500/10 blur-3xl pointer-events-none" />
-        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 relative z-10">
-          <div className="space-y-1.5">
-            <div className="flex items-center gap-2">
-              <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-500/20 text-amber-300 border border-amber-400/30 flex items-center gap-1">
-                <Camera size={13} /> August 19 • World Photography Day 📸
-              </span>
+      {/* Dynamic Daily Special Day Hero Card */}
+      {specialDay && (
+        <motion.div
+          initial={{ opacity: 0, scale: 0.98 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className={`rounded-2xl bg-gradient-to-r ${specialDay.bgGradient} p-6 text-white shadow-xl relative overflow-hidden border border-white/10`}
+        >
+          <div className="absolute right-0 top-0 translate-x-6 -translate-y-6 w-48 h-48 rounded-full bg-amber-500/10 blur-3xl pointer-events-none" />
+          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 relative z-10">
+            <div className="space-y-1.5">
+              <div className="flex items-center gap-2">
+                <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-white/10 text-amber-300 border border-white/10 flex items-center gap-1">
+                  <span>{specialDay.emoji}</span> {specialDay.badge}
+                </span>
+              </div>
+              <h2 className="text-xl md:text-2xl font-extrabold tracking-tight text-white">
+                {specialDay.title}
+              </h2>
+              <p className="text-xs md:text-sm text-slate-300 max-w-2xl">
+                &quot;{specialDay.quote}&quot; — {specialDay.subtitle}
+              </p>
             </div>
-            <h2 className="text-xl md:text-2xl font-extrabold tracking-tight text-white">
-              Capturing Every Detail with Precision 📷✨
-            </h2>
-            <p className="text-xs md:text-sm text-slate-300 max-w-2xl">
-              &quot;A photograph is the pause button of life.&quot; Today we celebrate photographers, visual storytellers, and precision asset management across every department.
-            </p>
+            <div className="flex items-center gap-2.5 shrink-0 flex-wrap">
+              {specialDay.interactiveType === 'photography' && (
+                <button
+                  type="button"
+                  onClick={() => setIsStudioOpen(true)}
+                  className="px-4 py-2 bg-gradient-to-r from-amber-500 to-amber-400 hover:from-amber-400 hover:to-amber-300 text-slate-950 font-bold text-xs rounded-xl shadow-lg transition-all hover:scale-105 active:scale-95 flex items-center gap-1.5"
+                >
+                  <Aperture size={15} /> Open Photo Studio 📸
+                </button>
+              )}
+              {specialDay.actionHref ? (
+                <Link
+                  href={specialDay.actionHref}
+                  className="px-4 py-2 bg-white/15 hover:bg-white/25 text-white font-bold text-xs rounded-xl border border-white/15 transition-all flex items-center gap-1.5"
+                >
+                  {specialDay.actionText} <ArrowRight size={14} />
+                </Link>
+              ) : (
+                <Link
+                  href="/dashboard/assets"
+                  className="px-4 py-2 bg-white/10 hover:bg-white/20 text-white font-semibold text-xs rounded-xl border border-white/10 transition-all flex items-center gap-1.5"
+                >
+                  <Camera size={15} /> View Equipment
+                </Link>
+              )}
+            </div>
           </div>
-          <div className="flex items-center gap-2.5 shrink-0 flex-wrap">
-            <button
-              type="button"
-              onClick={() => setIsStudioOpen(true)}
-              className="px-4 py-2 bg-gradient-to-r from-amber-500 to-amber-400 hover:from-amber-400 hover:to-amber-300 text-slate-950 font-bold text-xs rounded-xl shadow-lg transition-all hover:scale-105 active:scale-95 flex items-center gap-1.5"
-            >
-              <Aperture size={15} /> Open Photo Studio 📸
-            </button>
-            <Link
-              href="/dashboard/assets"
-              className="px-4 py-2 bg-white/10 hover:bg-white/20 text-white font-semibold text-xs rounded-xl border border-white/10 transition-all flex items-center gap-1.5"
-            >
-              <Camera size={15} /> View Equipment
-            </Link>
-          </div>
-        </div>
-      </motion.div>
+        </motion.div>
+      )}
 
       {/* ── KPI Cards ────────────────────────────────────────────── */}
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">

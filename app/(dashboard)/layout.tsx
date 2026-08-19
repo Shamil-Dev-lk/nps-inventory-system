@@ -22,7 +22,7 @@ import { useAuthStore } from '@/store/auth-store';
 import { useOrgStore } from '@/store/org-store';
 import { Organization } from '@/types';
 import { NotificationCenter } from '@/components/layout/NotificationCenter';
-import { PhotographyDayBanner } from '@/components/common/PhotographyDayBanner';
+import { DailySpecialDayBanner } from '@/components/common/DailySpecialDayBanner';
 
 interface NavItem {
   label: string;
@@ -346,7 +346,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
       {/* ── Main content ─────────────────────────────────────────── */}
       <div className="flex-1 flex flex-col overflow-hidden print:overflow-visible">
-        <PhotographyDayBanner />
+        <DailySpecialDayBanner />
         {/* Topbar */}
         <header className="h-14 border-b border-border bg-card/80 backdrop-blur-md flex items-center px-4 gap-3 shrink-0 sticky top-0 z-10 print:hidden">
           {/* Search trigger */}
