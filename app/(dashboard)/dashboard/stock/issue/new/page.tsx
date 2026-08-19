@@ -13,6 +13,8 @@ import { BarcodeScannerModal } from '@/components/scanner/BarcodeScannerModal';
 import { Modal } from '@/components/ui/modal';
 import { SearchableItemSelect } from '@/components/ui/SearchableItemSelect';
 
+import { isItemFeatured } from '@/lib/featured-items';
+
 export default function NewStockIssuePage() {
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -106,7 +108,15 @@ export default function NewStockIssuePage() {
     queryFn: async () => {
       const { data, error } = await supabase.from('items').select('*, unit:units(symbol)');
       if (error) throw error;
-      return data || [];
+      const list = data || [];
+      return list.map((i: any) => ({
+        ...i,
+        is_featured: isItemFeatured(i)
+      })).sort((a: any, b: any) => {
+        if (a.is_featured && !b.is_featured) return -1;
+        if (!a.is_featured && b.is_featured) return 1;
+        return 0;
+      });
     }
   });
   const { data: customers = [] } = useQuery({

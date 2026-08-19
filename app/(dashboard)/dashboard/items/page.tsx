@@ -100,6 +100,10 @@ export default function ItemsPage() {
           is_featured,
           stock_status
         };
+      }).sort((a: any, b: any) => {
+        if (a.is_featured && !b.is_featured) return -1;
+        if (!a.is_featured && b.is_featured) return 1;
+        return 0;
       });
 
       let filteredItems = mappedItems;
