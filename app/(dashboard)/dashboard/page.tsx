@@ -5,7 +5,7 @@ import { useQuery } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import {
   Package, TrendingUp, TrendingDown, AlertTriangle, ShoppingCart,
-  PackageMinus, ArrowRight, DollarSign, RefreshCw, Activity,
+  PackageMinus, ArrowRight, DollarSign, RefreshCw, Activity, Camera, Sparkles,
 } from 'lucide-react';
 import {
   AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell,
@@ -164,6 +164,38 @@ export default function DashboardPage() {
           Refresh
         </button>
       </div>
+
+      {/* World Photography Day Hero Card */}
+      <motion.div
+        initial={{ opacity: 0, scale: 0.98 }}
+        animate={{ opacity: 1, scale: 1 }}
+        className="rounded-2xl bg-gradient-to-r from-slate-900 via-indigo-950 to-purple-950 p-6 text-white shadow-xl relative overflow-hidden border border-indigo-500/30"
+      >
+        <div className="absolute right-0 top-0 translate-x-6 -translate-y-6 w-48 h-48 rounded-full bg-amber-500/10 blur-3xl pointer-events-none" />
+        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 relative z-10">
+          <div className="space-y-1.5">
+            <div className="flex items-center gap-2">
+              <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-500/20 text-amber-300 border border-amber-400/30 flex items-center gap-1">
+                <Camera size={13} /> August 19 • World Photography Day 📸
+              </span>
+            </div>
+            <h2 className="text-xl md:text-2xl font-extrabold tracking-tight text-white">
+              Capturing Every Detail with Precision 📷✨
+            </h2>
+            <p className="text-xs md:text-sm text-slate-300 max-w-2xl">
+              &quot;A photograph is the pause button of life.&quot; Today we celebrate photographers, visual storytellers, and precision asset management across every department.
+            </p>
+          </div>
+          <div className="flex items-center gap-2 shrink-0">
+            <Link
+              href="/dashboard/assets"
+              className="px-4 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs rounded-xl shadow-lg transition-all hover:scale-105 active:scale-95 flex items-center gap-1.5"
+            >
+              <Camera size={15} /> View Equipment & Assets
+            </Link>
+          </div>
+        </div>
+      </motion.div>
 
       {/* ── KPI Cards ────────────────────────────────────────────── */}
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">

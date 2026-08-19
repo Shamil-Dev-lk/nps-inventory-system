@@ -20,8 +20,9 @@ import { useTheme } from 'next-themes';
 import { supabase } from '@/lib/supabase';
 import { useAuthStore } from '@/store/auth-store';
 import { useOrgStore } from '@/store/org-store';
-import type { Organization } from '@/types';
+import { Organization } from '@/types';
 import { NotificationCenter } from '@/components/layout/NotificationCenter';
+import { PhotographyDayBanner } from '@/components/common/PhotographyDayBanner';
 
 interface NavItem {
   label: string;
@@ -345,6 +346,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
       {/* ── Main content ─────────────────────────────────────────── */}
       <div className="flex-1 flex flex-col overflow-hidden print:overflow-visible">
+        <PhotographyDayBanner />
         {/* Topbar */}
         <header className="h-14 border-b border-border bg-card/80 backdrop-blur-md flex items-center px-4 gap-3 shrink-0 sticky top-0 z-10 print:hidden">
           {/* Search trigger */}
