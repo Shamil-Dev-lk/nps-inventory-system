@@ -5,7 +5,8 @@ import { useForm } from 'react-hook-form';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { toast } from 'sonner';
-import { ArrowLeft, Save } from 'lucide-react';
+import { ArrowLeft, Save, Star } from 'lucide-react';
+import { isItemFeatured, toggleItemFeatured } from '@/lib/featured-items';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
 
@@ -42,7 +43,8 @@ export default function EditItemPage() {
         brand_id: itemData.brand_id || '',
         unit_id: itemData.unit_id || '',
         warehouse_id: itemData.warehouse_id || '',
-        description: itemData.description || '',
+        description: itemData.description?.replace(/\[Featured\]/g, '').trim() || '',
+        is_featured: isItemFeatured(itemData),
         purchase_price: itemData.purchase_price || 0,
         selling_price: itemData.selling_price || 0,
         current_quantity: itemData.current_quantity ?? 0,
@@ -55,6 +57,23 @@ export default function EditItemPage() {
 
   const updateMutation = useMutation({
     mutationFn: async (data: any) => {
+      const isFeatured = Boolean(data.is_featured);
+      delete data.is_featured;
+
+      let cleanDesc = (data.description || '').replace(/\[Featured\]/g, '').trim();
+      if (isFeatured) {
+        data.description = `[Featured] ${cleanDesc}`.trim();
+      } else {
+        data.description = cleanDesc;
+      }
+
+      if (itemId) {
+        const currentlyFeatured = isItemFeatured(itemData);
+        if (isFeatured !== currentlyFeatured) {
+          toggleItemFeatured(itemId);
+        }
+      }
+
       const { error } = await supabase.from('items').update(data).eq('id', itemId);
       if (error) throw error;
       return true;
@@ -136,6 +155,12 @@ export default function EditItemPage() {
             <div className="md:col-span-2">
               <label className="text-sm font-medium">Description</label>
               <textarea {...register('description')} rows={3} className="w-full px-3 py-2 mt-1 border rounded-lg"></textarea>
+            </div>
+            <div className="md:col-span-2 flex items-center gap-2 pt-1">
+              <input type="checkbox" id="is_featured" {...register('is_featured')} className="w-4 h-4 rounded text-amber-500 border-input focus:ring-amber-400" />
+              <label htmlFor="is_featured" className="text-sm font-medium flex items-center gap-1.5 cursor-pointer select-none">
+                <Star size={16} className="text-amber-500 fill-amber-500" /> Feature this Item (Starred / High Priority)
+              </label>
             </div>
           </div>
         </div>

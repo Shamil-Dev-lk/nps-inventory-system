@@ -5,7 +5,8 @@ import { useForm } from 'react-hook-form';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
-import { ArrowLeft, Save } from 'lucide-react';
+import { ArrowLeft, Save, Star } from 'lucide-react';
+import { toggleItemFeatured } from '@/lib/featured-items';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
 import { useNotificationStore } from '@/store/notification-store';
@@ -36,9 +37,20 @@ export default function NewItemPage() {
       data.code = data.code || `ITM-${String(maxNum + 1).padStart(5, '0')}`;
       delete data.item_code;
       
-      const { error } = await supabase.from('items').insert([data]);
+      const isFeatured = Boolean(data.is_featured);
+      delete data.is_featured;
+
+      if (isFeatured) {
+        data.description = `[Featured] ${data.description || ''}`.trim();
+      }
+      
+      const { data: inserted, error } = await supabase.from('items').insert([data]).select().single();
       if (error) throw error;
-      return data;
+      
+      if (isFeatured && inserted?.id) {
+        toggleItemFeatured(inserted.id);
+      }
+      return inserted || data;
     },
     onSuccess: (newItem: any) => {
       queryClient.invalidateQueries({ queryKey: ['items'] });
@@ -121,6 +133,12 @@ export default function NewItemPage() {
             <div className="md:col-span-2">
               <label className="text-sm font-medium">Description</label>
               <textarea {...register('description')} rows={3} className="w-full px-3 py-2 mt-1 border rounded-lg"></textarea>
+            </div>
+            <div className="md:col-span-2 flex items-center gap-2 pt-1">
+              <input type="checkbox" id="is_featured" {...register('is_featured')} className="w-4 h-4 rounded text-amber-500 border-input focus:ring-amber-400" />
+              <label htmlFor="is_featured" className="text-sm font-medium flex items-center gap-1.5 cursor-pointer select-none">
+                <Star size={16} className="text-amber-500 fill-amber-500" /> Feature this Item (Starred / High Priority)
+              </label>
             </div>
           </div>
         </div>

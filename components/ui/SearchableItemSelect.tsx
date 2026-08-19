@@ -1,17 +1,20 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
-import { Search, ChevronDown, Check, X, Package } from 'lucide-react';
+import { Search, ChevronDown, Check, X, Package, Star } from 'lucide-react';
+import { isItemFeatured } from '@/lib/featured-items';
 
 interface Item {
   id: string | number;
   item_code?: string;
   code?: string;
   name_en: string;
+  description?: string;
   available_quantity?: number | string;
   current_quantity?: number | string;
   unit?: { symbol?: string; name_en?: string };
   barcode?: string;
+  is_featured?: boolean;
 }
 
 interface SearchableItemSelectProps {
@@ -54,14 +57,22 @@ export function SearchableItemSelect({
     }
   }, [isOpen]);
 
-  const filteredItems = items.filter((item) => {
-    if (!search.trim()) return true;
-    const query = search.toLowerCase().trim();
-    const name = (item.name_en || '').toLowerCase();
-    const code = (item.item_code || item.code || '').toLowerCase();
-    const barcode = (item.barcode || '').toLowerCase();
-    return name.includes(query) || code.includes(query) || barcode.includes(query);
-  });
+  const filteredItems = items
+    .filter((item) => {
+      if (!search.trim()) return true;
+      const query = search.toLowerCase().trim();
+      const name = (item.name_en || '').toLowerCase();
+      const code = (item.item_code || item.code || '').toLowerCase();
+      const barcode = (item.barcode || '').toLowerCase();
+      return name.includes(query) || code.includes(query) || barcode.includes(query);
+    })
+    .sort((a, b) => {
+      const featA = a.is_featured || isItemFeatured(a);
+      const featB = b.is_featured || isItemFeatured(b);
+      if (featA && !featB) return -1;
+      if (!featA && featB) return 1;
+      return 0;
+    });
 
   return (
     <div className="relative w-full" ref={containerRef}>
@@ -79,13 +90,16 @@ export function SearchableItemSelect({
         <div className="flex items-center gap-2 truncate text-left">
           <Package size={16} className="text-muted-foreground shrink-0" />
           {selectedItem ? (
-            <div className="truncate">
-              <span className="font-mono text-xs bg-muted px-1.5 py-0.5 rounded mr-1.5 font-semibold text-foreground">
+            <div className="truncate flex items-center gap-1.5">
+              <span className="font-mono text-xs bg-muted px-1.5 py-0.5 rounded font-semibold text-foreground">
                 {selectedItem.item_code || selectedItem.code || `ID:${selectedItem.id}`}
               </span>
               <span className="font-medium text-foreground">{selectedItem.name_en}</span>
+              {(selectedItem.is_featured || isItemFeatured(selectedItem)) && (
+                <Star size={13} className="text-amber-500 fill-amber-500 shrink-0 ml-0.5" />
+              )}
               {(selectedItem.available_quantity !== undefined || selectedItem.current_quantity !== undefined) && (
-                <span className="ml-2 text-xs text-emerald-600 dark:text-emerald-400 font-semibold bg-emerald-50 dark:bg-emerald-950/40 px-1.5 py-0.5 rounded border border-emerald-200 dark:border-emerald-800">
+                <span className="ml-1.5 text-xs text-emerald-600 dark:text-emerald-400 font-semibold bg-emerald-50 dark:bg-emerald-950/40 px-1.5 py-0.5 rounded border border-emerald-200 dark:border-emerald-800">
                   {selectedItem.available_quantity ?? selectedItem.current_quantity} {selectedItem.unit?.symbol || ''}
                 </span>
               )}
@@ -128,6 +142,7 @@ export function SearchableItemSelect({
               filteredItems.map((item) => {
                 const isSelected = String(item.id) === String(value);
                 const stockQty = item.available_quantity ?? item.current_quantity ?? 0;
+                const isFeatured = item.is_featured || isItemFeatured(item);
 
                 return (
                   <button
@@ -148,7 +163,10 @@ export function SearchableItemSelect({
                       <span className="font-mono text-xs bg-muted px-1.5 py-0.5 rounded font-semibold shrink-0">
                         {item.item_code || item.code || `ID:${item.id}`}
                       </span>
-                      <span className="truncate font-medium">{item.name_en}</span>
+                      <span className="truncate font-medium flex items-center gap-1">
+                        {item.name_en}
+                        {isFeatured && <Star size={13} className="text-amber-500 fill-amber-500 shrink-0" />}
+                      </span>
                     </div>
 
                     <div className="flex items-center gap-2 shrink-0">

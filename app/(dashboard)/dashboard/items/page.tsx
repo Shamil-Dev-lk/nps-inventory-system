@@ -7,8 +7,9 @@ import {
   Plus, Search, Filter, Edit, Trash2, Eye, Package,
   Barcode, Tag, AlertTriangle, CheckCircle, XCircle,
   Download, Upload, ScanLine, RefreshCw, ChevronDown,
-  Printer
+  Printer, Star
 } from 'lucide-react';
+import { isItemFeatured, toggleItemFeatured } from '@/lib/featured-items';
 import { toast } from 'sonner';
 import Link from 'next/link';
 import api from '@/lib/api';
@@ -90,17 +91,21 @@ export default function ItemsPage() {
         const is_out_of_stock = qty <= 0;
         const is_low_stock = !is_out_of_stock && qty <= threshold;
         const stock_status = is_out_of_stock ? 'out_of_stock' : is_low_stock ? 'low_stock' : 'in_stock';
+        const is_featured = isItemFeatured(item);
         return {
           ...item,
           current_quantity: qty,
           is_out_of_stock,
           is_low_stock,
+          is_featured,
           stock_status
         };
       });
 
       let filteredItems = mappedItems;
-      if (statusFilter) {
+      if (statusFilter === 'featured') {
+        filteredItems = mappedItems.filter((i: any) => i.is_featured);
+      } else if (statusFilter) {
         filteredItems = mappedItems.filter((i: any) => i.stock_status === statusFilter);
       }
 
@@ -236,9 +241,10 @@ export default function ItemsPage() {
           <select
             value={statusFilter}
             onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }}
-            className="py-2 px-3 text-sm rounded-lg border border-input bg-background focus:outline-none focus:ring-2 focus:ring-primary/30"
+            className="py-2 px-3 text-sm rounded-lg border border-input bg-background focus:outline-none focus:ring-2 focus:ring-primary/30 font-medium"
           >
             <option value="">All Status</option>
+            <option value="featured">⭐ Featured Items</option>
             <option value="in_stock">In Stock</option>
             <option value="low_stock">Low Stock</option>
             <option value="out_of_stock">Out of Stock</option>
@@ -307,6 +313,7 @@ export default function ItemsPage() {
                 : items.map((item) => {
                     const status = statusConfig[item.stock_status] || statusConfig.in_stock;
                     const totalValue = item.current_quantity * item.average_cost;
+                    const isFeatured = item.is_featured;
                     return (
                       <tr key={item.id}>
                         <td className="px-5 text-center">
@@ -316,9 +323,27 @@ export default function ItemsPage() {
                           <code className="text-xs bg-muted px-1.5 py-0.5 rounded font-mono whitespace-nowrap">{item.code || item.item_code}</code>
                         </td>
                         <td>
-                          <div>
-                            <p className="font-medium text-foreground text-sm">{item.name_en}</p>
-                            {item.name_si && <p className="text-xs text-muted-foreground">{item.name_si}</p>}
+                          <div className="flex items-center gap-2">
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                const newState = toggleItemFeatured(item.id);
+                                toast.success(newState ? `Added "${item.name_en}" to Featured items ⭐` : `Removed "${item.name_en}" from Featured items`);
+                                refetch();
+                              }}
+                              className="p-1 hover:bg-amber-50 dark:hover:bg-amber-950/40 rounded transition-colors shrink-0"
+                              title={isFeatured ? "Remove from Featured" : "Mark as Featured"}
+                            >
+                              <Star size={16} className={isFeatured ? "text-amber-500 fill-amber-500" : "text-muted-foreground/30 hover:text-amber-400"} />
+                            </button>
+                            <div>
+                              <p className="font-medium text-foreground text-sm flex items-center gap-1.5">
+                                {item.name_en}
+                                {isFeatured && <span className="text-[10px] bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 font-bold px-1.5 py-0.2 rounded border border-amber-200 dark:border-amber-800">Featured</span>}
+                              </p>
+                              {item.name_si && <p className="text-xs text-muted-foreground">{item.name_si}</p>}
+                            </div>
                           </div>
                         </td>
                         <td className="text-muted-foreground text-sm">{item.category?.name_en || '—'}</td>
