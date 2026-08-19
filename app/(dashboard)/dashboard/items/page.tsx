@@ -77,28 +77,53 @@ export default function ItemsPage() {
         
       if (search.trim()) {
         const term = search.trim();
-        query = query.or(`name_en.ilike.%${term}%,code.ilike.%${term}%`);
+        query = query.or(`name_en.ilike.%${term}%,code.ilike.%${term}%,item_code.ilike.%${term}%`);
       }
       if (categoryId) query = query.eq('category_id', categoryId);
       
-      const from = (page - 1) * perPage;
-      const to = from + perPage - 1;
-      query = query.range(from, to).order('created_at', { ascending: false });
-      
-      const { data, error, count } = await query;
+      const { data: rawItems, error } = await query.order('created_at', { ascending: false });
       if (error) throw error;
       
+      const mappedItems = (rawItems || []).map((item: any) => {
+        const qty = Number(item.current_quantity || 0);
+        const threshold = Number(item.reorder_level || item.minimum_stock || 5);
+        const is_out_of_stock = qty <= 0;
+        const is_low_stock = !is_out_of_stock && qty <= threshold;
+        const stock_status = is_out_of_stock ? 'out_of_stock' : is_low_stock ? 'low_stock' : 'in_stock';
+        return {
+          ...item,
+          current_quantity: qty,
+          is_out_of_stock,
+          is_low_stock,
+          stock_status
+        };
+      });
+
+      let filteredItems = mappedItems;
+      if (statusFilter) {
+        filteredItems = mappedItems.filter((i: any) => i.stock_status === statusFilter);
+      }
+
+      const from = (page - 1) * perPage;
+      const to = from + perPage;
+      const paginatedItems = filteredItems.slice(from, to);
+
+      const totalItems = mappedItems.length;
+      const totalValue = mappedItems.reduce((acc: number, curr: any) => acc + (Number(curr.purchase_price || curr.price || curr.average_cost || 0) * Number(curr.current_quantity || 0)), 0);
+      const lowStockCount = mappedItems.filter((i: any) => i.is_low_stock).length;
+      const outOfStockCount = mappedItems.filter((i: any) => i.is_out_of_stock).length;
+      
       return {
-        data: data || [],
-        total: count || 0,
+        data: paginatedItems,
+        total: filteredItems.length,
         from: from + 1,
-        to: Math.min(from + perPage, count || 0),
-        last_page: Math.ceil((count || 0) / perPage),
+        to: Math.min(to, filteredItems.length),
+        last_page: Math.ceil(filteredItems.length / perPage) || 1,
         summary: {
-           total_items: count || 0,
-           total_value: data?.reduce((acc: number, curr: any) => acc + ((curr.average_cost || 0) * (curr.current_quantity || 0)), 0) || 0,
-           low_stock_count: data?.filter(i => i.is_low_stock && !i.is_out_of_stock).length || 0,
-           out_of_stock_count: data?.filter(i => i.is_out_of_stock).length || 0,
+           total_items: totalItems,
+           total_value: totalValue,
+           low_stock_count: lowStockCount,
+           out_of_stock_count: outOfStockCount,
         }
       };
     },

@@ -83,16 +83,44 @@ export default function DashboardPage() {
   const { data, isLoading, refetch } = useQuery({
     queryKey: ['dashboard-analytics'],
     queryFn: async () => {
-      // Dummy data to prevent 401 redirect while analytics query is rebuilt
+      const { data: items = [] } = await supabase.from('items').select('*');
+      
+      let totalValue = 0;
+      let lowStockCount = 0;
+      let outOfStockCount = 0;
+
+      (items || []).forEach((item: any) => {
+        const qty = Number(item.current_quantity || 0);
+        const price = Number(item.purchase_price || item.price || item.average_cost || 0);
+        const threshold = Number(item.reorder_level || item.minimum_stock || 5);
+        
+        totalValue += qty * price;
+        
+        if (qty <= 0) {
+          outOfStockCount++;
+        } else if (qty <= threshold) {
+          lowStockCount++;
+        }
+      });
+
+      const { data: issues = [] } = await supabase.from('stock_issues').select('*');
+      const { data: grns = [] } = await supabase.from('grns').select('*');
+      const grnTotalVal = (grns || []).reduce((acc: number, g: any) => acc + Number(g.total_amount || 0), 0);
+
       return {
-        inventory: { total_value: 0, total_items: 0 },
-        monthly_grn: { this_month: 0, last_month: 0, count: 0 },
-        monthly_issues: { this_month: 0, last_month: 0, count: 0 },
-        low_stock_count: 0,
+        inventory: { 
+          total_value: totalValue, 
+          total_items: (items || []).length,
+          low_stock_count: lowStockCount,
+          out_of_stock_count: outOfStockCount
+        },
+        monthly_grn: { this_month: grnTotalVal, last_month: 0, count: (grns || []).length },
+        monthly_issues: { this_month: (issues || []).length, last_month: 0, count: (issues || []).length },
+        low_stock_count: lowStockCount,
         stock_by_category: [],
         monthly_trend: [],
         recent_activity: [],
-      } as DashboardAnalytics;
+      } as any;
     },
     refetchInterval: 5 * 60 * 1000,
   });

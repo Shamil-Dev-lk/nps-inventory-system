@@ -29,13 +29,17 @@ export default function CurrentStockPage() {
       const { data: rawItems, error, count } = await query;
       if (error) throw error;
 
-      const { data: allItems, error: summaryError } = await supabase.from('items').select('current_quantity, average_cost, reorder_level');
+      const { data: allItems, error: summaryError } = await supabase.from('items').select('current_quantity, average_cost, reorder_level, minimum_stock, purchase_price, price');
       if (summaryError) throw summaryError;
 
       const totalItems = allItems?.length || 0;
-      const totalValue = allItems?.reduce((sum: number, item: any) => sum + (Number(item.current_quantity || 0) * Number(item.average_cost || 0)), 0) || 0;
-      const lowStockCount = allItems?.filter((item: any) => (item.current_quantity || 0) <= (item.reorder_level || 0) && (item.current_quantity || 0) > 0).length || 0;
-      const outOfStockCount = allItems?.filter((item: any) => (item.current_quantity || 0) <= 0).length || 0;
+      const totalValue = allItems?.reduce((sum: number, item: any) => sum + (Number(item.current_quantity || 0) * Number(item.purchase_price || item.price || item.average_cost || 0)), 0) || 0;
+      const lowStockCount = allItems?.filter((item: any) => {
+        const q = Number(item.current_quantity || 0);
+        const t = Number(item.reorder_level || item.minimum_stock || 5);
+        return q > 0 && q <= t;
+      }).length || 0;
+      const outOfStockCount = allItems?.filter((item: any) => Number(item.current_quantity || 0) <= 0).length || 0;
 
       return {
         data: {
@@ -189,8 +193,8 @@ export default function CurrentStockPage() {
                   <td className="text-sm text-muted-foreground">{item.category?.name_en || '—'}</td>
                   <td className="text-sm text-muted-foreground">{item.warehouse?.name_en || '—'}</td>
                   <td className="text-right">
-                    <span className={`font-semibold ${item.current_quantity <= 0 ? 'text-danger' : item.current_quantity <= item.reorder_level ? 'text-warning' : 'text-success'}`}>
-                      {Number(item.current_quantity)}
+                    <span className={`font-semibold ${Number(item.current_quantity || 0) <= 0 ? 'text-danger' : Number(item.current_quantity || 0) <= Number(item.reorder_level || item.minimum_stock || 5) ? 'text-warning' : 'text-success'}`}>
+                      {Number(item.current_quantity || 0)}
                     </span>
                   </td>
                   <td className="text-sm text-muted-foreground">{item.unit?.short_name || '—'}</td>

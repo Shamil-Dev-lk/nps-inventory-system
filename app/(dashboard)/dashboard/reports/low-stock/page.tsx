@@ -15,7 +15,11 @@ export default function LowStockPage() {
         .from('items')
         .select('*, category:categories(name_en), unit:units(symbol, name_en)');
       if (error) throw error;
-      const filtered = (data || []).filter((item: any) => Number(item.current_quantity || 0) <= Number(item.reorder_level || 0) && Number(item.current_quantity || 0) > 0);
+      const filtered = (data || []).filter((item: any) => {
+        const qty = Number(item.current_quantity || 0);
+        const threshold = Number(item.reorder_level || item.minimum_stock || 5);
+        return qty > 0 && qty <= threshold;
+      });
       return {
         data: { data: filtered },
         count: filtered.length,
