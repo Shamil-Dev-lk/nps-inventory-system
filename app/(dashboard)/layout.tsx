@@ -286,7 +286,18 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         {/* Logo */}
         <div className="flex items-center gap-3 px-4 py-5 border-b border-sidebar-border/50">
           <div className="w-10 h-10 rounded-xl bg-card border border-border shadow-sm flex items-center justify-center shrink-0 overflow-hidden relative">
-            <img src={org?.official_logo_url || '/nps-inventory-system/logo.png'} alt="Logo" className="w-full h-full object-contain mix-blend-multiply" />
+            <img
+              src={
+                org?.official_logo_url && !org.official_logo_url.startsWith('blob:')
+                  ? org.official_logo_url
+                  : '/nps-inventory-system/sabha-logo.png'
+              }
+              onError={(e) => {
+                (e.target as HTMLImageElement).src = '/nps-inventory-system/sabha-logo.png';
+              }}
+              alt="Logo"
+              className="w-full h-full object-contain p-0.5"
+            />
           </div>
           {!sidebarCollapsed && (
             <motion.div
@@ -297,10 +308,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               className="overflow-hidden"
             >
               <p className="text-sidebar-foreground font-bold text-sm leading-tight truncate max-w-[160px]">
-                {org?.system_name || 'ANTIGRAVITY'}
+                {org?.system_name || 'Pradheshiya Sabha'}
               </p>
               <p className="text-sidebar-foreground/50 text-[10px] truncate max-w-[160px]">
-                {org?.short_name || 'Gov. Store'}
+                {org?.short_name || 'Nikaweratiya PS'}
               </p>
             </motion.div>
           )}
