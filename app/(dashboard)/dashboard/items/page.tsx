@@ -324,7 +324,7 @@ export default function ItemsPage() {
                           <input type="checkbox" className="rounded" checked={selectedItems.some(i => i.id === item.id)} onChange={() => toggleSelectItem(item)} />
                         </td>
                         <td>
-                          <code className="text-xs bg-muted px-1.5 py-0.5 rounded font-mono whitespace-nowrap">{item.code || item.item_code}</code>
+                          <code className="text-xs bg-muted px-1.5 py-0.5 rounded font-mono whitespace-nowrap">{item.code || item.item_code || (item.id ? `ITM-${String(item.id).padStart(5, '0')}` : '—')}</code>
                         </td>
                         <td>
                           <div className="flex items-center gap-2">
@@ -366,12 +366,12 @@ export default function ItemsPage() {
                         </td>
                         <td>
                           <button onClick={() => { setSelectedItems([item]); setBarcodeOpen(true); }} className="text-xs bg-blue-50 text-blue-600 dark:bg-blue-900/20 px-2 py-1 rounded border border-blue-100 dark:border-blue-800 hover:bg-blue-100 transition-colors">
-                            {item.barcode || item.code || item.item_code || '—'}
+                            {item.barcode || item.code || item.item_code || (item.id ? `ITM-${String(item.id).padStart(5, '0')}` : '—')}
                           </button>
                         </td>
                         <td>
                           <button onClick={() => { setSelectedItems([item]); setQrOpen(true); }} className="text-xs bg-purple-50 text-purple-600 dark:bg-purple-900/20 px-2 py-1 rounded border border-purple-100 dark:border-purple-800 hover:bg-purple-100 transition-colors">
-                            {item.qr_code || item.code || item.item_code || '—'}
+                            {item.qr_code || item.code || item.item_code || (item.id ? `ITM-${String(item.id).padStart(5, '0')}` : '—')}
                           </button>
                         </td>
                         <td>

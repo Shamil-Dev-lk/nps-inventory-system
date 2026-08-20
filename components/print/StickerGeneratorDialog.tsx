@@ -142,10 +142,10 @@ export function StickerGeneratorDialog({ items, open, onOpenChange }: StickerGen
                     Array.from({ length: copies }).map((_, copyIdx) => (
                       <StickerEngine 
                         key={`${item.id}-${idx}-${copyIdx}`}
-                        code={item.barcode || item.code || item.item_code || 'NO-CODE'}
+                        code={item.barcode || item.code || item.item_code || (item.id ? `ITM-${String(item.id).padStart(5, '0')}` : 'NO-CODE')}
                         type={type}
                         title={item.name_en}
-                        subtitle={item.code || item.item_code}
+                        subtitle={item.code || item.item_code || (item.id ? `ITM-${String(item.id).padStart(5, '0')}` : '')}
                         price={item.selling_price}
                         size={size}
                         layout={layout}

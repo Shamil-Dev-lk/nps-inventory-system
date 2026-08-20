@@ -46,7 +46,7 @@ export default function ViewItemPage() {
               {itemData.name_en}
             </h1>
             <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
-              <span className="bg-primary/10 text-primary px-2 py-0.5 rounded font-mono text-xs font-bold">{itemData.code || itemData.item_code}</span>
+              <span className="bg-primary/10 text-primary px-2 py-0.5 rounded font-mono text-xs font-bold">{itemData.code || itemData.item_code || (itemData.id ? `ITM-${String(itemData.id).padStart(5, '0')}` : '—')}</span>
               {itemData.barcode && <span>• Barcode: {itemData.barcode}</span>}
             </div>
           </div>
@@ -89,11 +89,11 @@ export default function ViewItemPage() {
               </div>
               <div>
                 <p className="text-sm text-muted-foreground flex items-center gap-1.5 mb-1"><Hash size={14} /> Item Code</p>
-                <p className="font-mono bg-muted inline-block px-1.5 rounded">{itemData.code || itemData.item_code}</p>
+                <p className="font-mono bg-muted inline-block px-1.5 rounded">{itemData.code || itemData.item_code || (itemData.id ? `ITM-${String(itemData.id).padStart(5, '0')}` : '—')}</p>
               </div>
               <div>
                 <p className="text-sm text-muted-foreground flex items-center gap-1.5 mb-1"><QrCode size={14} /> Barcode / QR</p>
-                <p className="font-mono bg-muted inline-block px-1.5 rounded">{itemData.barcode || itemData.code || itemData.item_code}</p>
+                <p className="font-mono bg-muted inline-block px-1.5 rounded">{itemData.barcode || itemData.code || itemData.item_code || (itemData.id ? `ITM-${String(itemData.id).padStart(5, '0')}` : '—')}</p>
               </div>
               <div className="col-span-2">
                 <p className="text-sm text-muted-foreground flex items-center gap-1.5 mb-1"><AlignLeft size={14} /> Description</p>
