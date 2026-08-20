@@ -16,7 +16,7 @@ export interface SpecialDay {
   interactiveType?: 'photography' | 'celebration' | 'wellness' | 'environment' | 'tech';
 }
 
-export className SpecialDaysRegistry {
+export class SpecialDaysRegistry {
   public static SPECIAL_DAYS: SpecialDay[] = [
     {
       id: 'new_year',
