@@ -184,7 +184,16 @@ export default function DashboardPage() {
         <motion.div
           initial={{ opacity: 0, scale: 0.98 }}
           animate={{ opacity: 1, scale: 1 }}
-          className={`rounded-2xl bg-gradient-to-r ${specialDay.bgGradient} p-6 text-white shadow-xl relative overflow-hidden border border-white/10`}
+          className="rounded-2xl bg-[#0f172a] p-6 text-white shadow-xl relative overflow-hidden border border-white/10"
+          style={{
+            background: (() => {
+              if (specialDay.id === 'photography_day') return 'linear-gradient(to right, #0f172a, #31103f, #0f172a)';
+              if (specialDay.id === 'daily_excellence') return 'linear-gradient(to right, #0f172a, #1e1b4b, #0f172a)';
+              if (specialDay.id === 'sl_independence' || specialDay.id === 'avurudu') return 'linear-gradient(to right, #451a03, #7f1d1d, #064e3b)';
+              if (specialDay.id === 'new_year' || specialDay.id === 'happiness_day') return 'linear-gradient(to right, #451a03, #581c87, #0f172a)';
+              return 'linear-gradient(to right, #0f172a, #1e1b4b, #31103f)';
+            })()
+          }}
         >
           <div className="absolute right-0 top-0 translate-x-6 -translate-y-6 w-48 h-48 rounded-full bg-amber-500/10 blur-3xl pointer-events-none" />
           <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 relative z-10">
@@ -194,10 +203,10 @@ export default function DashboardPage() {
                   <span>{specialDay.emoji}</span> {specialDay.badge}
                 </span>
               </div>
-              <h2 className="text-xl md:text-2xl font-extrabold tracking-tight text-white">
+              <h2 className="text-xl md:text-2xl font-extrabold tracking-tight text-white drop-shadow-sm">
                 {specialDay.title}
               </h2>
-              <p className="text-xs md:text-sm text-slate-300 max-w-2xl">
+              <p className="text-xs md:text-sm text-slate-200 max-w-2xl font-medium">
                 &quot;{specialDay.quote}&quot; — {specialDay.subtitle}
               </p>
             </div>
@@ -206,7 +215,7 @@ export default function DashboardPage() {
                 <button
                   type="button"
                   onClick={() => setIsStudioOpen(true)}
-                  className="px-4 py-2 bg-gradient-to-r from-amber-500 to-amber-400 hover:from-amber-400 hover:to-amber-300 text-slate-950 font-bold text-xs rounded-xl shadow-lg transition-all hover:scale-105 active:scale-95 flex items-center gap-1.5"
+                  className="px-4 py-2 bg-amber-400 hover:bg-amber-300 text-slate-950 font-extrabold text-xs rounded-xl shadow-lg transition-all hover:scale-105 active:scale-95 flex items-center gap-1.5"
                 >
                   <Aperture size={15} /> Open Photo Studio 📸
                 </button>
@@ -214,14 +223,14 @@ export default function DashboardPage() {
               {specialDay.actionHref ? (
                 <Link
                   href={specialDay.actionHref}
-                  className="px-4 py-2 bg-white/15 hover:bg-white/25 text-white font-bold text-xs rounded-xl border border-white/15 transition-all flex items-center gap-1.5"
+                  className="px-4 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 font-extrabold text-xs rounded-xl shadow-md transition-all flex items-center gap-1.5 hover:scale-105"
                 >
                   {specialDay.actionText} <ArrowRight size={14} />
                 </Link>
               ) : (
                 <Link
                   href="/dashboard/assets"
-                  className="px-4 py-2 bg-white/10 hover:bg-white/20 text-white font-semibold text-xs rounded-xl border border-white/10 transition-all flex items-center gap-1.5"
+                  className="px-4 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 font-extrabold text-xs rounded-xl shadow-md transition-all flex items-center gap-1.5 hover:scale-105"
                 >
                   <Camera size={15} /> View Equipment
                 </Link>
