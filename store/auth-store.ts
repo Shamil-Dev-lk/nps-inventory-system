@@ -6,8 +6,11 @@ interface AuthState {
   user: User | null;
   token: string | null;
   isAuthenticated: boolean;
+  pendingAdminAuth: { user: User; token: string } | null;
   setUser: (user: User) => void;
   setToken: (token: string) => void;
+  setPendingAuth: (user: User, token: string) => void;
+  clearPendingAuth: () => void;
   logout: () => void;
   hasPermission: (permission: string) => boolean;
   hasRole: (role: string) => boolean;
@@ -20,8 +23,12 @@ export const useAuthStore = create<AuthState>()(
       user: null,
       token: null,
       isAuthenticated: false,
+      pendingAdminAuth: null,
 
       setUser: (user) => set({ user, isAuthenticated: true }),
+
+      setPendingAuth: (user, token) => set({ pendingAdminAuth: { user, token } }),
+      clearPendingAuth: () => set({ pendingAdminAuth: null }),
 
       setToken: (token) => {
         set({ token });
@@ -34,7 +41,7 @@ export const useAuthStore = create<AuthState>()(
         if (typeof window !== 'undefined') {
           localStorage.removeItem('nps_auth_token');
         }
-        set({ user: null, token: null, isAuthenticated: false });
+        set({ user: null, token: null, isAuthenticated: false, pendingAdminAuth: null });
       },
 
       hasPermission: (permission: string) => {

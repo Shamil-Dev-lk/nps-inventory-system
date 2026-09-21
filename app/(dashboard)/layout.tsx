@@ -93,6 +93,7 @@ const navItems: NavItem[] = [
       { label: 'Organization', href: '/dashboard/settings/organization', icon: Building2, permission: 'manage-settings' },
       { label: 'Users', href: '/dashboard/settings/users', icon: Users, permission: 'manage-users' },
       { label: 'Roles', href: '/dashboard/settings/roles', icon: ShieldCheck, permission: 'manage-roles' },
+      { label: 'Face Lock Security', href: '/dashboard/settings/security', icon: ShieldCheck, permission: 'manage-settings' },
       { label: 'Audit Log', href: '/dashboard/settings/audit-log', icon: ClipboardList, permission: 'view-audit-log' },
     ],
   },

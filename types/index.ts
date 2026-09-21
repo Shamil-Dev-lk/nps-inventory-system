@@ -80,6 +80,10 @@ export interface User {
   dark_mode: boolean;
   is_active: boolean;
   google2fa_enabled: boolean;
+  face_lock_enabled?: boolean;
+  face_data?: string | null;
+  security_pin?: string | null;
+  face_registered_at?: string | null;
   role?: string;
   roles: string[];
   permissions: string[];

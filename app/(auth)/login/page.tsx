@@ -17,7 +17,8 @@ import api from '@/lib/api';
 import { supabase } from '@/lib/supabase';
 import { useAuthStore } from '@/store/auth-store';
 import { useOrgStore } from '@/store/org-store';
-import type { Organization } from '@/types';
+import type { Organization, User } from '@/types';
+import { AdminFaceVerificationModal } from '@/components/auth/AdminFaceVerificationModal';
 
 const loginSchema = z.object({
   email: z.string().email('Please enter a valid email address'),
@@ -35,6 +36,7 @@ export default function LoginPage() {
   const [show2FA, setShow2FA] = useState(false);
   const [twoFactorToken, setTwoFactorToken] = useState('');
   const [otp, setOtp] = useState('');
+  const [pendingAuth, setPendingAuth] = useState<{ user: User; token: string } | null>(null);
 
   const form = useForm<LoginForm>({
     resolver: zodResolver(loginSchema),
@@ -120,20 +122,45 @@ export default function LoginPage() {
 
       const actualPermissions = roleDef?.permissions || userData.permissions || [];
       
-      setToken(sessionToken);
-      
-      const profileData = { 
+      const profileData: User = { 
         id: userData.id, 
         name: userData.name || userData.email.split('@')[0],
+        email: userData.email,
         roles: userData.roles?.length ? userData.roles : [userRoleName],
         permissions: actualPermissions,
-        avatar_url: userData.avatar_url
+        avatar_url: userData.avatar_url,
+        preferred_language: userData.preferred_language || 'en',
+        dark_mode: userData.dark_mode || false,
+        is_active: userData.is_active !== false,
+        google2fa_enabled: userData.google2fa_enabled || false,
+        face_lock_enabled: userData.face_lock_enabled || false,
+        face_data: userData.face_data || null,
+        security_pin: userData.security_pin || null,
+        face_registered_at: userData.face_registered_at || null,
+        created_at: userData.created_at || new Date().toISOString(),
       };
-      
-      setUser(profileData as any);
+
+      const userRolesLower = profileData.roles.map((r) => r.toLowerCase());
+      const isAdminRole =
+        userRolesLower.includes('super admin') ||
+        userRolesLower.includes('super-admin') ||
+        userRolesLower.includes('admin') ||
+        userRolesLower.includes('administrator');
+
+      // Admin-Only Face Lock Check:
+      // If user is Admin and face_lock_enabled is true, require face verification before granting access.
+      // Staff accounts (non-admin) bypass face verification completely.
+      if (isAdminRole && profileData.face_lock_enabled) {
+        setPendingAuth({ user: profileData, token: sessionToken });
+        toast.info('Admin Face Verification Required to complete login.');
+        return;
+      }
+
+      // Standard Login Flow (Staff or Admin with Face Lock disabled)
+      setToken(sessionToken);
+      setUser(profileData);
       toast.success(`Welcome back, ${profileData.name}!`);
       
-      // Delay navigation slightly to let state update
       setTimeout(() => {
         router.replace('/dashboard');
       }, 100);
@@ -428,6 +455,27 @@ export default function LoginPage() {
           </AnimatePresence>
         </div>
       </motion.div>
+
+      {/* Admin Face Lock Verification Modal */}
+      {pendingAuth && (
+        <AdminFaceVerificationModal
+          isOpen={Boolean(pendingAuth)}
+          user={pendingAuth.user}
+          token={pendingAuth.token}
+          onSuccess={() => {
+            const { user: pUser, token: pToken } = pendingAuth;
+            setToken(pToken);
+            setUser(pUser);
+            setPendingAuth(null);
+            toast.success(`Face verification successful! Welcome, ${pUser.name}.`);
+            router.replace('/dashboard');
+          }}
+          onCancel={() => {
+            setPendingAuth(null);
+            toast.info('Admin login cancelled.');
+          }}
+        />
+      )}
     </div>
   );
 }
