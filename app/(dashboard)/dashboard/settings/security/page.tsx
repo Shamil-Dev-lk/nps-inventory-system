@@ -41,21 +41,30 @@ export default function SecuritySettingsPage() {
 
   const startCamera = async () => {
     setCameraError('');
+    setIsCameraActive(true);
+
     const check = await FaceRecognitionEngine.checkCameraAvailability();
     if (!check.available) {
-      setCameraError(check.error || 'Camera is unavailable');
+      setCameraError(check.error || 'Camera hardware is unavailable on this device.');
+      setIsCameraActive(false);
       return;
     }
 
-    try {
-      if (videoRef.current) {
-        const stream = await FaceRecognitionEngine.startCamera(videoRef.current);
-        streamRef.current = stream;
-        setIsCameraActive(true);
+    // Delay slightly to ensure video DOM element is ready
+    setTimeout(async () => {
+      try {
+        if (videoRef.current) {
+          const stream = await FaceRecognitionEngine.startCamera(videoRef.current);
+          streamRef.current = stream;
+        } else {
+          setCameraError('Video frame component initialization failed.');
+          setIsCameraActive(false);
+        }
+      } catch (err: any) {
+        setCameraError(err.message || 'Failed to start camera. Please grant browser camera permissions.');
+        setIsCameraActive(false);
       }
-    } catch (err: any) {
-      setCameraError(err.message || 'Failed to start camera. Check permissions.');
-    }
+    }, 100);
   };
 
   const stopCamera = () => {
@@ -69,7 +78,7 @@ export default function SecuritySettingsPage() {
     try {
       const res = await FaceRecognitionEngine.captureFromVideo(videoRef.current);
       if (!res.faceDetected || res.descriptor.length === 0) {
-        toast.error('No clear face detected. Please position your face inside the frame.');
+        toast.error('No clear face detected. Please position your face inside the oval frame.');
         return;
       }
 
@@ -257,27 +266,35 @@ export default function SecuritySettingsPage() {
             </h3>
 
             <div className="relative w-full aspect-video rounded-2xl bg-black border-2 border-border overflow-hidden flex items-center justify-center group shadow-inner">
-              {capturedPreview ? (
+              {/* Always mounted video element so videoRef is available */}
+              <video
+                ref={videoRef}
+                muted
+                playsInline
+                className={`w-full h-full object-cover transform -scale-x-100 ${
+                  isCameraActive && !capturedPreview ? 'block' : 'hidden'
+                }`}
+              />
+
+              {/* Overlay Oval when camera active */}
+              {isCameraActive && !capturedPreview && (
+                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                  <div className="w-36 h-48 rounded-[50%] border-2 border-primary border-dashed animate-pulse" />
+                </div>
+              )}
+
+              {/* Captured preview image */}
+              {capturedPreview && (
                 <div className="relative w-full h-full">
                   <img src={capturedPreview} alt="Captured Face" className="w-full h-full object-cover" />
                   <div className="absolute top-2 right-2 bg-emerald-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1 shadow">
                     <CheckCircle2 size={12} /> Captured ({confidence}% Confidence)
                   </div>
                 </div>
-              ) : isCameraActive ? (
-                <div className="relative w-full h-full flex items-center justify-center">
-                  <video
-                    ref={videoRef}
-                    muted
-                    playsInline
-                    className="w-full h-full object-cover transform -scale-x-100"
-                  />
-                  {/* Overlay Oval */}
-                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                    <div className="w-36 h-48 rounded-[50%] border-2 border-primary border-dashed animate-pulse" />
-                  </div>
-                </div>
-              ) : (
+              )}
+
+              {/* Placeholder text before launch */}
+              {!isCameraActive && !capturedPreview && (
                 <div className="text-center p-6 space-y-3">
                   <Camera size={40} className="mx-auto text-muted-foreground/60" />
                   <p className="text-xs text-muted-foreground max-w-xs">
