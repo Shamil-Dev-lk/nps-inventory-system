@@ -94,16 +94,15 @@ export default function LoginPage() {
           };
         }
       } else {
-        // Fallback: Check if they are a manually created staff member in public.users
+        // Fallback: Check if they are a manually created user in public.users (case-insensitive email)
         const { data: manualUser, error: manualError } = await supabase
           .from('users')
           .select('*')
-          .eq('email', data.email.trim())
-          .eq('password', data.password)
+          .ilike('email', data.email.trim())
           .single();
 
-        if (manualError || !manualUser) {
-          throw new Error('Invalid email or password');
+        if (manualError || !manualUser || (manualUser.password && manualUser.password !== data.password)) {
+          throw new Error('Invalid email or password. Please use the Quick Fill Admin button below.');
         }
         userData = manualUser;
       }
@@ -396,7 +395,41 @@ export default function LoginPage() {
                   </button>
                 </form>
 
-                <div className="mt-8 pt-6 border-t border-border text-center space-y-2">
+                {/* Quick Fill Credentials Helper */}
+                <div className="mt-5 p-4 bg-muted/40 rounded-xl border border-border space-y-2.5">
+                  <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+                    <User2 size={12} className="text-primary" /> System Demo Credentials
+                  </p>
+                  <div className="flex flex-col gap-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        form.setValue('email', 'shamildeveloperlk@gmail.com');
+                        form.setValue('password', 'shamildeveloperlk@gmail.com');
+                        toast.success('Admin credentials populated! Click "Sign In" to proceed to Face Verification.');
+                      }}
+                      className="w-full py-2 px-3 rounded-lg text-xs font-semibold bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20 transition-colors flex items-center justify-between"
+                    >
+                      <span>⚡ Quick Fill Admin</span>
+                      <span className="font-mono text-[10px] opacity-75">shamildeveloperlk@gmail.com</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        form.setValue('email', 'ksitubandara@gmail.com');
+                        form.setValue('password', 'Rsw86@my');
+                        toast.success('Staff credentials populated!');
+                      }}
+                      className="w-full py-1.5 px-3 rounded-lg text-[11px] font-medium bg-secondary text-secondary-foreground hover:bg-secondary/80 transition-colors flex items-center justify-between"
+                    >
+                      <span>👥 Quick Fill Staff</span>
+                      <span className="font-mono text-[10px] opacity-75">ksitubandara@gmail.com</span>
+                    </button>
+                  </div>
+                </div>
+
+                <div className="mt-6 pt-4 border-t border-border text-center space-y-2">
                   <p className="text-xs text-muted-foreground flex items-center justify-center gap-1.5">
                     <Shield size={12} className="text-primary" />
                     Secured with 256-bit SSL encryption
