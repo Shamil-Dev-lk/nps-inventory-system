@@ -148,10 +148,9 @@ export default function LoginPage() {
         actualPermissions.includes('manage-settings');
 
       // Mandatory Admin 2FA Face Lock Check:
-      // If user is Admin and face lock is enabled (or face data is registered),
-      // enforce Face Verification BEFORE granting access to the Admin Dashboard.
-      // Staff accounts (non-admin) bypass face verification completely.
-      const isFaceRequired = isAdminRole && (profileData.face_lock_enabled || Boolean(profileData.face_data));
+      // ALL Admin accounts MUST pass Face Verification after entering Email & Password
+      // before opening the Admin Dashboard. Staff accounts bypass face verification.
+      const isFaceRequired = isAdminRole;
 
       if (isFaceRequired) {
         setPendingAuth({ user: profileData, token: sessionToken });
