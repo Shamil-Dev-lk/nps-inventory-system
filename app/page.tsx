@@ -16,8 +16,12 @@ function Redirector() {
         target = target.replace('/nps-inventory-system', '');
       }
       
+      if (!target.startsWith('/')) {
+        target = '/' + target;
+      }
+
       if (!target || target === '/') {
-        target = '/dashboard';
+        target = '/dashboard/';
       }
 
       // Convert legacy [id] URL paths into query param routes for GitHub Pages compatibility

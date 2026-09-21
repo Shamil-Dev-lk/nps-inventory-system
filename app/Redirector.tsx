@@ -10,9 +10,25 @@ export default function Redirector() {
   useEffect(() => {
     const p = searchParams.get('p');
     if (p) {
-      router.replace(p.replace('/government-stock-system', '') || '/dashboard');
+      let target = p;
+      while (target.includes('/nps-inventory-system')) {
+        target = target.replace('/nps-inventory-system', '');
+      }
+      while (target.includes('/government-stock-system')) {
+        target = target.replace('/government-stock-system', '');
+      }
+      if (!target.startsWith('/')) {
+        target = '/' + target;
+      }
+      if (!target || target === '/') {
+        target = '/dashboard/';
+      }
+      if (!target.includes('?') && !target.endsWith('/')) {
+        target += '/';
+      }
+      router.replace(target);
     } else {
-      router.replace('/dashboard');
+      router.replace('/dashboard/');
     }
   }, [searchParams, router]);
 

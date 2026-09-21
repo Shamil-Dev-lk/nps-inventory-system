@@ -200,7 +200,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   }, []);
 
   useEffect(() => {
-    if (isHydrated && !isAuthenticated) router.replace('/login');
+    if (isHydrated && !isAuthenticated) {
+      router.replace('/login/');
+    }
   }, [isAuthenticated, isHydrated, router]);
 
   // Hardware Scanner Integration
@@ -258,14 +260,22 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     } finally {
       logout();
       toast.success('Logged out successfully');
-      router.replace('/login');
+      router.replace('/login/');
     }
   };
 
   const pathname = usePathname();
 
-  if (!isHydrated) return null; // Wait for Zustand hydration
-  if (!isAuthenticated || !user) return null;
+  if (!isHydrated || !isAuthenticated || !user) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background p-4 text-center">
+        <div className="space-y-3">
+          <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto" />
+          <p className="text-xs font-medium text-muted-foreground">Authenticating session...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (pathname?.includes('/receipts/print')) {
     return <>{children}</>;
