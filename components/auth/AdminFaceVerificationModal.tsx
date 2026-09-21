@@ -182,13 +182,17 @@ export function AdminFaceVerificationModal({
         <div className="gov-gradient p-6 text-white text-center relative overflow-hidden">
           <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl -mr-10 -mt-10 pointer-events-none" />
 
+          <div className="inline-block px-3 py-1 rounded-full bg-white/20 border border-white/30 text-[10px] font-bold tracking-wider uppercase mb-3 shadow-sm">
+            Step 2 of 2 — Mandatory Biometric Lock
+          </div>
+
           <div className="w-14 h-14 rounded-2xl bg-white/15 border border-white/30 backdrop-blur-md flex items-center justify-center mx-auto mb-3 shadow-inner">
             <ShieldCheck size={28} className="text-white drop-shadow" />
           </div>
 
-          <h3 className="text-xl font-bold tracking-tight">Admin Face Lock</h3>
+          <h3 className="text-xl font-bold tracking-tight">Admin Face Verification</h3>
           <p className="text-white/80 text-xs mt-1">
-            Required 2nd factor verification for Admin Account ({user.name})
+            Complete facial scan or enter PIN to log into Admin Account ({user.name})
           </p>
 
           <button

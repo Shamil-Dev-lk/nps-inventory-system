@@ -141,18 +141,21 @@ export default function LoginPage() {
       };
 
       const userRolesLower = profileData.roles.map((r) => r.toLowerCase());
+      const roleSingleLower = (userData.role || '').toLowerCase();
       const isAdminRole =
-        userRolesLower.includes('super admin') ||
-        userRolesLower.includes('super-admin') ||
-        userRolesLower.includes('admin') ||
-        userRolesLower.includes('administrator');
+        userRolesLower.some((r) => r.includes('admin')) ||
+        roleSingleLower.includes('admin') ||
+        actualPermissions.includes('manage-settings');
 
-      // Admin-Only Face Lock Check:
-      // If user is Admin and face_lock_enabled is true, require face verification before granting access.
+      // Mandatory Admin 2FA Face Lock Check:
+      // If user is Admin and face lock is enabled (or face data is registered),
+      // enforce Face Verification BEFORE granting access to the Admin Dashboard.
       // Staff accounts (non-admin) bypass face verification completely.
-      if (isAdminRole && profileData.face_lock_enabled) {
+      const isFaceRequired = isAdminRole && (profileData.face_lock_enabled || Boolean(profileData.face_data));
+
+      if (isFaceRequired) {
         setPendingAuth({ user: profileData, token: sessionToken });
-        toast.info('Admin Face Verification Required to complete login.');
+        toast.info('Password verified! Step 2 of 2: Admin Face Verification required.');
         return;
       }
 
