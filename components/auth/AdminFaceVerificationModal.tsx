@@ -4,7 +4,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   ShieldCheck, ShieldAlert, Camera, KeyRound, RefreshCw, AlertTriangle,
-  CheckCircle2, XCircle, Loader2, Sparkles, UserCheck, Lock
+  CheckCircle2, XCircle, Loader2, Sparkles, UserCheck, Lock, Eye, EyeOff
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { FaceRecognitionEngine } from '@/lib/face-recognition';
@@ -37,6 +37,7 @@ export function AdminFaceVerificationModal({
 
   // Security PIN state for fallback
   const [pin, setPin] = useState<string>('');
+  const [showPin, setShowPin] = useState<boolean>(false);
   const [pinError, setPinError] = useState<boolean>(false);
   const [isVerifyingPin, setIsVerifyingPin] = useState<boolean>(false);
 
@@ -146,7 +147,7 @@ export function AdminFaceVerificationModal({
   };
 
   const handleVerifyPin = () => {
-    if (pin.length < 4) return;
+    if (pin.length < 2) return;
     setIsVerifyingPin(true);
     setPinError(false);
 
@@ -330,23 +331,33 @@ export function AdminFaceVerificationModal({
               </div>
 
               <div className="space-y-3">
-                <input
-                  type="password"
-                  value={pin}
-                  onChange={(e) => setPin(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                  placeholder="• • • • • •"
-                  maxLength={6}
-                  autoFocus
-                  className={`w-full text-center text-3xl font-mono tracking-[0.5em] py-3.5 rounded-2xl border-2 bg-background focus:outline-none transition-all ${
-                    pinError
-                      ? 'border-destructive ring-2 ring-destructive/20 text-destructive'
-                      : 'border-input focus:border-primary focus:ring-2 focus:ring-primary/20'
-                  }`}
-                />
+                <div className="relative flex items-center">
+                  <input
+                    type={showPin ? 'text' : 'password'}
+                    value={pin}
+                    onChange={(e) => setPin(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                    placeholder="• • • • • •"
+                    maxLength={6}
+                    autoFocus
+                    className={`w-full text-center text-3xl font-mono tracking-[0.5em] py-3.5 px-10 rounded-2xl border-2 bg-background focus:outline-none transition-all ${
+                      pinError
+                        ? 'border-destructive ring-2 ring-destructive/20 text-destructive'
+                        : 'border-input focus:border-primary focus:ring-2 focus:ring-primary/20'
+                    }`}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPin(!showPin)}
+                    className="absolute right-3 text-muted-foreground hover:text-foreground transition-colors p-1"
+                    title={showPin ? 'Hide PIN' : 'Show PIN'}
+                  >
+                    {showPin ? <EyeOff size={20} /> : <Eye size={20} />}
+                  </button>
+                </div>
 
                 <button
                   onClick={handleVerifyPin}
-                  disabled={pin.length < 4 || isVerifyingPin}
+                  disabled={pin.length < 2 || isVerifyingPin}
                   className="w-full py-3 px-4 rounded-xl font-semibold text-white gov-gradient hover:opacity-90 active:scale-[0.98] transition-all duration-200 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-md"
                 >
                   {isVerifyingPin ? (

@@ -5,7 +5,7 @@ import { motion } from 'framer-motion';
 import {
   ShieldCheck, ShieldAlert, Camera, KeyRound, RefreshCw, AlertTriangle,
   CheckCircle2, XCircle, Loader2, Sparkles, UserCheck, Lock, Trash2,
-  ScanLine, HelpCircle, Eye
+  ScanLine, HelpCircle, Eye, EyeOff
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuthStore } from '@/store/auth-store';
@@ -25,6 +25,7 @@ export default function SecuritySettingsPage() {
   const [capturedPreview, setCapturedPreview] = useState<string | null>(null);
   const [confidence, setConfidence] = useState<number>(0);
   const [pin, setPin] = useState<string>(user?.security_pin || '123456');
+  const [showPin, setShowPin] = useState<boolean>(false);
   const [isSaving, setIsSaving] = useState<boolean>(false);
 
   // Test modal state
@@ -98,8 +99,8 @@ export default function SecuritySettingsPage() {
       toast.error('Please capture your face before saving enrollment.');
       return;
     }
-    if (pin.length < 4) {
-      toast.error('Security PIN must be at least 4 digits.');
+    if (pin.length < 2) {
+      toast.error('Security PIN must be at least 2 digits.');
       return;
     }
 
@@ -362,16 +363,26 @@ export default function SecuritySettingsPage() {
 
               <div className="space-y-2 bg-muted/30 p-4 rounded-xl border border-border">
                 <label className="text-xs font-medium text-foreground block">
-                  6-Digit Admin Security PIN (Hardware Fallback)
+                  Admin Security PIN (Hardware Fallback, 2 to 6 digits)
                 </label>
-                <input
-                  type="password"
-                  value={pin}
-                  onChange={(e) => setPin(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                  placeholder="123456"
-                  maxLength={6}
-                  className="w-full text-center text-xl font-mono tracking-widest py-2 rounded-lg border border-input bg-background focus:outline-none focus:ring-2 focus:ring-primary/30"
-                />
+                <div className="relative flex items-center">
+                  <input
+                    type={showPin ? 'text' : 'password'}
+                    value={pin}
+                    onChange={(e) => setPin(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                    placeholder="123456"
+                    maxLength={6}
+                    className="w-full text-center text-xl font-mono tracking-widest py-2 px-10 rounded-lg border border-input bg-background focus:outline-none focus:ring-2 focus:ring-primary/30"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPin(!showPin)}
+                    className="absolute right-3 text-muted-foreground hover:text-foreground transition-colors p-1"
+                    title={showPin ? 'Hide PIN' : 'Show PIN'}
+                  >
+                    {showPin ? <EyeOff size={18} /> : <Eye size={18} />}
+                  </button>
+                </div>
                 <p className="text-[11px] text-muted-foreground">
                   Used to bypass face scan if camera is broken or in low-light environments.
                 </p>
