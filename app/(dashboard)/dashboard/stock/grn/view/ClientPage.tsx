@@ -1,9 +1,11 @@
 'use client';
 import React from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation } from '@tanstack/react-query';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
-import { ArrowLeft, Package, Calendar, MapPin, FileText, CheckCircle, XCircle, Printer, Download } from 'lucide-react';
+import { ArrowLeft, Package, Calendar, MapPin, FileText, CheckCircle, XCircle, Printer, Download, Edit, Trash2 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
+import { useAuthStore } from '@/store/auth-store';
+import { toast } from 'sonner';
 import Link from 'next/link';
 import { PrintLayout } from '@/components/print/PrintLayout';
 
@@ -12,6 +14,14 @@ export default function GrnViewPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const id = searchParams.get('id');
+
+  const { user, hasSuperAdmin, hasPermission } = useAuthStore();
+  const isAdmin = hasSuperAdmin() || 
+    user?.roles?.some((r: string) => r.toLowerCase().includes('admin')) || 
+    user?.designation?.toLowerCase().includes('admin') ||
+    user?.email?.toLowerCase().includes('admin') ||
+    hasPermission('delete-all') || 
+    hasPermission('manage-inventory');
 
   const { data: grn, isLoading } = useQuery({
     queryKey: ['grn', id],
@@ -25,6 +35,21 @@ export default function GrnViewPage() {
       return data;
     },
     enabled: !!id,
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async () => {
+      if (!id) return;
+      await supabase.from('grn_items').delete().eq('grn_id', id);
+      const { error } = await supabase.from('grns').delete().eq('id', id);
+      if (error) throw error;
+      return true;
+    },
+    onSuccess: () => {
+      toast.success('Goods Received Note deleted successfully.');
+      router.push('/dashboard/stock/grn');
+    },
+    onError: (err: any) => toast.error(err.message || 'Failed to delete GRN.'),
   });
 
   if (isLoading) {
@@ -61,7 +86,30 @@ export default function GrnViewPage() {
             <p className="text-sm text-muted-foreground mt-1 font-mono">{grnNumber}</p>
           </div>
         </div>
-        <div className="flex gap-2">
+        <div className="flex items-center gap-2">
+          {isAdmin && (
+            <Link
+              href={`/dashboard/stock/grn/edit/?id=${id}`}
+              className="flex items-center gap-2 px-4 py-2 border border-amber-300 text-amber-700 bg-amber-50 hover:bg-amber-100 rounded-lg font-medium transition-colors"
+              title="Edit GRN (Admin Only)"
+            >
+              <Edit size={16} /> Edit
+            </Link>
+          )}
+          {isAdmin && (
+            <button
+              onClick={() => {
+                if (window.confirm(`Are you sure you want to delete ${grnNumber}? This action cannot be undone.`)) {
+                  deleteMutation.mutate();
+                }
+              }}
+              disabled={deleteMutation.isPending}
+              className="flex items-center gap-2 px-4 py-2 border border-red-200 text-red-600 bg-red-50 hover:bg-red-100 rounded-lg font-medium transition-colors"
+              title="Delete GRN (Admin Only)"
+            >
+              <Trash2 size={16} /> Delete
+            </button>
+          )}
           <button
             onClick={() => window.open(`${window.location.pathname.split('/dashboard')[0] || ''}/dashboard/receipts/print/?type=grn&id=${grn.id}&action=download`, '_blank')}
             className="flex items-center gap-2 px-4 py-2 border border-border rounded-lg bg-card hover:bg-muted font-medium transition-colors"

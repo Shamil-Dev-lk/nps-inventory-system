@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
-import { Plus, Search, Eye, Edit, CheckCircle, XCircle, RefreshCw, Printer, FileDown } from 'lucide-react';
+import { Plus, Search, Eye, Edit, Trash2, CheckCircle, XCircle, RefreshCw, Printer, FileDown } from 'lucide-react';
 import { toast } from 'sonner';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
@@ -10,10 +10,18 @@ import { useAuthStore } from '@/store/auth-store';
 
 export default function GrnPage() {
   const qc = useQueryClient();
-  const { hasPermission } = useAuthStore();
+  const { user, hasPermission, hasSuperAdmin } = useAuthStore();
+  const isAdmin = hasSuperAdmin() || 
+    user?.roles?.some((r: string) => r.toLowerCase().includes('admin')) || 
+    user?.designation?.toLowerCase().includes('admin') ||
+    user?.email?.toLowerCase().includes('admin') ||
+    hasPermission('delete-all') || 
+    hasPermission('manage-inventory');
+
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState('');
   const [page, setPage] = useState(1);
+
   const { data, isLoading, refetch } = useQuery({
     queryKey: ['grn', page, search, status],
     queryFn: async () => {
@@ -130,6 +138,33 @@ export default function GrnPage() {
     onError: (err: any) => toast.error(err.message || 'Failed to approve.'),
   });
 
+  const deleteMutation = useMutation({
+    mutationFn: async (id: number) => {
+      // Delete child grn_items first
+      const { error: itemsErr } = await supabase.from('grn_items').delete().eq('grn_id', id);
+      if (itemsErr) throw itemsErr;
+
+      // Delete parent grn
+      const { error } = await supabase.from('grns').delete().eq('id', id);
+      if (error) throw error;
+      return true;
+    },
+    onSuccess: () => {
+      toast.success('Goods Received Note deleted successfully.');
+      qc.invalidateQueries({ queryKey: ['grn'] });
+      qc.invalidateQueries({ queryKey: ['items'] });
+      qc.invalidateQueries({ queryKey: ['stock'] });
+      qc.invalidateQueries({ queryKey: ['report-grn'] });
+    },
+    onError: (err: any) => toast.error(err.message || 'Failed to delete GRN.'),
+  });
+
+  const handleDelete = (id: number, grnNumber: string) => {
+    if (window.confirm(`Are you sure you want to delete ${grnNumber}? This action cannot be undone.`)) {
+      deleteMutation.mutate(id);
+    }
+  };
+
   const grns = data?.grns || [];
   const meta = data?.meta;
 
@@ -231,6 +266,15 @@ export default function GrnPage() {
                         >
                           <Eye size={15} />
                         </Link>
+                        {isAdmin && (
+                          <Link
+                            href={`/dashboard/stock/grn/edit/?id=${g.id}`}
+                            className="p-1.5 rounded hover:bg-amber-50 text-amber-500 hover:text-amber-700 transition-colors"
+                            title="Edit GRN (Admin Only)"
+                          >
+                            <Edit size={15} />
+                          </Link>
+                        )}
                         {hasPermission('approve-grn') && g.status === 'draft' && (
                           <button
                             onClick={() => approveMutation.mutate(g.id)}
@@ -239,6 +283,16 @@ export default function GrnPage() {
                             title="Approve GRN"
                           >
                             <CheckCircle size={15} />
+                          </button>
+                        )}
+                        {isAdmin && (
+                          <button
+                            onClick={() => handleDelete(g.id, grnNum)}
+                            disabled={deleteMutation.isPending}
+                            className="p-1.5 rounded hover:bg-red-50 text-red-400 hover:text-red-600 transition-colors"
+                            title="Delete GRN (Admin Only)"
+                          >
+                            <Trash2 size={15} />
                           </button>
                         )}
                       </div>
