@@ -20,7 +20,7 @@ const grnSchema = z.object({
   items: z.array(
     z.object({
       item_id: z.string().min(1, 'Item is required'),
-      received_quantity: z.number().min(1, 'Quantity must be at least 1'),
+      received_quantity: z.number().min(0.01, 'Quantity must be greater than 0'),
       accepted_quantity: z.number().min(0, 'Quantity cannot be negative'),
       unit_price: z.number().min(0, 'Price cannot be negative'),
       batch_number: z.string().optional(),
@@ -38,7 +38,7 @@ function NewGRNPage() {
 
   const [suppliers, setSuppliers] = useState<{id: number, name: string}[]>([]);
   const [warehouses, setWarehouses] = useState<{id: number, name_en: string}[]>([]);
-  const [itemsList, setItemsList] = useState<{id: number, name_en: string, purchase_price: number}[]>([]);
+  const [itemsList, setItemsList] = useState<{id: number, name_en: string, item_code?: string, code?: string, purchase_price: number, current_quantity?: number}[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const { register, control, handleSubmit, formState: { errors }, setValue, watch } = useForm<GRNFormValues>({
@@ -58,12 +58,12 @@ function NewGRNPage() {
     const fetchData = async () => {
       try {
         const [supRes, whRes, itemRes] = await Promise.all([
-          supabase.from('suppliers').select('*'),
-          supabase.from('warehouses').select('*'),
-          supabase.from('items').select('*')
+          supabase.from('suppliers').select('*').order('company_name', { ascending: true }),
+          supabase.from('warehouses').select('*').order('name_en', { ascending: true }),
+          supabase.from('items').select('*').order('name_en', { ascending: true })
         ]);
 
-        if (supRes.data) setSuppliers(supRes.data.map((s: any) => ({ id: s.id, name: s.company_name || s.name || '' })));
+        if (supRes.data) setSuppliers(supRes.data.map((s: any) => ({ id: s.id, name: s.company_name || s.name || `Supplier #${s.id}` })));
         if (whRes.data) setWarehouses(whRes.data);
         if (itemRes.data) {
           setItemsList(itemRes.data);
@@ -75,7 +75,7 @@ function NewGRNPage() {
           }
         }
       } catch (err) {
-        console.error(err);
+        console.error('Error loading initial data:', err);
       }
     };
     fetchData();
@@ -99,12 +99,18 @@ function NewGRNPage() {
       const sId = data.supplier_id ? parseInt(String(data.supplier_id)) || null : null;
       const wId = data.warehouse_id ? parseInt(String(data.warehouse_id)) || null : null;
 
+      // Generate next sequential GRN number
+      const countRes = await supabase.from('grns').select('id', { count: 'exact', head: true });
+      const nextNum = (countRes.count || 0) + 1;
+      const grnNumber = `GRN-${new Date().getFullYear()}-${String(nextNum).padStart(5, '0')}`;
+
       const { data: grn, error } = await supabase.from('grns').insert([{
+        grn_number: grnNumber,
         supplier_id: sId,
         warehouse_id: wId,
         received_date: data.received_date,
-        invoice_number: data.invoice_number,
-        remarks: data.remarks,
+        invoice_number: data.invoice_number || null,
+        remarks: data.remarks || null,
         total_amount: totalVal,
         status: 'draft'
       }]).select().single();
@@ -114,12 +120,14 @@ function NewGRNPage() {
       if (grn && data.items?.length) {
         const grnItems = data.items.map(item => ({
           grn_id: grn.id,
-          item_id: item.item_id,
-          received_quantity: item.received_quantity,
-          accepted_quantity: item.accepted_quantity,
-          unit_price: item.unit_price,
-          batch_number: item.batch_number,
-          expiry_date: item.expiry_date
+          item_id: parseInt(String(item.item_id)),
+          ordered_quantity: Number(item.received_quantity) || 0,
+          received_quantity: Number(item.received_quantity) || 0,
+          accepted_quantity: Number(item.accepted_quantity) || 0,
+          unit_price: Number(item.unit_price) || 0,
+          total_price: (Number(item.accepted_quantity) || 0) * (Number(item.unit_price) || 0),
+          batch_number: item.batch_number || null,
+          expiry_date: item.expiry_date || null
         }));
         const { error: itemsErr } = await supabase.from('grn_items').insert(grnItems);
         if (itemsErr) throw itemsErr;
@@ -144,12 +152,12 @@ function NewGRNPage() {
   return (
     <div className="max-w-5xl mx-auto pb-10">
       <div className="flex items-center gap-4 mb-6">
-        <Link href="/dashboard/items" className="p-2 rounded-lg hover:bg-muted border bg-card transition-colors" title="Back">
+        <Link href="/dashboard/stock/grn" className="p-2 rounded-lg hover:bg-muted border bg-card transition-colors" title="Back to GRN List">
           <ArrowLeft size={20} />
         </Link>
         <div>
           <h1 className="text-2xl font-bold">Receive Stock (GRN)</h1>
-          <p className="text-sm text-muted-foreground mt-1">Create a new Goods Receive Note to add stock</p>
+          <p className="text-sm text-muted-foreground mt-1">Create a new Goods Receive Note to record incoming deliveries</p>
         </div>
       </div>
 
@@ -225,7 +233,11 @@ function NewGRNPage() {
                         className="w-full p-2 rounded-md border bg-background text-sm"
                       >
                         <option value="">Select Item</option>
-                        {itemsList.map(i => <option key={i.id} value={i.id}>{i.item_code || i.code ? `${i.item_code || i.code} - ` : ''}{i.name_en} (Current Stock: {i.current_quantity ?? 0})</option>)}
+                        {itemsList.map(i => (
+                          <option key={i.id} value={i.id}>
+                            {i.item_code || i.code ? `${i.item_code || i.code} - ` : ''}{i.name_en} (Stock: {i.current_quantity ?? 0})
+                          </option>
+                        ))}
                       </select>
                       {errors.items?.[index]?.item_id && <p className="text-red-500 text-xs mt-1">{errors.items[index].item_id?.message}</p>}
                     </td>

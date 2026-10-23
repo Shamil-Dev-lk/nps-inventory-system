@@ -251,9 +251,9 @@ export function DedicatedPrintReceiptPage({ isPreviewProp = false }: { isPreview
               ) : ['stock-issue', 'stock-return', 'stock-transfer', 'stock-taking', 'grn', 'purchase-order', 'purchase-request'].includes(type) && documentData?.items ? (
                 documentData.items.map((item: any, idx: number) => (
                   <tr key={idx} className="border-b border-gray-100 last:border-0 align-top">
-                    <td className="py-1">{item.quantity || item.physical_quantity || 1}</td>
+                    <td className="py-1">{item.accepted_quantity ?? item.received_quantity ?? item.quantity ?? item.physical_quantity ?? 1}</td>
                     <td className="py-1 pr-1">{item.item?.name_en || 'Unknown Item'}</td>
-                    <td className="py-1 text-right">{Number((item.quantity || item.physical_quantity || 1) * (item.unit_price || item.unit_cost || item.estimated_unit_price || 0)).toLocaleString('en-LK', { minimumFractionDigits: 2 })}</td>
+                    <td className="py-1 text-right">{Number((item.accepted_quantity ?? item.received_quantity ?? item.quantity ?? item.physical_quantity ?? 1) * (item.unit_price || item.unit_cost || item.estimated_unit_price || 0)).toLocaleString('en-LK', { minimumFractionDigits: 2 })}</td>
                   </tr>
                 ))
               ) : type === 'supplier' ? (

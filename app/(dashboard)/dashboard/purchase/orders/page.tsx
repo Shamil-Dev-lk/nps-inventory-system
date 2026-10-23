@@ -15,7 +15,7 @@ export default function PurchaseOrdersPage() {
   const { data: posData, isLoading, refetch } = useQuery({
     queryKey: ['purchase-orders', page, search, status],
     queryFn: async () => {
-      let query = supabase.from('purchase_orders').select('*, supplier:suppliers(name)').order('created_at', { ascending: false });
+      let query = supabase.from('purchase_orders').select('*, supplier:suppliers(id, company_name)').order('created_at', { ascending: false });
       if (search) {
         query = query.ilike('po_number', `%${search}%`);
       }
@@ -100,7 +100,7 @@ export default function PurchaseOrdersPage() {
                 <tr key={po.id}>
                   <td className="font-mono font-medium text-xs">{po.po_number || po.order_number}</td>
                   <td className="text-sm text-muted-foreground">{new Date(po.order_date).toLocaleDateString('en-LK')}</td>
-                  <td className="text-sm">{po.supplier?.name || '—'}</td>
+                  <td className="text-sm">{po.supplier?.company_name || po.supplier?.name || '—'}</td>
                   <td className="text-sm text-muted-foreground">{po.created_by?.name || po.createdBy?.name || '—'}</td>
                   <td className="text-sm font-medium text-right font-mono text-foreground/80">
                     Rs. {parseFloat(po.total_amount).toLocaleString('en-US', { minimumFractionDigits: 2 })}

@@ -16,7 +16,7 @@ export default function PurchaseOrderDetailPage() {
     queryKey: ['purchase_order', id],
     queryFn: async () => {
       if (!id) return null;
-      const { data, error } = await supabase.from('purchase_orders').select('*, supplier:suppliers(name)').eq('id', id).single();
+      const { data, error } = await supabase.from('purchase_orders').select('*, supplier:suppliers(id, company_name)').eq('id', id).single();
       if (error) throw error;
       return data;
     },
@@ -79,7 +79,7 @@ export default function PurchaseOrderDetailPage() {
             </div>
             <div>
               <p className="text-sm text-muted-foreground">Supplier</p>
-              <p className="font-medium">{po.supplier?.name || po.supplier_id || '-'}</p>
+              <p className="font-medium">{po.supplier?.company_name || po.supplier?.name || po.supplier_id || '-'}</p>
             </div>
             <div>
               <p className="text-sm text-muted-foreground">Created By</p>
