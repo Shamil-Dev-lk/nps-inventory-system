@@ -82,7 +82,7 @@ export default function IssueReportPage() {
         .from('stock_issues')
         .select(
           `*,
-          department:departments(id, name_en),
+          department:departments(id, name_en, name_si),
           project:projects(id, name_en),
           customer:customers(id, name),
           warehouse:warehouses(id, name_en),
@@ -90,7 +90,7 @@ export default function IssueReportPage() {
             id,
             quantity,
             remarks,
-            item:items(id, name_en, code, unit:units(symbol, name_en))
+            item:items(id, name_en, name_si, code, unit:units(symbol, name_en))
           )`,
           { count: 'exact' }
         );
@@ -173,7 +173,7 @@ export default function IssueReportPage() {
       .from('stock_issues')
       .select(`
         *,
-        department:departments(id, name_en),
+        department:departments(id, name_en, name_si),
         project:projects(id, name_en),
         customer:customers(id, name),
         warehouse:warehouses(id, name_en),
@@ -184,6 +184,7 @@ export default function IssueReportPage() {
           item:items(
             id,
             name_en,
+            name_si,
             code,
             unit:units(symbol, name_en)
           )
