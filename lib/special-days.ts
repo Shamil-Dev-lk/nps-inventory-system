@@ -219,32 +219,15 @@ export class SpecialDaysRegistry {
   ];
 
   /**
-   * Get current special day based on local client/server date
+   * Get current special day based on local client/server date.
+   * Returns null if today is a normal operational day (no daily motivation fallback).
    */
-  public static getCurrentSpecialDay(overrideDate?: Date): SpecialDay {
+  public static getCurrentSpecialDay(overrideDate?: Date): SpecialDay | null {
     const today = overrideDate || new Date();
     const month = today.getMonth() + 1; // 1-12
     const day = today.getDate();       // 1-31
 
     const match = this.SPECIAL_DAYS.find(s => s.month === month && s.day === day);
-    if (match) return match;
-
-    // Fallback: Daily Excellence & Productivity Day
-    const dayName = today.toLocaleDateString('en-US', { weekday: 'long' });
-    return {
-      id: 'daily_excellence',
-      month,
-      day,
-      title: `${dayName} Focus & Productive Operations 🚀`,
-      badge: `${dayName} • Active Inventory Management`,
-      emoji: '⚡',
-      subtitle: 'Maintaining precision stock tracking, seamless operations, and organizational excellence.',
-      bgGradient: 'from-slate-900 via-indigo-950 to-slate-900',
-      accentColor: '#3b82f6',
-      quote: 'Excellence is not an act, but a habit of continuous dedication.',
-      actionText: 'Manage Inventory 📦',
-      actionHref: '/dashboard/items',
-      interactiveType: 'tech',
-    };
+    return match || null;
   }
 }

@@ -57,7 +57,6 @@ export function DailySpecialDayBanner() {
         style={{
           background: (() => {
             if (specialDay.id === 'photography_day') return 'linear-gradient(to right, #0f172a, #31103f, #0f172a)';
-            if (specialDay.id === 'daily_excellence') return 'linear-gradient(to right, #0f172a, #1e1b4b, #0f172a)';
             if (specialDay.id === 'sl_independence' || specialDay.id === 'avurudu') return 'linear-gradient(to right, #451a03, #7f1d1d, #064e3b)';
             if (specialDay.id === 'new_year' || specialDay.id === 'happiness_day') return 'linear-gradient(to right, #451a03, #581c87, #0f172a)';
             return 'linear-gradient(to right, #0f172a, #1e1b4b, #31103f)';
