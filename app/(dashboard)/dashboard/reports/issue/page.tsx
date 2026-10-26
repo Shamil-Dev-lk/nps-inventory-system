@@ -1,5 +1,5 @@
 'use client';
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import {
   RefreshCw,
@@ -11,11 +11,16 @@ import {
   X,
   Loader2,
   Search,
-  CheckCircle2,
-  FileCheck,
   Building2,
   Calendar,
-  AlertCircle
+  AlertCircle,
+  Package,
+  Layers,
+  Users,
+  CheckCircle2,
+  FileCheck2,
+  Sparkles,
+  Maximize2
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/lib/supabase';
@@ -45,8 +50,6 @@ export default function IssueReportPage() {
   const [isExporting, setIsExporting] = useState(false);
   const [exportAction, setExportAction] = useState<'download' | 'preview' | 'print' | 'csv' | null>(null);
   const [cachedExportIssues, setCachedExportIssues] = useState<IssueRecordForPdf[] | null>(null);
-
-  const printIframeRef = useRef<HTMLIFrameElement | null>(null);
 
   const getIssueNumber = (issue: any) => issue.issue_number || `IS-${String(issue.id || 0).padStart(4, '0')}`;
   const getOfficerName = (issue: any) => {
@@ -136,6 +139,34 @@ export default function IssueReportPage() {
   const selectedDepartment = departments?.find((d: any) => String(d.id) === String(departmentId));
   const departmentName = selectedDepartment?.name_en;
 
+  // Real-time Summary Metrics for On-Screen Cards
+  const onScreenMetrics = useMemo(() => {
+    let units = 0;
+    const recipients = new Set<string>();
+    let issued = 0;
+    let approved = 0;
+    let draft = 0;
+
+    issues.forEach(iss => {
+      const r = getRecipientDetails(iss).split('\n')[0].trim();
+      if (r && r !== '—') recipients.add(r);
+
+      const st = (iss.status || 'draft').toLowerCase();
+      if (st === 'issued') issued++;
+      else if (st === 'approved') approved++;
+      else draft++;
+
+      units += calculateTotalQty(iss.items);
+    });
+
+    return {
+      totalRecords: meta?.total || issues.length,
+      pageUnits: units,
+      recipientsCount: recipients.size,
+      statusStr: `${issued} Issued • ${approved} Appr • ${draft} Draft`
+    };
+  }, [issues, meta]);
+
   // Fetch ALL matching records for PDF/CSV export (no pagination limit)
   const fetchAllMatchingIssues = async (): Promise<IssueRecordForPdf[]> => {
     let query = supabase
@@ -211,7 +242,7 @@ export default function IssueReportPage() {
       const filename = `NPS_Inventory_Issue_Report_${todayStr}.pdf`;
 
       doc.save(filename);
-      toast.success(`Report downloaded successfully (${records.length} records)`, { id: toastId });
+      toast.success(`Official PDF downloaded successfully (${records.length} records)`, { id: toastId });
     } catch (err: any) {
       console.error('PDF generation error:', err);
       toast.error(err.message || 'Failed to generate PDF. Please try again.', { id: toastId });
@@ -433,7 +464,7 @@ export default function IssueReportPage() {
   return (
     <div className="space-y-6 max-w-[1600px] pb-10">
       {/* Page Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-border print:hidden">
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-4 border-b border-border print:hidden">
         <div>
           <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-[#701a2b]">
             <Building2 size={14} /> Nikaweratiya Pradeshiya Sabha
@@ -446,67 +477,144 @@ export default function IssueReportPage() {
           </p>
         </div>
 
-        {/* Action Controls */}
-        <div className="flex flex-wrap items-center gap-2">
+        {/* Action Controls Toolbar */}
+        <div className="flex flex-wrap items-center gap-2.5">
           {/* Preview PDF */}
           <button
             onClick={() => handlePreviewPdf()}
             disabled={isExporting}
-            className="flex items-center gap-2 px-3.5 py-2 rounded-lg border border-[#701a2b]/30 bg-card text-[#701a2b] dark:text-rose-300 text-sm font-medium hover:bg-[#701a2b]/10 transition-all shadow-sm disabled:opacity-50"
+            className="flex items-center gap-2 px-3.5 py-2.5 rounded-xl border border-[#701a2b]/30 bg-card hover:bg-[#701a2b]/10 text-[#701a2b] dark:text-rose-300 text-sm font-semibold transition-all shadow-sm hover:shadow disabled:opacity-50"
             title="Inspect formatted A4 document before printing or saving"
           >
             {isExporting && exportAction === 'preview' ? (
-              <Loader2 size={15} className="animate-spin text-[#701a2b]" />
+              <Loader2 size={16} className="animate-spin text-[#701a2b]" />
             ) : (
-              <Eye size={15} className="text-[#701a2b] dark:text-rose-300" />
+              <Eye size={16} className="text-[#701a2b] dark:text-rose-300" />
             )}
-            Preview PDF
+            <span>Preview PDF</span>
+            <span className="hidden sm:inline-block text-[10px] bg-[#701a2b]/15 text-[#701a2b] dark:text-rose-200 px-1.5 py-0.5 rounded font-mono uppercase tracking-wider font-bold">
+              A4
+            </span>
           </button>
 
           {/* Download PDF */}
           <button
             onClick={handleDownloadPdf}
             disabled={isExporting}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[#701a2b] hover:bg-[#581522] text-white text-sm font-semibold transition-all shadow-sm disabled:opacity-50"
+            className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-[#701a2b] to-[#8d2238] hover:from-[#5d1624] hover:to-[#701a2b] text-white text-sm font-semibold transition-all shadow-md hover:shadow-lg disabled:opacity-50"
             title="Download official PDF report (A4)"
           >
             {isExporting && exportAction === 'download' ? (
-              <Loader2 size={15} className="animate-spin text-white" />
+              <Loader2 size={16} className="animate-spin text-white" />
             ) : (
-              <Download size={15} />
+              <Download size={16} />
             )}
-            Download PDF
+            <span>Download PDF</span>
           </button>
 
           {/* Print Report */}
           <button
             onClick={handlePrintReport}
             disabled={isExporting}
-            className="flex items-center gap-2 px-3.5 py-2 rounded-lg border border-border bg-card text-foreground text-sm font-medium hover:bg-muted transition-all shadow-sm disabled:opacity-50"
-            title="Print report using native browser print dialog"
+            className="flex items-center gap-2 px-3.5 py-2.5 rounded-xl border border-border bg-card text-foreground text-sm font-medium hover:bg-muted transition-all shadow-sm disabled:opacity-50"
+            title="Print report directly with high-resolution vector layout"
           >
             {isExporting && exportAction === 'print' ? (
-              <Loader2 size={15} className="animate-spin" />
+              <Loader2 size={16} className="animate-spin" />
             ) : (
-              <Printer size={15} />
+              <Printer size={16} />
             )}
-            Print Report
+            <span>Print</span>
           </button>
 
           {/* Export CSV */}
           <button
             onClick={handleExportCsv}
             disabled={isExporting}
-            className="flex items-center gap-2 px-3.5 py-2 rounded-lg border border-border bg-card text-muted-foreground hover:text-foreground text-sm font-medium hover:bg-muted transition-all shadow-sm disabled:opacity-50"
+            className="flex items-center gap-2 px-3.5 py-2.5 rounded-xl border border-border bg-card text-muted-foreground hover:text-foreground text-sm font-medium hover:bg-muted transition-all shadow-sm disabled:opacity-50"
             title="Export raw data as spreadsheet CSV"
           >
             {isExporting && exportAction === 'csv' ? (
-              <Loader2 size={15} className="animate-spin" />
+              <Loader2 size={16} className="animate-spin" />
             ) : (
-              <FileText size={15} />
+              <FileText size={16} />
             )}
-            CSV
+            <span>CSV</span>
           </button>
+        </div>
+      </div>
+
+      {/* On-Screen Executive KPI Stat Cards */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3.5 print:hidden">
+        {/* Total Records */}
+        <div className="rounded-xl bg-card border border-border p-4 shadow-sm relative overflow-hidden flex flex-col justify-between">
+          <div className="flex items-center justify-between text-muted-foreground">
+            <span className="text-xs font-semibold uppercase tracking-wider">Total Issues</span>
+            <FileCheck2 size={16} className="text-[#701a2b]" />
+          </div>
+          <div className="mt-2">
+            <span className="text-2xl font-bold tracking-tight text-foreground">
+              {onScreenMetrics.totalRecords}
+            </span>
+            <span className="text-xs text-muted-foreground ml-1.5">orders</span>
+          </div>
+          <div className="mt-1 text-[11px] text-muted-foreground">
+            Matched filter scope
+          </div>
+          <div className="absolute top-0 left-0 w-1.5 h-full bg-[#701a2b]" />
+        </div>
+
+        {/* Units Dispatched */}
+        <div className="rounded-xl bg-card border border-border p-4 shadow-sm relative overflow-hidden flex flex-col justify-between">
+          <div className="flex items-center justify-between text-muted-foreground">
+            <span className="text-xs font-semibold uppercase tracking-wider">Dispatched Units</span>
+            <Package size={16} className="text-emerald-600" />
+          </div>
+          <div className="mt-2">
+            <span className="text-2xl font-bold tracking-tight text-foreground">
+              {onScreenMetrics.pageUnits.toLocaleString()}
+            </span>
+            <span className="text-xs text-muted-foreground ml-1.5">units</span>
+          </div>
+          <div className="mt-1 text-[11px] text-muted-foreground">
+            Items issued in view
+          </div>
+          <div className="absolute top-0 left-0 w-1.5 h-full bg-emerald-600" />
+        </div>
+
+        {/* Unique Recipients */}
+        <div className="rounded-xl bg-card border border-border p-4 shadow-sm relative overflow-hidden flex flex-col justify-between">
+          <div className="flex items-center justify-between text-muted-foreground">
+            <span className="text-xs font-semibold uppercase tracking-wider">Recipients</span>
+            <Users size={16} className="text-blue-600" />
+          </div>
+          <div className="mt-2">
+            <span className="text-2xl font-bold tracking-tight text-foreground">
+              {onScreenMetrics.recipientsCount}
+            </span>
+            <span className="text-xs text-muted-foreground ml-1.5">officers/depts</span>
+          </div>
+          <div className="mt-1 text-[11px] text-muted-foreground">
+            Unique consignees
+          </div>
+          <div className="absolute top-0 left-0 w-1.5 h-full bg-blue-600" />
+        </div>
+
+        {/* Status Distribution */}
+        <div className="rounded-xl bg-card border border-border p-4 shadow-sm relative overflow-hidden flex flex-col justify-between">
+          <div className="flex items-center justify-between text-muted-foreground">
+            <span className="text-xs font-semibold uppercase tracking-wider">Status Overview</span>
+            <Layers size={16} className="text-indigo-600" />
+          </div>
+          <div className="mt-2">
+            <span className="text-sm font-bold text-foreground">
+              {onScreenMetrics.statusStr}
+            </span>
+          </div>
+          <div className="mt-1 text-[11px] text-muted-foreground">
+            Audit workflow lifecycle
+          </div>
+          <div className="absolute top-0 left-0 w-1.5 h-full bg-indigo-600" />
         </div>
       </div>
 
@@ -641,10 +749,10 @@ export default function IssueReportPage() {
         {/* Table summary bar */}
         <div className="px-5 py-3.5 border-b border-border flex flex-wrap items-center justify-between gap-3 bg-muted/20">
           <div className="flex items-center gap-2">
-            <FileCheck size={16} className="text-[#701a2b]" />
+            <Building2 size={16} className="text-[#701a2b]" />
             <span className="text-sm font-semibold">Stock Issue Records</span>
-            <span className="text-xs bg-muted px-2 py-0.5 rounded-full font-medium text-muted-foreground">
-              {meta?.total || 0} Total
+            <span className="text-xs bg-[#701a2b]/10 text-[#701a2b] dark:text-rose-300 px-2.5 py-0.5 rounded-full font-bold">
+              {meta?.total || 0} Records
             </span>
           </div>
 
@@ -659,7 +767,7 @@ export default function IssueReportPage() {
 
         <div className="overflow-x-auto">
           <table className="w-full text-left text-sm data-table">
-            <thead className="bg-muted/40 text-xs font-semibold text-muted-foreground border-b border-border uppercase tracking-wider">
+            <thead className="bg-muted/50 text-xs font-semibold text-muted-foreground border-b border-border uppercase tracking-wider">
               <tr>
                 <th className="py-3 px-4 w-12 text-center">#</th>
                 <th className="py-3 px-4">Issue No.</th>
@@ -801,20 +909,25 @@ export default function IssueReportPage() {
 
       {/* PDF PREVIEW MODAL */}
       {previewModalOpen && (
-        <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4 md:p-6 print:hidden">
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-2 sm:p-4 md:p-6 print:hidden">
           <div className="bg-card w-full max-w-6xl h-[92vh] rounded-2xl border border-border shadow-2xl flex flex-col overflow-hidden animate-in fade-in-50 zoom-in-95 duration-200">
             {/* Modal Header */}
             <div className="px-5 py-3.5 border-b border-border flex flex-wrap items-center justify-between gap-3 bg-muted/40">
               <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-lg bg-[#701a2b]/10 text-[#701a2b] dark:text-rose-300 flex items-center justify-center">
+                <div className="w-9 h-9 rounded-xl bg-[#701a2b] text-white flex items-center justify-center shadow-sm">
                   <FileText size={18} />
                 </div>
                 <div>
-                  <h3 className="font-bold text-sm text-foreground">
-                    Document Preview — Official Inventory Issue Report
-                  </h3>
-                  <p className="text-xs text-muted-foreground">
-                    Nikaweratiya Pradeshiya Sabha • Print-ready A4 government layout
+                  <div className="flex items-center gap-2">
+                    <h3 className="font-bold text-sm text-foreground">
+                      Document Preview — Official Inventory Issue Report
+                    </h3>
+                    <span className="text-[10px] bg-[#701a2b]/15 text-[#701a2b] dark:text-rose-200 px-2 py-0.5 rounded-full font-bold uppercase tracking-wider">
+                      Official A4
+                    </span>
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    Nikaweratiya Pradeshiya Sabha • Print-ready vector audit record
                   </p>
                 </div>
               </div>
@@ -822,26 +935,26 @@ export default function IssueReportPage() {
               {/* Toolbar Controls in Modal */}
               <div className="flex items-center gap-2">
                 {/* Orientation Switcher */}
-                <div className="flex items-center bg-muted rounded-lg p-0.5 border border-border text-xs">
+                <div className="flex items-center bg-muted rounded-xl p-1 border border-border text-xs">
                   <button
                     onClick={() => handlePreviewPdf('landscape')}
-                    className={`px-2.5 py-1 rounded-md font-medium transition-all ${
+                    className={`px-3 py-1 rounded-lg font-semibold transition-all ${
                       previewOrientation === 'landscape'
-                        ? 'bg-card text-foreground shadow-sm'
+                        ? 'bg-[#701a2b] text-white shadow-sm'
                         : 'text-muted-foreground hover:text-foreground'
                     }`}
                   >
-                    Landscape (A4)
+                    Landscape
                   </button>
                   <button
                     onClick={() => handlePreviewPdf('portrait')}
-                    className={`px-2.5 py-1 rounded-md font-medium transition-all ${
+                    className={`px-3 py-1 rounded-lg font-semibold transition-all ${
                       previewOrientation === 'portrait'
-                        ? 'bg-card text-foreground shadow-sm'
+                        ? 'bg-[#701a2b] text-white shadow-sm'
                         : 'text-muted-foreground hover:text-foreground'
                     }`}
                   >
-                    Portrait (A4)
+                    Portrait
                   </button>
                 </div>
 
@@ -849,7 +962,7 @@ export default function IssueReportPage() {
                 <button
                   onClick={handlePrintReport}
                   disabled={isExporting}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border bg-card hover:bg-muted text-xs font-medium transition-all"
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-border bg-card hover:bg-muted text-xs font-semibold transition-all shadow-sm"
                   title="Print this document directly"
                 >
                   <Printer size={14} />
@@ -860,7 +973,7 @@ export default function IssueReportPage() {
                 <button
                   onClick={handleDownloadPdf}
                   disabled={isExporting}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#701a2b] hover:bg-[#581522] text-white text-xs font-semibold transition-all"
+                  className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-[#701a2b] hover:bg-[#581522] text-white text-xs font-semibold transition-all shadow-sm"
                   title="Download PDF"
                 >
                   <Download size={14} />
@@ -870,7 +983,7 @@ export default function IssueReportPage() {
                 {/* Close Modal */}
                 <button
                   onClick={handleClosePreviewModal}
-                  className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors ml-1"
+                  className="p-1.5 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted transition-colors ml-1"
                   title="Close preview"
                 >
                   <X size={18} />
@@ -879,17 +992,17 @@ export default function IssueReportPage() {
             </div>
 
             {/* Modal Body: Embedded PDF Iframe */}
-            <div className="flex-1 bg-zinc-900/10 p-3 sm:p-4 overflow-hidden relative">
+            <div className="flex-1 bg-zinc-950/20 p-3 sm:p-4 overflow-hidden relative">
               {previewBlobUrl ? (
                 <iframe
                   src={previewBlobUrl}
                   title="Inventory Issue Report PDF Preview"
-                  className="w-full h-full rounded-xl border border-border shadow-inner bg-white"
+                  className="w-full h-full rounded-xl border border-border shadow-md bg-white"
                 />
               ) : (
                 <div className="w-full h-full flex flex-col items-center justify-center gap-3">
-                  <Loader2 size={32} className="animate-spin text-[#701a2b]" />
-                  <p className="text-sm font-medium text-muted-foreground">Rendering print-ready PDF...</p>
+                  <Loader2 size={36} className="animate-spin text-[#701a2b]" />
+                  <p className="text-sm font-semibold text-muted-foreground">Rendering print-ready PDF...</p>
                 </div>
               )}
             </div>
@@ -897,7 +1010,7 @@ export default function IssueReportPage() {
             {/* Modal Footer */}
             <div className="px-5 py-2.5 border-t border-border bg-card flex items-center justify-between text-xs text-muted-foreground">
               <span>Ready for official filing, institutional record keeping & external audits</span>
-              <span>Use standard A4 paper size when printing</span>
+              <span className="font-mono text-[11px]">Format: A4 (297 x 210 mm) • 300 DPI Vector Output</span>
             </div>
           </div>
         </div>
