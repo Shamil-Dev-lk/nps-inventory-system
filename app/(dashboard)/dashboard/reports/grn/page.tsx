@@ -24,6 +24,7 @@ import {
   generateGrnReportPdf,
   GrnRecordForPdf
 } from '@/lib/reports/grn-report-pdf';
+import { GovernmentReportView } from '@/lib/reports/government-report-view';
 
 export default function GrnReportPage() {
   const { user } = useAuthStore();
@@ -39,9 +40,11 @@ export default function GrnReportPage() {
   const [previewModalOpen, setPreviewModalOpen] = useState(false);
   const [previewBlobUrl, setPreviewBlobUrl] = useState<string | null>(null);
   const [previewOrientation, setPreviewOrientation] = useState<'landscape' | 'portrait'>('landscape');
+  const [previewMode, setPreviewMode] = useState<'form' | 'pdf'>('form');
   const [isExporting, setIsExporting] = useState(false);
   const [exportAction, setExportAction] = useState<'download' | 'preview' | 'print' | 'csv' | null>(null);
   const [cachedExportGrns, setCachedExportGrns] = useState<GrnRecordForPdf[] | null>(null);
+  const [activeExportGrns, setActiveExportGrns] = useState<GrnRecordForPdf[]>([]);
 
   const { data, isLoading, refetch } = useQuery({
     queryKey: ['report-grn', page, supplierId, fromDate, toDate, status, search],
@@ -204,6 +207,7 @@ export default function GrnReportPage() {
     try {
       const records = cachedExportGrns || (await fetchAllMatchingGrns());
       setCachedExportGrns(records);
+      setActiveExportGrns(records);
 
       const doc = buildPdf(records, orientation);
       const blob = doc.output('blob');
@@ -234,42 +238,21 @@ export default function GrnReportPage() {
     try {
       const records = cachedExportGrns || (await fetchAllMatchingGrns());
       setCachedExportGrns(records);
+      setActiveExportGrns(records);
 
       if (records.length === 0) {
         toast.error('No GRN records found to print.', { id: toastId });
         return;
       }
 
-      const doc = buildPdf(records, previewOrientation);
-      const blob = doc.output('blob');
-      const blobUrl = URL.createObjectURL(blob);
-
-      const iframe = document.createElement('iframe');
-      iframe.style.position = 'fixed';
-      iframe.style.right = '0';
-      iframe.style.bottom = '0';
-      iframe.style.width = '0';
-      iframe.style.height = '0';
-      iframe.style.border = '0';
-      iframe.src = blobUrl;
-
-      document.body.appendChild(iframe);
-      iframe.onload = () => {
-        toast.success('Opening print dialog...', { id: toastId });
-        try {
-          iframe.contentWindow?.focus();
-          iframe.contentWindow?.print();
-        } catch {
-          window.print();
-        }
-        setTimeout(() => {
-          if (document.body.contains(iframe)) document.body.removeChild(iframe);
-          URL.revokeObjectURL(blobUrl);
-        }, 60000);
-      };
+      toast.success('Opening print dialog...', { id: toastId });
+      setTimeout(() => {
+        window.print();
+      }, 300);
     } catch (err: any) {
       console.error(err);
       toast.error(err.message || 'Failed to print GRN report.', { id: toastId });
+      window.print();
     } finally {
       setIsExporting(false);
       setExportAction(null);
@@ -749,19 +732,45 @@ export default function GrnReportPage() {
                 <div>
                   <div className="flex items-center gap-2">
                     <h3 className="font-bold text-sm text-foreground">
-                      Document Preview — Goods Received Notes (GRN) Report
+                      Document Preview — Official Government Goods Received Notes (GRN) Register
                     </h3>
                     <span className="text-[10px] bg-[#701a2b]/15 text-[#701a2b] dark:text-rose-200 px-2 py-0.5 rounded-full font-bold uppercase tracking-wider">
-                      Official A4
+                      FORM GENERAL 137
                     </span>
                   </div>
                   <p className="text-xs text-muted-foreground mt-0.5">
-                    Nikaweratiya Pradeshiya Sabha • Print-ready procurement audit record
+                    නිකවැරටිය ප්‍රාදේශීය සභාව • Nikaweratiya Pradeshiya Sabha Official Audit Document
                   </p>
                 </div>
               </div>
 
-              <div className="flex items-center gap-2">
+              {/* Toolbar Controls in Modal */}
+              <div className="flex items-center gap-2 flex-wrap">
+                {/* View Mode Switcher: Government Form vs PDF File */}
+                <div className="flex items-center bg-muted rounded-xl p-1 border border-border text-xs">
+                  <button
+                    onClick={() => setPreviewMode('form')}
+                    className={`px-3 py-1 rounded-lg font-semibold transition-all ${
+                      previewMode === 'form'
+                        ? 'bg-[#701a2b] text-white shadow-sm'
+                        : 'text-muted-foreground hover:text-foreground'
+                    }`}
+                  >
+                    රාජ්‍ය ආකෘතිය (Form View)
+                  </button>
+                  <button
+                    onClick={() => setPreviewMode('pdf')}
+                    className={`px-3 py-1 rounded-lg font-semibold transition-all ${
+                      previewMode === 'pdf'
+                        ? 'bg-[#701a2b] text-white shadow-sm'
+                        : 'text-muted-foreground hover:text-foreground'
+                    }`}
+                  >
+                    PDF ගොනුව (PDF File)
+                  </button>
+                </div>
+
+                {/* Orientation Switcher */}
                 <div className="flex items-center bg-muted rounded-xl p-1 border border-border text-xs">
                   <button
                     onClick={() => handlePreviewPdf('landscape')}
@@ -789,20 +798,20 @@ export default function GrnReportPage() {
                   onClick={handlePrintReport}
                   disabled={isExporting}
                   className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-border bg-card hover:bg-muted text-xs font-semibold transition-all shadow-sm"
-                  title="Print this document directly"
+                  title="Print this official government document directly"
                 >
                   <Printer size={14} />
-                  Print
+                  මුද්‍රණය (Print)
                 </button>
 
                 <button
                   onClick={handleDownloadPdf}
                   disabled={isExporting}
                   className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-[#701a2b] hover:bg-[#581522] text-white text-xs font-semibold transition-all shadow-sm"
-                  title="Download PDF"
+                  title="Download Official PDF"
                 >
                   <Download size={14} />
-                  Download
+                  බාගන්න (Download PDF)
                 </button>
 
                 <button
@@ -815,15 +824,108 @@ export default function GrnReportPage() {
               </div>
             </div>
 
-            <div className="flex-1 bg-zinc-950/20 p-3 sm:p-4 overflow-hidden relative">
-              {previewBlobUrl ? (
+            {/* Modal Body */}
+            <div className="flex-1 bg-slate-900/40 overflow-y-auto p-4 sm:p-6 relative">
+              {previewMode === 'form' ? (
+                <GovernmentReportView
+                  titleEn="Goods Received Notes (GRN) Official Procurement Register"
+                  titleSi="භාණ්ඩ ලැබීමේ සටහන් (GRN) නිල ලේඛනය සහ වාර්තාව"
+                  formCode="ආකෘති පත්‍රය: පොදු 137 (භාණ්ඩ ලැබීම්) • FORM GENERAL 137 (STORES RECEIPT)"
+                  subtitleEn="Stores & Inventory Management Division • Government Store System"
+                  subtitleSi="ගබඩා සහ බඩුතොග කළමනාකරණ අංශය"
+                  reportRef={`NPS-GRN-${new Date().toISOString().slice(0, 10).replace(/-/g, '')}`}
+                  generatedBy={user?.email || 'Store Administration'}
+                  orientation={previewOrientation}
+                  filterScopeStr={`[ සැපයුම්කරු / Supplier: ${supplierName || 'All Suppliers'} ] • [ තත්ත්වය / Status: ${status || 'ALL'} ] • [ කාලසීමාව / Period: ${fromDate || 'Start'} to ${toDate || 'End'} ]`}
+                  summaryMetrics={[
+                    {
+                      label: 'මුළු GRN සටහන් / TOTAL GRN RECORDS',
+                      val: `${(activeExportGrns.length > 0 ? activeExportGrns : (cachedExportGrns || grns)).length.toLocaleString()} Vouchers`,
+                      sub: 'Received Notes'
+                    },
+                    {
+                      label: 'මුළු ලැබීම් වටිනාකම / TOTAL PROCUREMENT VALUE',
+                      val: `Rs. ${(activeExportGrns.length > 0 ? activeExportGrns : (cachedExportGrns || grns)).reduce((acc, curr) => acc + Number(curr.total_amount || 0), 0).toLocaleString('en-LK', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+                      sub: 'Audited Inward Goods'
+                    },
+                    {
+                      label: 'අනුමත සටහන් / APPROVED GRNs',
+                      val: `${(activeExportGrns.length > 0 ? activeExportGrns : (cachedExportGrns || grns)).filter(g => (g.status || '').toLowerCase() === 'approved' || (g.status || '').toLowerCase() === 'received').length.toLocaleString()} Records`,
+                      sub: 'Passed Inspection'
+                    },
+                    {
+                      label: 'සැපයුම්කරුවන් / SUPPLIERS',
+                      val: `${new Set((activeExportGrns.length > 0 ? activeExportGrns : (cachedExportGrns || grns)).map(g => g.supplier?.company_name).filter(Boolean)).size} Registered`,
+                      sub: 'Vendor Directory'
+                    }
+                  ]}
+                  tableHeaders={['#', 'GRN අංකය\nGRN No.', 'දිනය\nDate', 'සැපයුම්කරු\nSupplier / Vendor', 'ඉන්වොයිස් අංකය\nInvoice Ref', 'ගබඩාව\nWarehouse', 'ලැබුණු භාණ්ඩ විස්තරය\nParticulars of Received Goods', 'මුළු මුදල (රු.)\nTotal Amount (Rs)', 'තත්ත්වය\nStatus']}
+                  columnAlignments={['center', 'center', 'center', 'left', 'center', 'left', 'left', 'right', 'center']}
+                  columnWidths={['3%', '10%', '8%', '16%', '9%', '9%', '27%', '11%', '7%']}
+                  tableRows={(activeExportGrns.length > 0 ? activeExportGrns : (cachedExportGrns || grns)).map((grn, index) => {
+                    const grnNum = grn.grn_number || `GRN-${String(grn.id || 0).padStart(4, '0')}`;
+                    const dateStr = grn.received_date
+                      ? new Date(grn.received_date).toLocaleDateString('en-LK', { year: 'numeric', month: 'short', day: '2-digit' })
+                      : '—';
+                    const supplier = grn.supplier?.company_name || '—';
+                    const invoice = grn.invoice_number || '—';
+                    const warehouse = grn.warehouse?.name_si
+                      ? `${grn.warehouse.name_si} (${grn.warehouse.name_en})`
+                      : (grn.warehouse?.name_en || 'Main Store');
+                    const itemsList = (grn.items || []).map((i, idx) => {
+                      const nameSi = i.item?.name_si;
+                      const nameEn = i.item?.name_en || 'Item';
+                      const itemName = nameSi ? `${nameSi} (${nameEn})` : nameEn;
+                      const code = i.item?.code || '';
+                      const qty = Number(i.accepted_quantity ?? i.received_quantity ?? 0);
+                      const unit = i.item?.unit?.symbol || i.item?.unit?.name_en || 'ea';
+                      return (
+                        <div key={idx} className="text-[11px] leading-tight mb-1 last:mb-0">
+                          <span className="font-semibold">{idx + 1}. </span>
+                          {code && <span className="font-mono text-slate-500">[{code}] </span>}
+                          <span>{itemName}</span>
+                          <span className="font-bold text-[#701a2b]"> — {qty} {unit}</span>
+                        </div>
+                      );
+                    });
+                    const totalAmount = Number(grn.total_amount || 0);
+                    const st = (grn.status || 'draft').toUpperCase();
+
+                    return [
+                      <span key="idx" className="font-mono font-semibold text-slate-500">{index + 1}</span>,
+                      <span key="num" className="font-mono font-bold text-[#701a2b]">{grnNum}</span>,
+                      <span key="date" className="whitespace-nowrap">{dateStr}</span>,
+                      <span key="sup" className="font-medium text-slate-900">{supplier}</span>,
+                      <span key="inv" className="font-mono text-slate-700">{invoice}</span>,
+                      <span key="wh">{warehouse}</span>,
+                      <div key="items">{itemsList.length > 0 ? itemsList : '—'}</div>,
+                      <span key="amt" className="font-mono font-bold text-right block text-slate-900">{totalAmount.toLocaleString('en-LK', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>,
+                      <span
+                        key="st"
+                        className={`inline-block px-2 py-0.5 rounded text-[10px] font-bold border uppercase tracking-wider ${
+                          st === 'APPROVED' || st === 'RECEIVED'
+                            ? 'bg-emerald-50 text-emerald-800 border-emerald-300'
+                            : st === 'REJECTED'
+                            ? 'bg-rose-50 text-rose-800 border-rose-300'
+                            : 'bg-amber-50 text-amber-800 border-amber-300'
+                        }`}
+                      >
+                        {st === 'APPROVED' ? '[ අනුමතයි / APPROVED ]' :
+                         st === 'RECEIVED' ? '[ ලැබුණි / RECEIVED ]' :
+                         st === 'REJECTED' ? '[ ප්‍රතික්ෂේපිත / REJECTED ]' :
+                         '[ කෙටුම්පත් / DRAFT ]'}
+                      </span>
+                    ];
+                  })}
+                />
+              ) : previewBlobUrl ? (
                 <iframe
                   src={previewBlobUrl}
                   title="GRN Report PDF Preview"
-                  className="w-full h-full rounded-xl border border-border shadow-md bg-white"
+                  className="w-full h-full rounded-xl border border-border shadow-md bg-white min-h-[600px]"
                 />
               ) : (
-                <div className="w-full h-full flex flex-col items-center justify-center gap-3">
+                <div className="w-full h-full min-h-[400px] flex flex-col items-center justify-center gap-3">
                   <Loader2 size={36} className="animate-spin text-[#701a2b]" />
                   <p className="text-sm font-semibold text-muted-foreground">Rendering print-ready PDF...</p>
                 </div>
@@ -831,24 +933,118 @@ export default function GrnReportPage() {
             </div>
 
             <div className="px-5 py-2.5 border-t border-border bg-card flex items-center justify-between text-xs text-muted-foreground">
-              <span>Ready for official filing, institutional record keeping & external audits</span>
-              <span className="font-mono text-[11px]">Format: A4 (297 x 210 mm) • 300 DPI Vector Output</span>
+              <span>රාජ්‍ය විගණනය සහ ගබඩා ලේඛනාගාර කටයුතු සඳහා සූදානම් නිල වාර්තාව • Ready for official filing & external audits</span>
+              <span className="font-mono text-[11px]">Format: A4 ({previewOrientation === 'landscape' ? '297 x 210 mm' : '210 x 297 mm'}) • High Definition Government Standard</span>
             </div>
           </div>
         </div>
       )}
 
-      {/* Dedicated Print Styles */}
+      {/* DEDICATED NATIVE PRINT VIEW (Visible only during window.print) */}
+      <div className="hidden print:block">
+        <GovernmentReportView
+          titleEn="Goods Received Notes (GRN) Official Procurement Register"
+          titleSi="භාණ්ඩ ලැබීමේ සටහන් (GRN) නිල ලේඛනය සහ වාර්තාව"
+          formCode="ආකෘති පත්‍රය: පොදු 137 (භාණ්ඩ ලැබීම්) • FORM GENERAL 137 (STORES RECEIPT)"
+          subtitleEn="Stores & Inventory Management Division • Government Store System"
+          subtitleSi="ගබඩා සහ බඩුතොග කළමනාකරණ අංශය"
+          reportRef={`NPS-GRN-${new Date().toISOString().slice(0, 10).replace(/-/g, '')}`}
+          generatedBy={user?.email || 'Store Administration'}
+          orientation={previewOrientation}
+          filterScopeStr={`[ සැපයුම්කරු / Supplier: ${supplierName || 'All Suppliers'} ] • [ තත්ත්වය / Status: ${status || 'ALL'} ] • [ කාලසීමාව / Period: ${fromDate || 'Start'} to ${toDate || 'End'} ]`}
+          summaryMetrics={[
+            {
+              label: 'මුළු GRN සටහන් / TOTAL GRN RECORDS',
+              val: `${(activeExportGrns.length > 0 ? activeExportGrns : (cachedExportGrns || grns)).length.toLocaleString()} Vouchers`,
+              sub: 'Received Notes'
+            },
+            {
+              label: 'මුළු ලැබීම් වටිනාකම / TOTAL PROCUREMENT VALUE',
+              val: `Rs. ${(activeExportGrns.length > 0 ? activeExportGrns : (cachedExportGrns || grns)).reduce((acc, curr) => acc + Number(curr.total_amount || 0), 0).toLocaleString('en-LK', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+              sub: 'Audited Inward Goods'
+            },
+            {
+              label: 'අනුමත සටහන් / APPROVED GRNs',
+              val: `${(activeExportGrns.length > 0 ? activeExportGrns : (cachedExportGrns || grns)).filter(g => (g.status || '').toLowerCase() === 'approved' || (g.status || '').toLowerCase() === 'received').length.toLocaleString()} Records`,
+              sub: 'Passed Inspection'
+            },
+            {
+              label: 'සැපයුම්කරුවන් / SUPPLIERS',
+              val: `${new Set((activeExportGrns.length > 0 ? activeExportGrns : (cachedExportGrns || grns)).map(g => g.supplier?.company_name).filter(Boolean)).size} Registered`,
+              sub: 'Vendor Directory'
+            }
+          ]}
+          tableHeaders={['#', 'GRN අංකය\nGRN No.', 'දිනය\nDate', 'සැපයුම්කරු\nSupplier / Vendor', 'ඉන්වොයිස් අංකය\nInvoice Ref', 'ගබඩාව\nWarehouse', 'ලැබුණු භාණ්ඩ විස්තරය\nParticulars of Received Goods', 'මුළු මුදල (රු.)\nTotal Amount (Rs)', 'තත්ත්වය\nStatus']}
+          columnAlignments={['center', 'center', 'center', 'left', 'center', 'left', 'left', 'right', 'center']}
+          columnWidths={['3%', '10%', '8%', '16%', '9%', '9%', '27%', '11%', '7%']}
+          tableRows={(activeExportGrns.length > 0 ? activeExportGrns : (cachedExportGrns || grns)).map((grn, index) => {
+            const grnNum = grn.grn_number || `GRN-${String(grn.id || 0).padStart(4, '0')}`;
+            const dateStr = grn.received_date
+              ? new Date(grn.received_date).toLocaleDateString('en-LK', { year: 'numeric', month: 'short', day: '2-digit' })
+              : '—';
+            const supplier = grn.supplier?.company_name || '—';
+            const invoice = grn.invoice_number || '—';
+            const warehouse = grn.warehouse?.name_si
+              ? `${grn.warehouse.name_si} (${grn.warehouse.name_en})`
+              : (grn.warehouse?.name_en || 'Main Store');
+            const itemsList = (grn.items || []).map((i, idx) => {
+              const nameSi = i.item?.name_si;
+              const nameEn = i.item?.name_en || 'Item';
+              const itemName = nameSi ? `${nameSi} (${nameEn})` : nameEn;
+              const code = i.item?.code || '';
+              const qty = Number(i.accepted_quantity ?? i.received_quantity ?? 0);
+              const unit = i.item?.unit?.symbol || i.item?.unit?.name_en || 'ea';
+              return (
+                <div key={idx} className="text-[11px] leading-tight mb-1 last:mb-0">
+                  <span className="font-semibold">{idx + 1}. </span>
+                  {code && <span className="font-mono text-slate-500">[{code}] </span>}
+                  <span>{itemName}</span>
+                  <span className="font-bold text-[#701a2b]"> — {qty} {unit}</span>
+                </div>
+              );
+            });
+            const totalAmount = Number(grn.total_amount || 0);
+            const st = (grn.status || 'draft').toUpperCase();
+
+            return [
+              <span key="idx" className="font-mono font-semibold text-slate-500">{index + 1}</span>,
+              <span key="num" className="font-mono font-bold text-[#701a2b]">{grnNum}</span>,
+              <span key="date" className="whitespace-nowrap">{dateStr}</span>,
+              <span key="sup" className="font-medium text-slate-900">{supplier}</span>,
+              <span key="inv" className="font-mono text-slate-700">{invoice}</span>,
+              <span key="wh">{warehouse}</span>,
+              <div key="items">{itemsList.length > 0 ? itemsList : '—'}</div>,
+              <span key="amt" className="font-mono font-bold text-right block text-slate-900">{totalAmount.toLocaleString('en-LK', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>,
+              <span
+                key="st"
+                className={`inline-block px-2 py-0.5 rounded text-[10px] font-bold border uppercase tracking-wider ${
+                  st === 'APPROVED' || st === 'RECEIVED'
+                    ? 'bg-emerald-50 text-emerald-800 border-emerald-300'
+                    : st === 'REJECTED'
+                    ? 'bg-rose-50 text-rose-800 border-rose-300'
+                    : 'bg-amber-50 text-amber-800 border-amber-300'
+                }`}
+              >
+                {st === 'APPROVED' ? '[ අනුමතයි / APPROVED ]' :
+                 st === 'RECEIVED' ? '[ ලැබුණි / RECEIVED ]' :
+                 st === 'REJECTED' ? '[ ප්‍රතික්ෂේපිත / REJECTED ]' :
+                 '[ කෙටුම්පත් / DRAFT ]'}
+              </span>
+            ];
+          })}
+        />
+      </div>
+
+      {/* DEDICATED PRINT STYLING FOR BROWSER PRINT (Ctrl+P / window.print) */}
       <style jsx global>{`
         @media print {
           @page {
             size: A4 landscape;
-            margin: 8mm;
+            margin: 6mm;
           }
           body {
             background: #ffffff !important;
             color: #000000 !important;
-            font-size: 9pt !important;
           }
           nav,
           aside,
@@ -859,20 +1055,23 @@ export default function GrnReportPage() {
           select {
             display: none !important;
           }
-          .data-table {
+          body * {
+            visibility: hidden;
+          }
+          .government-document,
+          .government-document * {
+            visibility: visible;
+          }
+          .government-document {
+            position: absolute !important;
+            left: 0 !important;
+            top: 0 !important;
             width: 100% !important;
-            border-collapse: collapse !important;
-          }
-          .data-table thead {
-            display: table-header-group !important;
-          }
-          .data-table tr {
-            page-break-inside: avoid !important;
-          }
-          .data-table th,
-          .data-table td {
-            border: 0.5pt solid #cbd5e1 !important;
-            padding: 4pt 6pt !important;
+            max-width: none !important;
+            border: none !important;
+            box-shadow: none !important;
+            padding: 0 !important;
+            margin: 0 !important;
           }
         }
       `}</style>

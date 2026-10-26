@@ -22,6 +22,7 @@ import {
   generateLowStockPdf,
   LowStockItemForPdf
 } from '@/lib/reports/low-stock-report-pdf';
+import { GovernmentReportView } from '@/lib/reports/government-report-view';
 
 export default function LowStockPage() {
   const { user } = useAuthStore();
@@ -31,6 +32,7 @@ export default function LowStockPage() {
   const [previewModalOpen, setPreviewModalOpen] = useState(false);
   const [previewBlobUrl, setPreviewBlobUrl] = useState<string | null>(null);
   const [previewOrientation, setPreviewOrientation] = useState<'landscape' | 'portrait'>('landscape');
+  const [previewMode, setPreviewMode] = useState<'form' | 'pdf'>('form');
   const [isExporting, setIsExporting] = useState(false);
   const [exportAction, setExportAction] = useState<'download' | 'preview' | 'print' | 'csv' | null>(null);
 
@@ -144,36 +146,14 @@ export default function LowStockPage() {
     const toastId = toast.loading('Preparing print-ready alert document...');
 
     try {
-      const doc = buildPdf(items, previewOrientation);
-      const blob = doc.output('blob');
-      const blobUrl = URL.createObjectURL(blob);
-
-      const iframe = document.createElement('iframe');
-      iframe.style.position = 'fixed';
-      iframe.style.right = '0';
-      iframe.style.bottom = '0';
-      iframe.style.width = '0';
-      iframe.style.height = '0';
-      iframe.style.border = '0';
-      iframe.src = blobUrl;
-
-      document.body.appendChild(iframe);
-      iframe.onload = () => {
-        toast.success('Opening print dialog...', { id: toastId });
-        try {
-          iframe.contentWindow?.focus();
-          iframe.contentWindow?.print();
-        } catch {
-          window.print();
-        }
-        setTimeout(() => {
-          if (document.body.contains(iframe)) document.body.removeChild(iframe);
-          URL.revokeObjectURL(blobUrl);
-        }, 60000);
-      };
+      toast.success('Opening print dialog...', { id: toastId });
+      setTimeout(() => {
+        window.print();
+      }, 300);
     } catch (err: any) {
       console.error(err);
       toast.error(err.message || 'Failed to print alert report.', { id: toastId });
+      window.print();
     } finally {
       setIsExporting(false);
       setExportAction(null);
@@ -495,19 +475,45 @@ export default function LowStockPage() {
                 <div>
                   <div className="flex items-center gap-2">
                     <h3 className="font-bold text-sm text-foreground">
-                      Document Preview — Stock Replenishment Alert Report
+                      Document Preview — Official Government Stock Replenishment Alert Register
                     </h3>
                     <span className="text-[10px] bg-[#701a2b]/15 text-[#701a2b] dark:text-rose-200 px-2 py-0.5 rounded-full font-bold uppercase tracking-wider">
-                      Official A4
+                      FORM GENERAL 140
                     </span>
                   </div>
                   <p className="text-xs text-muted-foreground mt-0.5">
-                    Nikaweratiya Pradeshiya Sabha • Print-ready urgent procurement schedule
+                    නිකවැරටිය ප්‍රාදේශීය සභාව • Nikaweratiya Pradeshiya Sabha Official Audit Document
                   </p>
                 </div>
               </div>
 
-              <div className="flex items-center gap-2">
+              {/* Toolbar Controls in Modal */}
+              <div className="flex items-center gap-2 flex-wrap">
+                {/* View Mode Switcher: Government Form vs PDF File */}
+                <div className="flex items-center bg-muted rounded-xl p-1 border border-border text-xs">
+                  <button
+                    onClick={() => setPreviewMode('form')}
+                    className={`px-3 py-1 rounded-lg font-semibold transition-all ${
+                      previewMode === 'form'
+                        ? 'bg-[#701a2b] text-white shadow-sm'
+                        : 'text-muted-foreground hover:text-foreground'
+                    }`}
+                  >
+                    රාජ්‍ය ආකෘතිය (Form View)
+                  </button>
+                  <button
+                    onClick={() => setPreviewMode('pdf')}
+                    className={`px-3 py-1 rounded-lg font-semibold transition-all ${
+                      previewMode === 'pdf'
+                        ? 'bg-[#701a2b] text-white shadow-sm'
+                        : 'text-muted-foreground hover:text-foreground'
+                    }`}
+                  >
+                    PDF ගොනුව (PDF File)
+                  </button>
+                </div>
+
+                {/* Orientation Switcher */}
                 <div className="flex items-center bg-muted rounded-xl p-1 border border-border text-xs">
                   <button
                     onClick={() => handlePreviewPdf('landscape')}
@@ -535,20 +541,20 @@ export default function LowStockPage() {
                   onClick={handlePrintReport}
                   disabled={isExporting}
                   className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-border bg-card hover:bg-muted text-xs font-semibold transition-all shadow-sm"
-                  title="Print this document directly"
+                  title="Print this official government document directly"
                 >
                   <Printer size={14} />
-                  Print
+                  මුද්‍රණය (Print)
                 </button>
 
                 <button
                   onClick={handleDownloadPdf}
                   disabled={isExporting}
                   className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-[#701a2b] hover:bg-[#581522] text-white text-xs font-semibold transition-all shadow-sm"
-                  title="Download PDF"
+                  title="Download Official PDF"
                 >
                   <Download size={14} />
-                  Download
+                  බාගන්න (Download PDF)
                 </button>
 
                 <button
@@ -561,15 +567,97 @@ export default function LowStockPage() {
               </div>
             </div>
 
-            <div className="flex-1 bg-zinc-950/20 p-3 sm:p-4 overflow-hidden relative">
-              {previewBlobUrl ? (
+            {/* Modal Body */}
+            <div className="flex-1 bg-slate-900/40 overflow-y-auto p-4 sm:p-6 relative">
+              {previewMode === 'form' ? (
+                <GovernmentReportView
+                  titleEn={tab === 'low' ? 'Low Stock Inventory Alert & Reorder Register' : 'Zero Stock Critical Deficit Audit Register'}
+                  titleSi={tab === 'low' ? 'අවම බඩුතොග අනතුරු ඇඟවීමේ නිල ලේඛනය' : 'ශුන්‍ය බඩුතොග හදිසි ඇණවුම් ලේඛනය'}
+                  formCode="ආකෘති පත්‍රය: පොදු 140 (තොග හිඟතා) • FORM GENERAL 140 (STOCK SHORTAGE)"
+                  subtitleEn="Stores & Inventory Management Division • Government Store System"
+                  subtitleSi="ගබඩා සහ බඩුතොග කළමනාකරණ අංශය"
+                  reportRef={`NPS-ALERT-${new Date().toISOString().slice(0, 10).replace(/-/g, '')}`}
+                  generatedBy={user?.email || 'Store Administration'}
+                  orientation={previewOrientation}
+                  filterScopeStr={tab === 'low' ? '[ විෂය පථය: අවම තොග මට්ටමේ පවතින අයිතම (Low Stock Reorder Items) ]' : '[ විෂය පථය: ශුන්‍ය තොග මට්ටමේ පවතින අයිතම (Out of Stock / Zero Stock) ]'}
+                  summaryMetrics={[
+                    {
+                      label: tab === 'low' ? 'අවම තොග අයිතම / LOW STOCK ITEMS' : 'ශුන්‍ය තොග අයිතම / ZERO STOCK ITEMS',
+                      val: `${items.length.toLocaleString()} Items`,
+                      sub: tab === 'low' ? 'Reorder Warning' : 'Immediate Reorder Critical'
+                    },
+                    {
+                      label: 'ඇස්තමේන්තුගත හිඟය / ESTIMATED DEFICIT',
+                      val: `${items.reduce((acc, curr) => {
+                        const q = Number(curr.current_quantity || 0);
+                        const t = Number(curr.reorder_level || curr.minimum_stock || 5);
+                        return acc + Math.max(0, t - q);
+                      }, 0).toLocaleString()} Units`,
+                      sub: 'Deficit Units to Reorder'
+                    },
+                    {
+                      label: 'ඇස්තමේන්තුගත නැවත ඇණවුම් වටිනාකම / REPLENISHMENT COST',
+                      val: `Rs. ${items.reduce((acc, curr) => {
+                        const q = Number(curr.current_quantity || 0);
+                        const t = Number(curr.reorder_level || curr.minimum_stock || 5);
+                        const def = Math.max(0, t - q);
+                        const price = Number(curr.purchase_price || curr.price || curr.average_cost || 0);
+                        return acc + (def * price);
+                      }, 0).toLocaleString('en-LK', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+                      sub: 'Estimated Budget'
+                    },
+                    {
+                      label: 'විගණන තත්ත්වය / AUDIT STATUS',
+                      val: tab === 'low' ? 'අවම තොග (LOW STOCK)' : 'අත්‍යවශ්‍ය (CRITICAL)',
+                      sub: 'Government Form 140'
+                    }
+                  ]}
+                  tableHeaders={['#', 'අයිතම කේතය\nItem Code', 'අයිතමයේ නම සහ විස්තරය\nItem Details (Sinhala & English)', 'කාණ්ඩය\nCategory', 'දැනට පවතින තොගය\nIn-Stock', 'අවම මට්ටම\nMin Level', 'නැවත ඇණවුම් මට්ටම\nReorder Level', 'හිඟ ප්‍රමාණය\nDeficit Qty', 'තත්ත්වය\nStatus']}
+                  columnAlignments={['center', 'center', 'left', 'left', 'right', 'right', 'right', 'right', 'center']}
+                  columnWidths={['4%', '11%', '28%', '13%', '8%', '8%', '9%', '9%', '10%']}
+                  tableRows={items.map((item, index) => {
+                    const code = item.code || item.item_code || '—';
+                    const nameSi = item.name_si;
+                    const nameEn = item.name_en || 'Item';
+                    const itemName = nameSi ? `${nameSi} (${nameEn})` : nameEn;
+                    const cat = item.category?.name_si ? `${item.category.name_si} (${item.category.name_en})` : item.category?.name_en || '—';
+                    const currentQty = Number(item.current_quantity || 0);
+                    const minStock = Number(item.minimum_stock || 0);
+                    const reorderLevel = Number(item.reorder_level || 5);
+                    const deficit = Math.max(0, reorderLevel - currentQty);
+                    const unit = item.unit?.symbol || item.unit?.name_en || 'ea';
+                    const isOut = currentQty <= 0;
+
+                    return [
+                      <span key="idx" className="font-mono font-semibold text-slate-500">{index + 1}</span>,
+                      <span key="code" className="font-mono font-bold text-[#701a2b]">{code}</span>,
+                      <div key="name" className="font-medium text-slate-900">{itemName}</div>,
+                      <span key="cat" className="text-slate-600">{cat}</span>,
+                      <span key="cur" className="font-mono font-bold text-right block text-rose-700">{currentQty.toLocaleString()} {unit}</span>,
+                      <span key="min" className="font-mono text-right block text-slate-600">{minStock.toLocaleString()} {unit}</span>,
+                      <span key="reord" className="font-mono text-right block text-slate-600">{reorderLevel.toLocaleString()} {unit}</span>,
+                      <span key="def" className="font-mono font-bold text-right block text-[#701a2b]">+{deficit.toLocaleString()} {unit}</span>,
+                      <span
+                        key="st"
+                        className={`inline-block px-2 py-0.5 rounded text-[10px] font-bold border uppercase tracking-wider ${
+                          isOut
+                            ? 'bg-rose-50 text-rose-800 border-rose-300'
+                            : 'bg-amber-50 text-amber-800 border-amber-300'
+                        }`}
+                      >
+                        {isOut ? '[ CRITICAL / ශුන්‍ය ]' : '[ REORDER / අවම ]'}
+                      </span>
+                    ];
+                  })}
+                />
+              ) : previewBlobUrl ? (
                 <iframe
                   src={previewBlobUrl}
                   title="Low Stock Report PDF Preview"
-                  className="w-full h-full rounded-xl border border-border shadow-md bg-white"
+                  className="w-full h-full rounded-xl border border-border shadow-md bg-white min-h-[600px]"
                 />
               ) : (
-                <div className="w-full h-full flex flex-col items-center justify-center gap-3">
+                <div className="w-full h-full min-h-[400px] flex flex-col items-center justify-center gap-3">
                   <Loader2 size={36} className="animate-spin text-[#701a2b]" />
                   <p className="text-sm font-semibold text-muted-foreground">Rendering print-ready PDF...</p>
                 </div>
@@ -577,24 +665,107 @@ export default function LowStockPage() {
             </div>
 
             <div className="px-5 py-2.5 border-t border-border bg-card flex items-center justify-between text-xs text-muted-foreground">
-              <span>Ready for official filing, institutional record keeping & external audits</span>
-              <span className="font-mono text-[11px]">Format: A4 (297 x 210 mm) • 300 DPI Vector Output</span>
+              <span>රාජ්‍ය විගණනය සහ ගබඩා ලේඛනාගාර කටයුතු සඳහා සූදානම් නිල වාර්තාව • Ready for official filing & external audits</span>
+              <span className="font-mono text-[11px]">Format: A4 ({previewOrientation === 'landscape' ? '297 x 210 mm' : '210 x 297 mm'}) • High Definition Government Standard</span>
             </div>
           </div>
         </div>
       )}
 
-      {/* Dedicated Print Styles */}
+      {/* DEDICATED NATIVE PRINT VIEW (Visible only during window.print) */}
+      <div className="hidden print:block">
+        <GovernmentReportView
+          titleEn={tab === 'low' ? 'Low Stock Inventory Alert & Reorder Register' : 'Zero Stock Critical Deficit Audit Register'}
+          titleSi={tab === 'low' ? 'අවම බඩුතොග අනතුරු ඇඟවීමේ නිල ලේඛනය' : 'ශුන්‍ය බඩුතොග හදිසි ඇණවුම් ලේඛනය'}
+          formCode="ආකෘති පත්‍රය: පොදු 140 (තොග හිඟතා) • FORM GENERAL 140 (STOCK SHORTAGE)"
+          subtitleEn="Stores & Inventory Management Division • Government Store System"
+          subtitleSi="ගබඩා සහ බඩුතොග කළමනාකරණ අංශය"
+          reportRef={`NPS-ALERT-${new Date().toISOString().slice(0, 10).replace(/-/g, '')}`}
+          generatedBy={user?.email || 'Store Administration'}
+          orientation={previewOrientation}
+          filterScopeStr={tab === 'low' ? '[ විෂය පථය: අවම තොග මට්ටමේ පවතින අයිතම (Low Stock Reorder Items) ]' : '[ විෂය පථය: ශුන්‍ය තොග මට්ටමේ පවතින අයිතම (Out of Stock / Zero Stock) ]'}
+          summaryMetrics={[
+            {
+              label: tab === 'low' ? 'අවම තොග අයිතම / LOW STOCK ITEMS' : 'ශුන්‍ය තොග අයිතම / ZERO STOCK ITEMS',
+              val: `${items.length.toLocaleString()} Items`,
+              sub: tab === 'low' ? 'Reorder Warning' : 'Immediate Reorder Critical'
+            },
+            {
+              label: 'ඇස්තමේන්තුගත හිඟය / ESTIMATED DEFICIT',
+              val: `${items.reduce((acc, curr) => {
+                const q = Number(curr.current_quantity || 0);
+                const t = Number(curr.reorder_level || curr.minimum_stock || 5);
+                return acc + Math.max(0, t - q);
+              }, 0).toLocaleString()} Units`,
+              sub: 'Deficit Units to Reorder'
+            },
+            {
+              label: 'ඇස්තමේන්තුගත නැවත ඇණවුම් වටිනාකම / REPLENISHMENT COST',
+              val: `Rs. ${items.reduce((acc, curr) => {
+                const q = Number(curr.current_quantity || 0);
+                const t = Number(curr.reorder_level || curr.minimum_stock || 5);
+                const def = Math.max(0, t - q);
+                const price = Number(curr.purchase_price || curr.price || curr.average_cost || 0);
+                return acc + (def * price);
+              }, 0).toLocaleString('en-LK', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+              sub: 'Estimated Budget'
+            },
+            {
+              label: 'විගණන තත්ත්වය / AUDIT STATUS',
+              val: tab === 'low' ? 'අවම තොග (LOW STOCK)' : 'අත්‍යවශ්‍ය (CRITICAL)',
+              sub: 'Government Form 140'
+            }
+          ]}
+          tableHeaders={['#', 'අයිතම කේතය\nItem Code', 'අයිතමයේ නම සහ විස්තරය\nItem Details (Sinhala & English)', 'කාණ්ඩය\nCategory', 'දැනට පවතින තොගය\nIn-Stock', 'අවම මට්ටම\nMin Level', 'නැවත ඇණවුම් මට්ටම\nReorder Level', 'හිඟ ප්‍රමාණය\nDeficit Qty', 'තත්ත්වය\nStatus']}
+          columnAlignments={['center', 'center', 'left', 'left', 'right', 'right', 'right', 'right', 'center']}
+          columnWidths={['4%', '11%', '28%', '13%', '8%', '8%', '9%', '9%', '10%']}
+          tableRows={items.map((item, index) => {
+            const code = item.code || item.item_code || '—';
+            const nameSi = item.name_si;
+            const nameEn = item.name_en || 'Item';
+            const itemName = nameSi ? `${nameSi} (${nameEn})` : nameEn;
+            const cat = item.category?.name_si ? `${item.category.name_si} (${item.category.name_en})` : item.category?.name_en || '—';
+            const currentQty = Number(item.current_quantity || 0);
+            const minStock = Number(item.minimum_stock || 0);
+            const reorderLevel = Number(item.reorder_level || 5);
+            const deficit = Math.max(0, reorderLevel - currentQty);
+            const unit = item.unit?.symbol || item.unit?.name_en || 'ea';
+            const isOut = currentQty <= 0;
+
+            return [
+              <span key="idx" className="font-mono font-semibold text-slate-500">{index + 1}</span>,
+              <span key="code" className="font-mono font-bold text-[#701a2b]">{code}</span>,
+              <div key="name" className="font-medium text-slate-900">{itemName}</div>,
+              <span key="cat" className="text-slate-600">{cat}</span>,
+              <span key="cur" className="font-mono font-bold text-right block text-rose-700">{currentQty.toLocaleString()} {unit}</span>,
+              <span key="min" className="font-mono text-right block text-slate-600">{minStock.toLocaleString()} {unit}</span>,
+              <span key="reord" className="font-mono text-right block text-slate-600">{reorderLevel.toLocaleString()} {unit}</span>,
+              <span key="def" className="font-mono font-bold text-right block text-[#701a2b]">+{deficit.toLocaleString()} {unit}</span>,
+              <span
+                key="st"
+                className={`inline-block px-2 py-0.5 rounded text-[10px] font-bold border uppercase tracking-wider ${
+                  isOut
+                    ? 'bg-rose-50 text-rose-800 border-rose-300'
+                    : 'bg-amber-50 text-amber-800 border-amber-300'
+                }`}
+              >
+                {isOut ? '[ CRITICAL / ශුන්‍ය ]' : '[ REORDER / අවම ]'}
+              </span>
+            ];
+          })}
+        />
+      </div>
+
+      {/* DEDICATED PRINT STYLING FOR BROWSER PRINT (Ctrl+P / window.print) */}
       <style jsx global>{`
         @media print {
           @page {
             size: A4 landscape;
-            margin: 8mm;
+            margin: 6mm;
           }
           body {
             background: #ffffff !important;
             color: #000000 !important;
-            font-size: 9pt !important;
           }
           nav,
           aside,
@@ -605,20 +776,23 @@ export default function LowStockPage() {
           select {
             display: none !important;
           }
-          .data-table {
+          body * {
+            visibility: hidden;
+          }
+          .government-document,
+          .government-document * {
+            visibility: visible;
+          }
+          .government-document {
+            position: absolute !important;
+            left: 0 !important;
+            top: 0 !important;
             width: 100% !important;
-            border-collapse: collapse !important;
-          }
-          .data-table thead {
-            display: table-header-group !important;
-          }
-          .data-table tr {
-            page-break-inside: avoid !important;
-          }
-          .data-table th,
-          .data-table td {
-            border: 0.5pt solid #cbd5e1 !important;
-            padding: 4pt 6pt !important;
+            max-width: none !important;
+            border: none !important;
+            box-shadow: none !important;
+            padding: 0 !important;
+            margin: 0 !important;
           }
         }
       `}</style>

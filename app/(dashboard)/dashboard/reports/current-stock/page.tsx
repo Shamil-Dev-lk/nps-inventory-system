@@ -26,6 +26,7 @@ import {
   generateCurrentStockPdf,
   StockItemForPdf
 } from '@/lib/reports/stock-report-pdf';
+import { GovernmentReportView } from '@/lib/reports/government-report-view';
 
 export default function CurrentStockPage() {
   const { user } = useAuthStore();
@@ -39,9 +40,11 @@ export default function CurrentStockPage() {
   const [previewModalOpen, setPreviewModalOpen] = useState(false);
   const [previewBlobUrl, setPreviewBlobUrl] = useState<string | null>(null);
   const [previewOrientation, setPreviewOrientation] = useState<'landscape' | 'portrait'>('landscape');
+  const [previewMode, setPreviewMode] = useState<'form' | 'pdf'>('form');
   const [isExporting, setIsExporting] = useState(false);
   const [exportAction, setExportAction] = useState<'download' | 'preview' | 'print' | 'csv' | null>(null);
   const [cachedExportItems, setCachedExportItems] = useState<StockItemForPdf[] | null>(null);
+  const [activeExportItems, setActiveExportItems] = useState<StockItemForPdf[]>([]);
 
   const { data, isLoading, refetch } = useQuery({
     queryKey: ['report-current-stock', page, search, categoryId, warehouseId],
@@ -199,6 +202,7 @@ export default function CurrentStockPage() {
     try {
       const records = cachedExportItems || (await fetchAllMatchingItems());
       setCachedExportItems(records);
+      setActiveExportItems(records);
 
       const doc = buildPdf(records, orientation);
       const blob = doc.output('blob');
@@ -229,42 +233,21 @@ export default function CurrentStockPage() {
     try {
       const records = cachedExportItems || (await fetchAllMatchingItems());
       setCachedExportItems(records);
+      setActiveExportItems(records);
 
       if (records.length === 0) {
         toast.error('No items found to print.', { id: toastId });
         return;
       }
 
-      const doc = buildPdf(records, previewOrientation);
-      const blob = doc.output('blob');
-      const blobUrl = URL.createObjectURL(blob);
-
-      const iframe = document.createElement('iframe');
-      iframe.style.position = 'fixed';
-      iframe.style.right = '0';
-      iframe.style.bottom = '0';
-      iframe.style.width = '0';
-      iframe.style.height = '0';
-      iframe.style.border = '0';
-      iframe.src = blobUrl;
-
-      document.body.appendChild(iframe);
-      iframe.onload = () => {
-        toast.success('Opening print dialog...', { id: toastId });
-        try {
-          iframe.contentWindow?.focus();
-          iframe.contentWindow?.print();
-        } catch {
-          window.print();
-        }
-        setTimeout(() => {
-          if (document.body.contains(iframe)) document.body.removeChild(iframe);
-          URL.revokeObjectURL(blobUrl);
-        }, 60000);
-      };
+      toast.success('Opening print dialog...', { id: toastId });
+      setTimeout(() => {
+        window.print();
+      }, 300);
     } catch (err: any) {
       console.error(err);
       toast.error(err.message || 'Failed to print.', { id: toastId });
+      window.print();
     } finally {
       setIsExporting(false);
       setExportAction(null);
@@ -750,19 +733,45 @@ export default function CurrentStockPage() {
                 <div>
                   <div className="flex items-center gap-2">
                     <h3 className="font-bold text-sm text-foreground">
-                      Document Preview — Current Stock Inventory Report
+                      Document Preview — Official Government Stock Register
                     </h3>
                     <span className="text-[10px] bg-[#701a2b]/15 text-[#701a2b] dark:text-rose-200 px-2 py-0.5 rounded-full font-bold uppercase tracking-wider">
-                      Official A4
+                      FORM GENERAL 138
                     </span>
                   </div>
                   <p className="text-xs text-muted-foreground mt-0.5">
-                    Nikaweratiya Pradeshiya Sabha • Print-ready vector audit record
+                    නිකවැරටිය ප්‍රාදේශීය සභාව • Nikaweratiya Pradeshiya Sabha Official Audit Document
                   </p>
                 </div>
               </div>
 
-              <div className="flex items-center gap-2">
+              {/* Toolbar Controls in Modal */}
+              <div className="flex items-center gap-2 flex-wrap">
+                {/* View Mode Switcher: Government Form vs PDF File */}
+                <div className="flex items-center bg-muted rounded-xl p-1 border border-border text-xs">
+                  <button
+                    onClick={() => setPreviewMode('form')}
+                    className={`px-3 py-1 rounded-lg font-semibold transition-all ${
+                      previewMode === 'form'
+                        ? 'bg-[#701a2b] text-white shadow-sm'
+                        : 'text-muted-foreground hover:text-foreground'
+                    }`}
+                  >
+                    රාජ්‍ය ආකෘතිය (Form View)
+                  </button>
+                  <button
+                    onClick={() => setPreviewMode('pdf')}
+                    className={`px-3 py-1 rounded-lg font-semibold transition-all ${
+                      previewMode === 'pdf'
+                        ? 'bg-[#701a2b] text-white shadow-sm'
+                        : 'text-muted-foreground hover:text-foreground'
+                    }`}
+                  >
+                    PDF ගොනුව (PDF File)
+                  </button>
+                </div>
+
+                {/* Orientation Switcher */}
                 <div className="flex items-center bg-muted rounded-xl p-1 border border-border text-xs">
                   <button
                     onClick={() => handlePreviewPdf('landscape')}
@@ -790,20 +799,20 @@ export default function CurrentStockPage() {
                   onClick={handlePrintReport}
                   disabled={isExporting}
                   className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-border bg-card hover:bg-muted text-xs font-semibold transition-all shadow-sm"
-                  title="Print this document directly"
+                  title="Print this official government document directly"
                 >
                   <Printer size={14} />
-                  Print
+                  මුද්‍රණය (Print)
                 </button>
 
                 <button
                   onClick={handleDownloadPdf}
                   disabled={isExporting}
                   className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-[#701a2b] hover:bg-[#581522] text-white text-xs font-semibold transition-all shadow-sm"
-                  title="Download PDF"
+                  title="Download Official PDF"
                 >
                   <Download size={14} />
-                  Download
+                  බාගන්න (Download PDF)
                 </button>
 
                 <button
@@ -816,15 +825,95 @@ export default function CurrentStockPage() {
               </div>
             </div>
 
-            <div className="flex-1 bg-zinc-950/20 p-3 sm:p-4 overflow-hidden relative">
-              {previewBlobUrl ? (
+            {/* Modal Body */}
+            <div className="flex-1 bg-slate-900/40 overflow-y-auto p-4 sm:p-6 relative">
+              {previewMode === 'form' ? (
+                <GovernmentReportView
+                  titleEn="Current Stock Inventory Audit Register"
+                  titleSi="වත්මන් බඩුතොග වාර්තාව සහ නිල ලේඛනය"
+                  formCode="ආකෘති පත්‍රය: පොදු 138 (බඩුතොග ලේඛනය) • FORM GENERAL 138 (STOCK BALANCE)"
+                  subtitleEn="Stores & Inventory Management Division • Government Store System"
+                  subtitleSi="ගබඩා සහ බඩුතොග කළමනාකරණ අංශය"
+                  reportRef={`NPS-STK-${new Date().toISOString().slice(0, 10).replace(/-/g, '')}`}
+                  generatedBy={user?.email || 'Store Administration'}
+                  orientation={previewOrientation}
+                  filterScopeStr={`[ කාණ්ඩය / Category: ${categoryName || 'All Categories'} ] • [ ගබඩාව / Warehouse: ${warehouseName || 'All Warehouses'} ] • [ සෙවුම / Search: ${search.trim() || 'All'} ]`}
+                  summaryMetrics={[
+                    {
+                      label: 'මුළු අයිතම සංඛ්‍යාව / TOTAL STOCK ITEMS',
+                      val: `${(activeExportItems.length > 0 ? activeExportItems : (cachedExportItems || items)).length.toLocaleString()} Items`,
+                      sub: 'Verified Ledger SKUs'
+                    },
+                    {
+                      label: 'තොගයේ මුළු වටිනාකම / TOTAL INVENTORY VALUE',
+                      val: `Rs. ${(activeExportItems.length > 0 ? activeExportItems : (cachedExportItems || items)).reduce((acc, curr) => acc + (Number(curr.current_quantity || 0) * Number(curr.purchase_price || curr.price || curr.average_cost || 0)), 0).toLocaleString('en-LK', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+                      sub: 'At Cost/Valuation'
+                    },
+                    {
+                      label: 'අවම මට්ටමේ පවතින / LOW STOCK ITEMS',
+                      val: `${(activeExportItems.length > 0 ? activeExportItems : (cachedExportItems || items)).filter(item => {
+                        const q = Number(item.current_quantity || 0);
+                        const t = Number(item.reorder_level || item.minimum_stock || 5);
+                        return q > 0 && q <= t;
+                      }).length.toLocaleString()} Items`,
+                      sub: 'Reorder Warning'
+                    },
+                    {
+                      label: 'ශුන්‍ය තොග / OUT OF STOCK',
+                      val: `${(activeExportItems.length > 0 ? activeExportItems : (cachedExportItems || items)).filter(item => Number(item.current_quantity || 0) <= 0).length.toLocaleString()} Items`,
+                      sub: 'Replenishment Urgently Required'
+                    }
+                  ]}
+                  tableHeaders={['#', 'අයිතම කේතය\nItem Code', 'අයිතමයේ නම සහ විස්තරය\nItem Particulars (Sinhala & English)', 'කාණ්ඩය\nCategory', 'ගබඩාව\nWarehouse', 'දැනට පවතින තොගය\nIn-Stock Qty', 'ඒකක මිල (රු.)\nUnit Cost (Rs)', 'මුළු වටිනාකම (රු.)\nTotal Value (Rs)', 'තත්ත්වය\nStatus']}
+                  columnAlignments={['center', 'center', 'left', 'left', 'left', 'right', 'right', 'right', 'center']}
+                  columnWidths={['3%', '10%', '28%', '12%', '10%', '11%', '9%', '10%', '7%']}
+                  tableRows={(activeExportItems.length > 0 ? activeExportItems : (cachedExportItems || items)).map((item, index) => {
+                    const code = item.code || item.item_code || '—';
+                    const nameSi = item.name_si;
+                    const nameEn = item.name_en || 'Item';
+                    const itemName = nameSi ? `${nameSi} (${nameEn})` : nameEn;
+                    const cat = item.category?.name_si ? `${item.category.name_si} (${item.category.name_en})` : item.category?.name_en || '—';
+                    const wh = item.warehouse?.name_si ? `${item.warehouse.name_si} (${item.warehouse.name_en})` : item.warehouse?.name_en || 'Main Store';
+                    const qty = Number(item.current_quantity || 0);
+                    const unit = item.unit?.symbol || item.unit?.name_en || 'ea';
+                    const cost = Number(item.purchase_price || item.price || item.average_cost || 0);
+                    const totalVal = qty * cost;
+                    const min = Number(item.reorder_level || item.minimum_stock || 5);
+                    const isOut = qty <= 0;
+                    const isLow = !isOut && qty <= min;
+
+                    return [
+                      <span key="idx" className="font-mono font-semibold text-slate-500">{index + 1}</span>,
+                      <span key="code" className="font-mono font-bold text-[#701a2b]">{code}</span>,
+                      <div key="name" className="font-medium text-slate-900">{itemName}</div>,
+                      <span key="cat" className="text-slate-600">{cat}</span>,
+                      <span key="wh" className="text-slate-600">{wh}</span>,
+                      <span key="qty" className="font-mono font-bold text-right block">{qty.toLocaleString()} {unit}</span>,
+                      <span key="cost" className="font-mono text-right block text-slate-700">{cost.toLocaleString('en-LK', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>,
+                      <span key="val" className="font-mono font-bold text-right block text-slate-900">{totalVal.toLocaleString('en-LK', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>,
+                      <span
+                        key="st"
+                        className={`inline-block px-2 py-0.5 rounded text-[10px] font-bold border uppercase tracking-wider ${
+                          isOut
+                            ? 'bg-rose-50 text-rose-800 border-rose-300'
+                            : isLow
+                            ? 'bg-amber-50 text-amber-800 border-amber-300'
+                            : 'bg-emerald-50 text-emerald-800 border-emerald-300'
+                        }`}
+                      >
+                        {isOut ? '[ OUT / ශුන්‍ය තොග ]' : isLow ? '[ LOW / අවම තොග ]' : '[ IN STOCK / ප්‍රමාණවත් ]'}
+                      </span>
+                    ];
+                  })}
+                />
+              ) : previewBlobUrl ? (
                 <iframe
                   src={previewBlobUrl}
                   title="Current Stock Report PDF Preview"
-                  className="w-full h-full rounded-xl border border-border shadow-md bg-white"
+                  className="w-full h-full rounded-xl border border-border shadow-md bg-white min-h-[600px]"
                 />
               ) : (
-                <div className="w-full h-full flex flex-col items-center justify-center gap-3">
+                <div className="w-full h-full min-h-[400px] flex flex-col items-center justify-center gap-3">
                   <Loader2 size={36} className="animate-spin text-[#701a2b]" />
                   <p className="text-sm font-semibold text-muted-foreground">Rendering print-ready PDF...</p>
                 </div>
@@ -832,24 +921,105 @@ export default function CurrentStockPage() {
             </div>
 
             <div className="px-5 py-2.5 border-t border-border bg-card flex items-center justify-between text-xs text-muted-foreground">
-              <span>Ready for official filing, institutional record keeping & external audits</span>
-              <span className="font-mono text-[11px]">Format: A4 (297 x 210 mm) • 300 DPI Vector Output</span>
+              <span>රාජ්‍ය විගණනය සහ ගබඩා ලේඛනාගාර කටයුතු සඳහා සූදානම් නිල වාර්තාව • Ready for official filing & external audits</span>
+              <span className="font-mono text-[11px]">Format: A4 ({previewOrientation === 'landscape' ? '297 x 210 mm' : '210 x 297 mm'}) • High Definition Government Standard</span>
             </div>
           </div>
         </div>
       )}
 
-      {/* Dedicated Print Styles */}
+      {/* DEDICATED NATIVE PRINT VIEW (Visible only during window.print) */}
+      <div className="hidden print:block">
+        <GovernmentReportView
+          titleEn="Current Stock Inventory Audit Register"
+          titleSi="වත්මන් බඩුතොග වාර්තාව සහ නිල ලේඛනය"
+          formCode="ආකෘති පත්‍රය: පොදු 138 (බඩුතොග ලේඛනය) • FORM GENERAL 138 (STOCK BALANCE)"
+          subtitleEn="Stores & Inventory Management Division • Government Store System"
+          subtitleSi="ගබඩා සහ බඩුතොග කළමනාකරණ අංශය"
+          reportRef={`NPS-STK-${new Date().toISOString().slice(0, 10).replace(/-/g, '')}`}
+          generatedBy={user?.email || 'Store Administration'}
+          orientation={previewOrientation}
+          filterScopeStr={`[ කාණ්ඩය / Category: ${categoryName || 'All Categories'} ] • [ ගබඩාව / Warehouse: ${warehouseName || 'All Warehouses'} ] • [ සෙවුම / Search: ${search.trim() || 'All'} ]`}
+          summaryMetrics={[
+            {
+              label: 'මුළු අයිතම සංඛ්‍යාව / TOTAL STOCK ITEMS',
+              val: `${(activeExportItems.length > 0 ? activeExportItems : (cachedExportItems || items)).length.toLocaleString()} Items`,
+              sub: 'Verified Ledger SKUs'
+            },
+            {
+              label: 'තොගයේ මුළු වටිනාකම / TOTAL INVENTORY VALUE',
+              val: `Rs. ${(activeExportItems.length > 0 ? activeExportItems : (cachedExportItems || items)).reduce((acc, curr) => acc + (Number(curr.current_quantity || 0) * Number(curr.purchase_price || curr.price || curr.average_cost || 0)), 0).toLocaleString('en-LK', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+              sub: 'At Cost/Valuation'
+            },
+            {
+              label: 'අවම මට්ටමේ පවතින / LOW STOCK ITEMS',
+              val: `${(activeExportItems.length > 0 ? activeExportItems : (cachedExportItems || items)).filter(item => {
+                const q = Number(item.current_quantity || 0);
+                const t = Number(item.reorder_level || item.minimum_stock || 5);
+                return q > 0 && q <= t;
+              }).length.toLocaleString()} Items`,
+              sub: 'Reorder Warning'
+            },
+            {
+              label: 'ශුන්‍ය තොග / OUT OF STOCK',
+              val: `${(activeExportItems.length > 0 ? activeExportItems : (cachedExportItems || items)).filter(item => Number(item.current_quantity || 0) <= 0).length.toLocaleString()} Items`,
+              sub: 'Replenishment Urgently Required'
+            }
+          ]}
+          tableHeaders={['#', 'අයිතම කේතය\nItem Code', 'අයිතමයේ නම සහ විස්තරය\nItem Particulars (Sinhala & English)', 'කාණ්ඩය\nCategory', 'ගබඩාව\nWarehouse', 'දැනට පවතින තොගය\nIn-Stock Qty', 'ඒකක මිල (රු.)\nUnit Cost (Rs)', 'මුළු වටිනාකම (රු.)\nTotal Value (Rs)', 'තත්ත්වය\nStatus']}
+          columnAlignments={['center', 'center', 'left', 'left', 'left', 'right', 'right', 'right', 'center']}
+          columnWidths={['3%', '10%', '28%', '12%', '10%', '11%', '9%', '10%', '7%']}
+          tableRows={(activeExportItems.length > 0 ? activeExportItems : (cachedExportItems || items)).map((item, index) => {
+            const code = item.code || item.item_code || '—';
+            const nameSi = item.name_si;
+            const nameEn = item.name_en || 'Item';
+            const itemName = nameSi ? `${nameSi} (${nameEn})` : nameEn;
+            const cat = item.category?.name_si ? `${item.category.name_si} (${item.category.name_en})` : item.category?.name_en || '—';
+            const wh = item.warehouse?.name_si ? `${item.warehouse.name_si} (${item.warehouse.name_en})` : item.warehouse?.name_en || 'Main Store';
+            const qty = Number(item.current_quantity || 0);
+            const unit = item.unit?.symbol || item.unit?.name_en || 'ea';
+            const cost = Number(item.purchase_price || item.price || item.average_cost || 0);
+            const totalVal = qty * cost;
+            const min = Number(item.reorder_level || item.minimum_stock || 5);
+            const isOut = qty <= 0;
+            const isLow = !isOut && qty <= min;
+
+            return [
+              <span key="idx" className="font-mono font-semibold text-slate-500">{index + 1}</span>,
+              <span key="code" className="font-mono font-bold text-[#701a2b]">{code}</span>,
+              <div key="name" className="font-medium text-slate-900">{itemName}</div>,
+              <span key="cat" className="text-slate-600">{cat}</span>,
+              <span key="wh" className="text-slate-600">{wh}</span>,
+              <span key="qty" className="font-mono font-bold text-right block">{qty.toLocaleString()} {unit}</span>,
+              <span key="cost" className="font-mono text-right block text-slate-700">{cost.toLocaleString('en-LK', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>,
+              <span key="val" className="font-mono font-bold text-right block text-slate-900">{totalVal.toLocaleString('en-LK', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>,
+              <span
+                key="st"
+                className={`inline-block px-2 py-0.5 rounded text-[10px] font-bold border uppercase tracking-wider ${
+                  isOut
+                    ? 'bg-rose-50 text-rose-800 border-rose-300'
+                    : isLow
+                    ? 'bg-amber-50 text-amber-800 border-amber-300'
+                    : 'bg-emerald-50 text-emerald-800 border-emerald-300'
+                }`}
+              >
+                {isOut ? '[ OUT / ශුන්‍ය තොග ]' : isLow ? '[ LOW / අවම තොග ]' : '[ IN STOCK / ප්‍රමාණවත් ]'}
+              </span>
+            ];
+          })}
+        />
+      </div>
+
+      {/* DEDICATED PRINT STYLING FOR BROWSER PRINT (Ctrl+P / window.print) */}
       <style jsx global>{`
         @media print {
           @page {
             size: A4 landscape;
-            margin: 8mm;
+            margin: 6mm;
           }
           body {
             background: #ffffff !important;
             color: #000000 !important;
-            font-size: 9pt !important;
           }
           nav,
           aside,
@@ -860,20 +1030,23 @@ export default function CurrentStockPage() {
           select {
             display: none !important;
           }
-          .data-table {
+          body * {
+            visibility: hidden;
+          }
+          .government-document,
+          .government-document * {
+            visibility: visible;
+          }
+          .government-document {
+            position: absolute !important;
+            left: 0 !important;
+            top: 0 !important;
             width: 100% !important;
-            border-collapse: collapse !important;
-          }
-          .data-table thead {
-            display: table-header-group !important;
-          }
-          .data-table tr {
-            page-break-inside: avoid !important;
-          }
-          .data-table th,
-          .data-table td {
-            border: 0.5pt solid #cbd5e1 !important;
-            padding: 4pt 6pt !important;
+            max-width: none !important;
+            border: none !important;
+            box-shadow: none !important;
+            padding: 0 !important;
+            margin: 0 !important;
           }
         }
       `}</style>

@@ -25,6 +25,7 @@ import {
   generateStockLedgerPdf,
   LedgerEntryForPdf
 } from '@/lib/reports/stock-ledger-report-pdf';
+import { GovernmentReportView } from '@/lib/reports/government-report-view';
 
 export default function StockLedgerPage() {
   const { user } = useAuthStore();
@@ -40,9 +41,11 @@ export default function StockLedgerPage() {
   const [previewModalOpen, setPreviewModalOpen] = useState(false);
   const [previewBlobUrl, setPreviewBlobUrl] = useState<string | null>(null);
   const [previewOrientation, setPreviewOrientation] = useState<'landscape' | 'portrait'>('landscape');
+  const [previewMode, setPreviewMode] = useState<'form' | 'pdf'>('form');
   const [isExporting, setIsExporting] = useState(false);
   const [exportAction, setExportAction] = useState<'download' | 'preview' | 'print' | 'csv' | null>(null);
   const [cachedExportEntries, setCachedExportEntries] = useState<LedgerEntryForPdf[] | null>(null);
+  const [activeExportEntries, setActiveExportEntries] = useState<LedgerEntryForPdf[]>([]);
 
   const { data, isLoading, refetch } = useQuery({
     queryKey: ['report-stock-ledger', page, itemId, warehouseId, fromDate, toDate, transactionType],
@@ -186,6 +189,7 @@ export default function StockLedgerPage() {
     try {
       const records = cachedExportEntries || (await fetchAllMatchingEntries());
       setCachedExportEntries(records);
+      setActiveExportEntries(records);
 
       const doc = buildPdf(records, orientation);
       const blob = doc.output('blob');
@@ -216,42 +220,21 @@ export default function StockLedgerPage() {
     try {
       const records = cachedExportEntries || (await fetchAllMatchingEntries());
       setCachedExportEntries(records);
+      setActiveExportEntries(records);
 
       if (records.length === 0) {
         toast.error('No ledger entries found to print.', { id: toastId });
         return;
       }
 
-      const doc = buildPdf(records, previewOrientation);
-      const blob = doc.output('blob');
-      const blobUrl = URL.createObjectURL(blob);
-
-      const iframe = document.createElement('iframe');
-      iframe.style.position = 'fixed';
-      iframe.style.right = '0';
-      iframe.style.bottom = '0';
-      iframe.style.width = '0';
-      iframe.style.height = '0';
-      iframe.style.border = '0';
-      iframe.src = blobUrl;
-
-      document.body.appendChild(iframe);
-      iframe.onload = () => {
-        toast.success('Opening print dialog...', { id: toastId });
-        try {
-          iframe.contentWindow?.focus();
-          iframe.contentWindow?.print();
-        } catch {
-          window.print();
-        }
-        setTimeout(() => {
-          if (document.body.contains(iframe)) document.body.removeChild(iframe);
-          URL.revokeObjectURL(blobUrl);
-        }, 60000);
-      };
+      toast.success('Opening print dialog...', { id: toastId });
+      setTimeout(() => {
+        window.print();
+      }, 300);
     } catch (err: any) {
       console.error(err);
       toast.error(err.message || 'Failed to print ledger.', { id: toastId });
+      window.print();
     } finally {
       setIsExporting(false);
       setExportAction(null);
@@ -742,19 +725,45 @@ export default function StockLedgerPage() {
                 <div>
                   <div className="flex items-center gap-2">
                     <h3 className="font-bold text-sm text-foreground">
-                      Document Preview — Stock Ledger Audit Report
+                      Document Preview — Official Government Stock Ledger Register
                     </h3>
                     <span className="text-[10px] bg-[#701a2b]/15 text-[#701a2b] dark:text-rose-200 px-2 py-0.5 rounded-full font-bold uppercase tracking-wider">
-                      Official A4
+                      FORM GENERAL 139
                     </span>
                   </div>
                   <p className="text-xs text-muted-foreground mt-0.5">
-                    Nikaweratiya Pradeshiya Sabha • Print-ready bin-card transaction history
+                    නිකවැරටිය ප්‍රාදේශීය සභාව • Nikaweratiya Pradeshiya Sabha Official Audit Document
                   </p>
                 </div>
               </div>
 
-              <div className="flex items-center gap-2">
+              {/* Toolbar Controls in Modal */}
+              <div className="flex items-center gap-2 flex-wrap">
+                {/* View Mode Switcher: Government Form vs PDF File */}
+                <div className="flex items-center bg-muted rounded-xl p-1 border border-border text-xs">
+                  <button
+                    onClick={() => setPreviewMode('form')}
+                    className={`px-3 py-1 rounded-lg font-semibold transition-all ${
+                      previewMode === 'form'
+                        ? 'bg-[#701a2b] text-white shadow-sm'
+                        : 'text-muted-foreground hover:text-foreground'
+                    }`}
+                  >
+                    රාජ්‍ය ආකෘතිය (Form View)
+                  </button>
+                  <button
+                    onClick={() => setPreviewMode('pdf')}
+                    className={`px-3 py-1 rounded-lg font-semibold transition-all ${
+                      previewMode === 'pdf'
+                        ? 'bg-[#701a2b] text-white shadow-sm'
+                        : 'text-muted-foreground hover:text-foreground'
+                    }`}
+                  >
+                    PDF ගොනුව (PDF File)
+                  </button>
+                </div>
+
+                {/* Orientation Switcher */}
                 <div className="flex items-center bg-muted rounded-xl p-1 border border-border text-xs">
                   <button
                     onClick={() => handlePreviewPdf('landscape')}
@@ -782,20 +791,20 @@ export default function StockLedgerPage() {
                   onClick={handlePrintReport}
                   disabled={isExporting}
                   className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-border bg-card hover:bg-muted text-xs font-semibold transition-all shadow-sm"
-                  title="Print this document directly"
+                  title="Print this official government document directly"
                 >
                   <Printer size={14} />
-                  Print
+                  මුද්‍රණය (Print)
                 </button>
 
                 <button
                   onClick={handleDownloadPdf}
                   disabled={isExporting}
                   className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-[#701a2b] hover:bg-[#581522] text-white text-xs font-semibold transition-all shadow-sm"
-                  title="Download PDF"
+                  title="Download Official PDF"
                 >
                   <Download size={14} />
-                  Download
+                  බාගන්න (Download PDF)
                 </button>
 
                 <button
@@ -808,15 +817,98 @@ export default function StockLedgerPage() {
               </div>
             </div>
 
-            <div className="flex-1 bg-zinc-950/20 p-3 sm:p-4 overflow-hidden relative">
-              {previewBlobUrl ? (
+            {/* Modal Body */}
+            <div className="flex-1 bg-slate-900/40 overflow-y-auto p-4 sm:p-6 relative">
+              {previewMode === 'form' ? (
+                <GovernmentReportView
+                  titleEn="Stock Ledger Audit & Inventory Movements Register"
+                  titleSi="බඩුතොග ලෙජර වාර්තාව සහ චලන ලේඛනය"
+                  formCode="ආකෘති පත්‍රය: පොදු 139 (බඩුතොග ලෙජරය) • FORM GENERAL 139 (STOCK LEDGER)"
+                  subtitleEn="Stores & Inventory Management Division • Government Store System"
+                  subtitleSi="ගබඩා සහ බඩුතොග කළමනාකරණ අංශය"
+                  reportRef={`NPS-LDG-${new Date().toISOString().slice(0, 10).replace(/-/g, '')}`}
+                  generatedBy={user?.email || 'Store Administration'}
+                  orientation={previewOrientation}
+                  filterScopeStr={`[ අයිතමය / Item: ${itemName || 'All Items'} ] • [ ගබඩාව / Warehouse: ${warehouseName || 'All Warehouses'} ] • [ වර්ගය / Type: ${transactionType ? transactionType.toUpperCase() : 'ALL'} ] • [ කාලසීමාව / Period: ${fromDate || 'Start'} to ${toDate || 'End'} ]`}
+                  summaryMetrics={[
+                    {
+                      label: 'මුළු ගනුදෙනු වාර / TOTAL ENTRIES',
+                      val: `${(activeExportEntries.length > 0 ? activeExportEntries : (cachedExportEntries || entries)).length.toLocaleString()} Movements`,
+                      sub: 'Ledger Audit History'
+                    },
+                    {
+                      label: 'මුළු ලැබීම් / TOTAL RECEIVED (IN)',
+                      val: `+${(activeExportEntries.length > 0 ? activeExportEntries : (cachedExportEntries || entries)).reduce((acc, curr) => acc + Number(curr.quantity_in || 0), 0).toLocaleString()} Units`,
+                      sub: 'Stock Replenishments'
+                    },
+                    {
+                      label: 'මුළු නිකුත් කිරීම් / TOTAL ISSUED (OUT)',
+                      val: `-${(activeExportEntries.length > 0 ? activeExportEntries : (cachedExportEntries || entries)).reduce((acc, curr) => acc + Number(curr.quantity_out || 0), 0).toLocaleString()} Units`,
+                      sub: 'Dispatches & Allocations'
+                    },
+                    {
+                      label: 'ශුද්ධ තොග වෙනස / NET MOVEMENT',
+                      val: `${((activeExportEntries.length > 0 ? activeExportEntries : (cachedExportEntries || entries)).reduce((acc, curr) => acc + Number(curr.quantity_in || 0) - Number(curr.quantity_out || 0), 0) >= 0 ? '+' : '')}${(activeExportEntries.length > 0 ? activeExportEntries : (cachedExportEntries || entries)).reduce((acc, curr) => acc + Number(curr.quantity_in || 0) - Number(curr.quantity_out || 0), 0).toLocaleString()} Units`,
+                      sub: 'Net Stock Variation'
+                    }
+                  ]}
+                  tableHeaders={['#', 'දිනය\nDate', 'වර්ගය\nType', 'යොමු අංකය\nReference', 'අයිතමය සහ විස්තරය\nItem Details (Sinhala & English)', 'ගබඩාව\nWarehouse', 'ලැබීම් (+)\nIn Qty', 'නිකුත් (-)\nOut Qty', 'ශේෂය\nBalance', 'වටිනාකම (රු.)\nValue (Rs)']}
+                  columnAlignments={['center', 'center', 'center', 'center', 'left', 'left', 'right', 'right', 'right', 'right']}
+                  columnWidths={['3%', '8%', '7%', '10%', '27%', '10%', '8%', '8%', '9%', '10%']}
+                  tableRows={(activeExportEntries.length > 0 ? activeExportEntries : (cachedExportEntries || entries)).map((e, index) => {
+                    const dateStr = e.transaction_date
+                      ? new Date(e.transaction_date).toLocaleDateString('en-LK', { year: 'numeric', month: 'short', day: '2-digit' })
+                      : '—';
+                    const type = (e.transaction_type || 'adjustment').toUpperCase();
+                    const ref = e.reference_number || '—';
+                    const itemCode = e.item?.code || e.item?.item_code || '';
+                    const itemName = e.item?.name_si
+                      ? `${e.item.name_si} (${e.item.name_en || ''})`
+                      : (e.item?.name_en || 'Item');
+                    const warehouse = e.warehouse?.name_si
+                      ? `${e.warehouse.name_si} (${e.warehouse.name_en})`
+                      : (e.warehouse?.name_en || 'Main Store');
+                    const inQty = Number(e.quantity_in || 0);
+                    const outQty = Number(e.quantity_out || 0);
+                    const balance = Number(e.balance || 0);
+                    const val = Number(e.total_value || 0);
+
+                    return [
+                      <span key="idx" className="font-mono font-semibold text-slate-500">{index + 1}</span>,
+                      <span key="date" className="whitespace-nowrap">{dateStr}</span>,
+                      <span
+                        key="type"
+                        className={`inline-block px-1.5 py-0.5 rounded text-[10px] font-bold border uppercase tracking-wider ${
+                          type === 'IN' || type === 'GRN'
+                            ? 'bg-emerald-50 text-emerald-800 border-emerald-300'
+                            : type === 'OUT' || type === 'ISSUE'
+                            ? 'bg-rose-50 text-rose-800 border-rose-300'
+                            : 'bg-slate-100 text-slate-800 border-slate-300'
+                        }`}
+                      >
+                        {type}
+                      </span>,
+                      <span key="ref" className="font-mono font-bold text-[#701a2b]">{ref}</span>,
+                      <div key="item">
+                        {itemCode && <span className="font-mono text-slate-500 text-[10px]">[{itemCode}] </span>}
+                        <span className="font-medium text-slate-900">{itemName}</span>
+                      </div>,
+                      <span key="wh">{warehouse}</span>,
+                      <span key="in" className="font-mono font-bold text-emerald-700 text-right block">{inQty > 0 ? `+${inQty.toLocaleString()}` : '—'}</span>,
+                      <span key="out" className="font-mono font-bold text-rose-700 text-right block">{outQty > 0 ? `-${outQty.toLocaleString()}` : '—'}</span>,
+                      <span key="bal" className="font-mono font-bold text-slate-900 text-right block">{balance.toLocaleString()}</span>,
+                      <span key="val" className="font-mono text-slate-700 text-right block">{val.toLocaleString('en-LK', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                    ];
+                  })}
+                />
+              ) : previewBlobUrl ? (
                 <iframe
                   src={previewBlobUrl}
                   title="Stock Ledger Report PDF Preview"
-                  className="w-full h-full rounded-xl border border-border shadow-md bg-white"
+                  className="w-full h-full rounded-xl border border-border shadow-md bg-white min-h-[600px]"
                 />
               ) : (
-                <div className="w-full h-full flex flex-col items-center justify-center gap-3">
+                <div className="w-full h-full min-h-[400px] flex flex-col items-center justify-center gap-3">
                   <Loader2 size={36} className="animate-spin text-[#701a2b]" />
                   <p className="text-sm font-semibold text-muted-foreground">Rendering print-ready PDF...</p>
                 </div>
@@ -824,24 +916,108 @@ export default function StockLedgerPage() {
             </div>
 
             <div className="px-5 py-2.5 border-t border-border bg-card flex items-center justify-between text-xs text-muted-foreground">
-              <span>Ready for official filing, institutional record keeping & external audits</span>
-              <span className="font-mono text-[11px]">Format: A4 (297 x 210 mm) • 300 DPI Vector Output</span>
+              <span>රාජ්‍ය විගණනය සහ ගබඩා ලේඛනාගාර කටයුතු සඳහා සූදානම් නිල වාර්තාව • Ready for official filing & external audits</span>
+              <span className="font-mono text-[11px]">Format: A4 ({previewOrientation === 'landscape' ? '297 x 210 mm' : '210 x 297 mm'}) • High Definition Government Standard</span>
             </div>
           </div>
         </div>
       )}
 
-      {/* Dedicated Print Styles */}
+      {/* DEDICATED NATIVE PRINT VIEW (Visible only during window.print) */}
+      <div className="hidden print:block">
+        <GovernmentReportView
+          titleEn="Stock Ledger Audit & Inventory Movements Register"
+          titleSi="බඩුතොග ලෙජර වාර්තාව සහ චලන ලේඛනය"
+          formCode="ආකෘති පත්‍රය: පොදු 139 (බඩුතොග ලෙජරය) • FORM GENERAL 139 (STOCK LEDGER)"
+          subtitleEn="Stores & Inventory Management Division • Government Store System"
+          subtitleSi="ගබඩා සහ බඩුතොග කළමනාකරණ අංශය"
+          reportRef={`NPS-LDG-${new Date().toISOString().slice(0, 10).replace(/-/g, '')}`}
+          generatedBy={user?.email || 'Store Administration'}
+          orientation={previewOrientation}
+          filterScopeStr={`[ අයිතමය / Item: ${itemName || 'All Items'} ] • [ ගබඩාව / Warehouse: ${warehouseName || 'All Warehouses'} ] • [ වර්ගය / Type: ${transactionType ? transactionType.toUpperCase() : 'ALL'} ] • [ කාලසීමාව / Period: ${fromDate || 'Start'} to ${toDate || 'End'} ]`}
+          summaryMetrics={[
+            {
+              label: 'මුළු ගනුදෙනු වාර / TOTAL ENTRIES',
+              val: `${(activeExportEntries.length > 0 ? activeExportEntries : (cachedExportEntries || entries)).length.toLocaleString()} Movements`,
+              sub: 'Ledger Audit History'
+            },
+            {
+              label: 'මුළු ලැබීම් / TOTAL RECEIVED (IN)',
+              val: `+${(activeExportEntries.length > 0 ? activeExportEntries : (cachedExportEntries || entries)).reduce((acc, curr) => acc + Number(curr.quantity_in || 0), 0).toLocaleString()} Units`,
+              sub: 'Stock Replenishments'
+            },
+            {
+              label: 'මුළු නිකුත් කිරීම් / TOTAL ISSUED (OUT)',
+              val: `-${(activeExportEntries.length > 0 ? activeExportEntries : (cachedExportEntries || entries)).reduce((acc, curr) => acc + Number(curr.quantity_out || 0), 0).toLocaleString()} Units`,
+              sub: 'Dispatches & Allocations'
+            },
+            {
+              label: 'ශුද්ධ තොග වෙනස / NET MOVEMENT',
+              val: `${((activeExportEntries.length > 0 ? activeExportEntries : (cachedExportEntries || entries)).reduce((acc, curr) => acc + Number(curr.quantity_in || 0) - Number(curr.quantity_out || 0), 0) >= 0 ? '+' : '')}${(activeExportEntries.length > 0 ? activeExportEntries : (cachedExportEntries || entries)).reduce((acc, curr) => acc + Number(curr.quantity_in || 0) - Number(curr.quantity_out || 0), 0).toLocaleString()} Units`,
+              sub: 'Net Stock Variation'
+            }
+          ]}
+          tableHeaders={['#', 'දිනය\nDate', 'වර්ගය\nType', 'යොමු අංකය\nReference', 'අයිතමය සහ විස්තරය\nItem Details (Sinhala & English)', 'ගබඩාව\nWarehouse', 'ලැබීම් (+)\nIn Qty', 'නිකුත් (-)\nOut Qty', 'ශේෂය\nBalance', 'වටිනාකම (රු.)\nValue (Rs)']}
+          columnAlignments={['center', 'center', 'center', 'center', 'left', 'left', 'right', 'right', 'right', 'right']}
+          columnWidths={['3%', '8%', '7%', '10%', '27%', '10%', '8%', '8%', '9%', '10%']}
+          tableRows={(activeExportEntries.length > 0 ? activeExportEntries : (cachedExportEntries || entries)).map((e, index) => {
+            const dateStr = e.transaction_date
+              ? new Date(e.transaction_date).toLocaleDateString('en-LK', { year: 'numeric', month: 'short', day: '2-digit' })
+              : '—';
+            const type = (e.transaction_type || 'adjustment').toUpperCase();
+            const ref = e.reference_number || '—';
+            const itemCode = e.item?.code || e.item?.item_code || '';
+            const itemName = e.item?.name_si
+              ? `${e.item.name_si} (${e.item.name_en || ''})`
+              : (e.item?.name_en || 'Item');
+            const warehouse = e.warehouse?.name_si
+              ? `${e.warehouse.name_si} (${e.warehouse.name_en})`
+              : (e.warehouse?.name_en || 'Main Store');
+            const inQty = Number(e.quantity_in || 0);
+            const outQty = Number(e.quantity_out || 0);
+            const balance = Number(e.balance || 0);
+            const val = Number(e.total_value || 0);
+
+            return [
+              <span key="idx" className="font-mono font-semibold text-slate-500">{index + 1}</span>,
+              <span key="date" className="whitespace-nowrap">{dateStr}</span>,
+              <span
+                key="type"
+                className={`inline-block px-1.5 py-0.5 rounded text-[10px] font-bold border uppercase tracking-wider ${
+                  type === 'IN' || type === 'GRN'
+                    ? 'bg-emerald-50 text-emerald-800 border-emerald-300'
+                    : type === 'OUT' || type === 'ISSUE'
+                    ? 'bg-rose-50 text-rose-800 border-rose-300'
+                    : 'bg-slate-100 text-slate-800 border-slate-300'
+                }`}
+              >
+                {type}
+              </span>,
+              <span key="ref" className="font-mono font-bold text-[#701a2b]">{ref}</span>,
+              <div key="item">
+                {itemCode && <span className="font-mono text-slate-500 text-[10px]">[{itemCode}] </span>}
+                <span className="font-medium text-slate-900">{itemName}</span>
+              </div>,
+              <span key="wh">{warehouse}</span>,
+              <span key="in" className="font-mono font-bold text-emerald-700 text-right block">{inQty > 0 ? `+${inQty.toLocaleString()}` : '—'}</span>,
+              <span key="out" className="font-mono font-bold text-rose-700 text-right block">{outQty > 0 ? `-${outQty.toLocaleString()}` : '—'}</span>,
+              <span key="bal" className="font-mono font-bold text-slate-900 text-right block">{balance.toLocaleString()}</span>,
+              <span key="val" className="font-mono text-slate-700 text-right block">{val.toLocaleString('en-LK', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+            ];
+          })}
+        />
+      </div>
+
+      {/* DEDICATED PRINT STYLING FOR BROWSER PRINT (Ctrl+P / window.print) */}
       <style jsx global>{`
         @media print {
           @page {
             size: A4 landscape;
-            margin: 8mm;
+            margin: 6mm;
           }
           body {
             background: #ffffff !important;
             color: #000000 !important;
-            font-size: 9pt !important;
           }
           nav,
           aside,
@@ -852,20 +1028,23 @@ export default function StockLedgerPage() {
           select {
             display: none !important;
           }
-          .data-table {
+          body * {
+            visibility: hidden;
+          }
+          .government-document,
+          .government-document * {
+            visibility: visible;
+          }
+          .government-document {
+            position: absolute !important;
+            left: 0 !important;
+            top: 0 !important;
             width: 100% !important;
-            border-collapse: collapse !important;
-          }
-          .data-table thead {
-            display: table-header-group !important;
-          }
-          .data-table tr {
-            page-break-inside: avoid !important;
-          }
-          .data-table th,
-          .data-table td {
-            border: 0.5pt solid #cbd5e1 !important;
-            padding: 4pt 6pt !important;
+            max-width: none !important;
+            border: none !important;
+            box-shadow: none !important;
+            padding: 0 !important;
+            margin: 0 !important;
           }
         }
       `}</style>
