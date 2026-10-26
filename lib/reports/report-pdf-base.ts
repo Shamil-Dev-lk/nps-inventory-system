@@ -1,5 +1,5 @@
 import { jsPDF } from 'jspdf';
-import { NotoSansSinhala } from '@/lib/sinhala-font';
+import { NotoSansSinhala, NotoSansSinhalaBold } from '@/lib/sinhala-font';
 import { logoBase64 } from '@/lib/assets/logo-base64';
 
 export interface ReportKpiCard {
@@ -69,14 +69,15 @@ export function initGovernmentReportPdf(options: BaseReportPdfOptions): BasePdfC
   const marginX = 28;
   const usableWidth = pageWidth - (marginX * 2);
 
-  // Register NotoSansSinhala for BOTH 'normal' and 'bold' to prevent any font fallback warnings
+  // Register Dual-Script Font (Sinhala + English Latin) for BOTH 'normal' and 'bold'
   try {
     doc.addFileToVFS('NotoSansSinhala.ttf', NotoSansSinhala);
+    doc.addFileToVFS('NotoSansSinhala-Bold.ttf', NotoSansSinhalaBold);
     doc.addFont('NotoSansSinhala.ttf', 'NotoSansSinhala', 'normal');
-    doc.addFont('NotoSansSinhala.ttf', 'NotoSansSinhala', 'bold');
+    doc.addFont('NotoSansSinhala-Bold.ttf', 'NotoSansSinhala', 'bold');
     doc.setFont('NotoSansSinhala', 'normal');
   } catch (e) {
-    console.warn('Sinhala font registration notice:', e);
+    console.warn('Sinhala/English font registration notice:', e);
   }
 
   // Header positioning

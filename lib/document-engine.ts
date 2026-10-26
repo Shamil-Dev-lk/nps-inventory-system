@@ -2,7 +2,7 @@ import { toast } from 'sonner';
 import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
-import { NotoSansSinhala } from './sinhala-font';
+import { NotoSansSinhala, NotoSansSinhalaBold } from './sinhala-font';
 
 // ============================================================================
 // EXPORT TO CSV (WITH BOM FOR UTF-8 SINHALA/TAMIL)
@@ -139,9 +139,11 @@ export const exportToPdf = (
     try {
     const doc = new jsPDF(orientation, 'pt', 'a4');
     
-    // Add Sinhala Font Support
+    // Add Sinhala and English Latin Font Support
     doc.addFileToVFS('NotoSansSinhala.ttf', NotoSansSinhala);
+    doc.addFileToVFS('NotoSansSinhala-Bold.ttf', NotoSansSinhalaBold);
     doc.addFont('NotoSansSinhala.ttf', 'NotoSansSinhala', 'normal');
+    doc.addFont('NotoSansSinhala-Bold.ttf', 'NotoSansSinhala', 'bold');
     doc.setFont('NotoSansSinhala');
     
     // Auto-generate columns if not provided
