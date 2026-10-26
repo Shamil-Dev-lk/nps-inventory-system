@@ -238,33 +238,31 @@ export function generateGrnReportPdf(options: GrnReportPdfOptions): jsPDF {
         if (!rawText || rawText === '—') return;
 
         const badgeW = data.cell.width - 6;
-        const badgeH = 13;
+        const badgeH = 14;
         const badgeX = data.cell.x + 3;
         const badgeY = data.cell.y + (data.cell.height - badgeH) / 2;
 
-        let bg = [243, 244, 246];
-        let fg = [55, 65, 81];
-        let border = [209, 213, 219];
+        let bg = [240, 253, 244];
+        let fg = [22, 101, 52];
+        let border = [187, 247, 208];
+        let label = 'APPROVED / අනුමතයි';
 
-        if (rawText === 'APPROVED') {
-          bg = [220, 252, 231];
-          fg = [22, 101, 52];
-          border = [187, 247, 208];
-        } else if (rawText === 'DRAFT') {
-          bg = [254, 243, 199];
-          fg = [146, 64, 14];
-          border = [253, 230, 138];
+        if (rawText === 'DRAFT' || rawText === 'PENDING') {
+          bg = [254, 252, 232];
+          fg = [133, 77, 14];
+          border = [254, 240, 138];
+          label = 'DRAFT / කෙටුම්පත්';
         }
 
         doc.setFillColor(bg[0], bg[1], bg[2]);
         doc.setDrawColor(border[0], border[1], border[2]);
         doc.setLineWidth(0.5);
-        doc.roundedRect(badgeX, badgeY, badgeW, badgeH, 2.5, 2.5, 'FD');
+        doc.rect(badgeX, badgeY, badgeW, badgeH, 'FD');
 
-        doc.setFontSize(isLandscape ? 6.2 : 5.5);
+        doc.setFontSize(isLandscape ? 5.8 : 5.2);
         doc.setFont('NotoSansSinhala', 'bold');
         doc.setTextColor(fg[0], fg[1], fg[2]);
-        doc.text(rawText, badgeX + (badgeW / 2), badgeY + 9, { align: 'center' });
+        doc.text(label, badgeX + (badgeW / 2), badgeY + 9.5, { align: 'center' });
       }
     }
   });

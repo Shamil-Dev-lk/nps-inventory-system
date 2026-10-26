@@ -100,7 +100,7 @@ export function initGovernmentReportPdf(options: BaseReportPdfOptions): BasePdfC
   doc.line(marginX + logoWidth + 8, headerTopY + 2, marginX + logoWidth + 8, headerTopY + 44);
 
   // 2. Bilingual National & Council Header
-  const textLeftX = marginX + logoWidth + 16;
+  const textLeftX = marginX + logoWidth + 14;
 
   // National Crest Line (Sinhala + English)
   doc.setTextColor(112, 26, 43); // Deep Maroon
@@ -110,75 +110,81 @@ export function initGovernmentReportPdf(options: BaseReportPdfOptions): BasePdfC
 
   // Council Name (Sinhala + English)
   doc.setTextColor(17, 24, 39); // Charcoal
-  doc.setFontSize(12.5);
+  doc.setFontSize(12);
   doc.setFont('NotoSansSinhala', 'bold');
-  doc.text('නිකවැරටිය ප්‍රාදේශීය සභාව  •  NIKAWERATIYA PRADESHIYA SABHA', textLeftX, headerTopY + 21);
+  doc.text('නිකවැරටිය ප්‍රාදේශීය සභාව  •  NIKAWERATIYA PRADESHIYA SABHA', textLeftX, headerTopY + 20);
 
-  // Division Subtitle
+  // Provincial & Ministry Subtitle
   doc.setTextColor(75, 85, 99);
-  doc.setFontSize(7.2);
+  doc.setFontSize(7);
   doc.setFont('NotoSansSinhala', 'normal');
-  doc.text(`${subtitleSi}  •  ${subtitleEn}`, textLeftX, headerTopY + 32);
+  doc.text(`වයඹ පළාත් පාලන දෙපාර්තමේන්තුව  •  Department of Local Government (NWP)`, textLeftX, headerTopY + 30);
+  doc.text(`${subtitleSi}  •  ${subtitleEn}`, textLeftX, headerTopY + 39);
 
-  // Report Title (Bilingual)
+  // Official Form & Report Title (Bilingual)
   doc.setTextColor(112, 26, 43); // Deep Maroon
-  doc.setFontSize(10.5);
+  doc.setFontSize(10);
   doc.setFont('NotoSansSinhala', 'bold');
-  doc.text(`${titleSi}  •  ${titleEn.toUpperCase()}`, textLeftX, headerTopY + 44);
+  doc.text(`${titleSi}  •  ${titleEn.toUpperCase()}`, textLeftX, headerTopY + 50);
 
-  // 3. Right-side Metadata Framed Passport Card
-  const metaBoxW = isLandscape ? 190 : 160;
-  const metaBoxH = 46;
+  // 3. Right-side Formal Government Document Passport Card
+  const metaBoxW = isLandscape ? 196 : 166;
+  const metaBoxH = 48;
   const metaBoxX = pageWidth - marginX - metaBoxW;
-  const metaBoxY = headerTopY;
+  const metaBoxY = headerTopY + 2;
 
   // Background & Border
-  doc.setFillColor(252, 253, 255);
-  doc.roundedRect(metaBoxX, metaBoxY, metaBoxW, metaBoxH, 3, 3, 'F');
-  doc.setDrawColor(226, 232, 240);
-  doc.setLineWidth(0.5);
-  doc.roundedRect(metaBoxX, metaBoxY, metaBoxW, metaBoxH, 3, 3, 'S');
+  doc.setFillColor(255, 255, 255);
+  doc.roundedRect(metaBoxX, metaBoxY, metaBoxW, metaBoxH, 2, 2, 'F');
+  doc.setDrawColor(203, 213, 225);
+  doc.setLineWidth(0.6);
+  doc.roundedRect(metaBoxX, metaBoxY, metaBoxW, metaBoxH, 2, 2, 'S');
 
-  // Maroon left accent bar
+  // Maroon Top Border
   doc.setFillColor(112, 26, 43);
-  doc.rect(metaBoxX, metaBoxY, 2.5, metaBoxH, 'F');
+  doc.rect(metaBoxX, metaBoxY, metaBoxW, 2, 'F');
 
   const now = new Date();
   const genDateStr = now.toLocaleDateString('en-LK', { year: 'numeric', month: 'short', day: 'numeric' });
   const genTimeStr = now.toLocaleTimeString('en-LK', { hour: '2-digit', minute: '2-digit' });
   const defaultRef = `NPS-RPT-${now.toISOString().slice(0, 10).replace(/-/g, '')}`;
 
-  doc.setFontSize(6.5);
+  doc.setFontSize(6.2);
   doc.setFont('NotoSansSinhala', 'bold');
-  doc.setTextColor(107, 114, 128);
-  doc.text('REPORT REF:', metaBoxX + 8, metaBoxY + 11);
-  doc.setTextColor(17, 24, 39);
-  doc.text(reportRef || defaultRef, metaBoxX + 58, metaBoxY + 11);
+  doc.setTextColor(100, 116, 139);
+  doc.text('FORM / ආකෘතිය:', metaBoxX + 6, metaBoxY + 11);
+  doc.setTextColor(15, 23, 42);
+  doc.text('GEN-136 (STORES)', metaBoxX + 66, metaBoxY + 11);
 
-  doc.setTextColor(107, 114, 128);
-  doc.text('GENERATED:', metaBoxX + 8, metaBoxY + 21);
+  doc.setTextColor(100, 116, 139);
+  doc.text('REF NO / අංකය:', metaBoxX + 6, metaBoxY + 20);
+  doc.setTextColor(15, 23, 42);
+  doc.text(reportRef || defaultRef, metaBoxX + 66, metaBoxY + 20);
+
+  doc.setTextColor(100, 116, 139);
+  doc.text('DATE / දිනය:', metaBoxX + 6, metaBoxY + 29);
   doc.setFont('NotoSansSinhala', 'normal');
-  doc.setTextColor(31, 41, 55);
-  doc.text(`${genDateStr}, ${genTimeStr}`, metaBoxX + 58, metaBoxY + 21);
+  doc.setTextColor(30, 41, 59);
+  doc.text(`${genDateStr}, ${genTimeStr}`, metaBoxX + 66, metaBoxY + 29);
 
   doc.setFont('NotoSansSinhala', 'bold');
-  doc.setTextColor(107, 114, 128);
-  doc.text('OFFICER:', metaBoxX + 8, metaBoxY + 31);
+  doc.setTextColor(100, 116, 139);
+  doc.text('OFFICER / නිලධාරී:', metaBoxX + 6, metaBoxY + 38);
   doc.setFont('NotoSansSinhala', 'normal');
-  doc.setTextColor(31, 41, 55);
-  const officerTrimmed = generatedBy.length > 22 ? generatedBy.slice(0, 20) + '...' : generatedBy;
-  doc.text(officerTrimmed, metaBoxX + 58, metaBoxY + 31);
+  doc.setTextColor(30, 41, 59);
+  const officerTrimmed = generatedBy.length > 20 ? generatedBy.slice(0, 18) + '...' : generatedBy;
+  doc.text(officerTrimmed, metaBoxX + 66, metaBoxY + 38);
 
-  // Security Status Pill Badge
-  doc.setFillColor(220, 252, 231);
-  doc.roundedRect(metaBoxX + 8, metaBoxY + 35, metaBoxW - 16, 8, 2, 2, 'F');
-  doc.setFontSize(5.5);
+  // Bottom Notice Bar
+  doc.setFillColor(241, 245, 249);
+  doc.rect(metaBoxX, metaBoxY + 41, metaBoxW, 7, 'F');
+  doc.setFontSize(5);
   doc.setFont('NotoSansSinhala', 'bold');
-  doc.setTextColor(22, 101, 52);
-  doc.text('තහවුරු කළ වාර්තාව  •  AUDIT VERIFIED OFFICIAL RECORD', metaBoxX + (metaBoxW / 2), metaBoxY + 41, { align: 'center' });
+  doc.setTextColor(112, 26, 43);
+  doc.text('රාජ්‍ය විගණනය සඳහා පමණි • FOR OFFICIAL AUDIT ONLY', metaBoxX + (metaBoxW / 2), metaBoxY + 46.5, { align: 'center' });
 
   // 4. Dual Rule: Maroon + Champagne Gold
-  const dividerY = headerTopY + 52;
+  const dividerY = headerTopY + 57;
   doc.setDrawColor(112, 26, 43); // Maroon
   doc.setLineWidth(1.5);
   doc.line(marginX, dividerY, pageWidth - marginX, dividerY);
@@ -187,68 +193,76 @@ export function initGovernmentReportPdf(options: BaseReportPdfOptions): BasePdfC
   doc.setLineWidth(0.75);
   doc.line(marginX, dividerY + 2.5, pageWidth - marginX, dividerY + 2.5);
 
-  // 5. Active Filter Scope Banner Pill
-  let currentY = dividerY + 10;
+  // 5. Active Filter Scope Banner
+  let currentY = dividerY + 8;
   if (filterScopeStr) {
-    const bannerH = 16;
+    const bannerH = 15;
     doc.setFillColor(248, 250, 252);
-    doc.roundedRect(marginX, currentY, usableWidth, bannerH, 3, 3, 'F');
-    doc.setDrawColor(226, 232, 240);
+    doc.rect(marginX, currentY, usableWidth, bannerH, 'F');
+    doc.setDrawColor(203, 213, 225);
     doc.setLineWidth(0.5);
-    doc.roundedRect(marginX, currentY, usableWidth, bannerH, 3, 3, 'S');
+    doc.rect(marginX, currentY, usableWidth, bannerH, 'S');
 
-    doc.setFontSize(6.8);
+    doc.setFontSize(6.5);
     doc.setFont('NotoSansSinhala', 'bold');
     doc.setTextColor(112, 26, 43);
-    doc.text('සක්‍රිය විෂය පථය / SCOPE:', marginX + 8, currentY + 11);
+    doc.text('විෂය පථය සහ පෙරහන් / SCOPE:', marginX + 6, currentY + 10.5);
 
     doc.setFont('NotoSansSinhala', 'normal');
-    doc.setTextColor(55, 65, 81);
-    doc.text(filterScopeStr, marginX + 110, currentY + 11);
+    doc.setTextColor(51, 65, 85);
+    doc.text(filterScopeStr, marginX + 116, currentY + 10.5);
 
-    currentY += bannerH + 7;
+    currentY += bannerH + 6;
   }
 
-  // 6. Executive KPI Summary Cards
+  // 6. Formal Government Summary Ledger Block (Clean Boxed Ledger)
   if (kpiCards.length > 0) {
-    const cardH = 36;
-    const cardGap = 8;
-    const cardW = (usableWidth - (cardGap * (kpiCards.length - 1))) / kpiCards.length;
+    const blockH = 32;
+    const colW = usableWidth / kpiCards.length;
+
+    // Outer border
+    doc.setFillColor(255, 255, 255);
+    doc.rect(marginX, currentY, usableWidth, blockH, 'F');
+    doc.setDrawColor(203, 213, 225);
+    doc.setLineWidth(0.6);
+    doc.rect(marginX, currentY, usableWidth, blockH, 'S');
+
+    // Subtle header background
+    doc.setFillColor(248, 250, 252);
+    doc.rect(marginX, currentY, usableWidth, 11, 'F');
+    doc.setDrawColor(226, 232, 240);
+    doc.line(marginX, currentY + 11, marginX + usableWidth, currentY + 11);
 
     kpiCards.forEach((card, idx) => {
-      const cardX = marginX + (idx * (cardW + cardGap));
-      const accentColor = card.color || [112, 26, 43];
+      const colX = marginX + (idx * colW);
 
-      doc.setFillColor(255, 255, 255);
-      doc.roundedRect(cardX, currentY, cardW, cardH, 3, 3, 'F');
-      doc.setDrawColor(226, 232, 240);
-      doc.setLineWidth(0.5);
-      doc.roundedRect(cardX, currentY, cardW, cardH, 3, 3, 'S');
+      // Vertical separator between columns
+      if (idx > 0) {
+        doc.setDrawColor(203, 213, 225);
+        doc.setLineWidth(0.5);
+        doc.line(colX, currentY, colX, currentY + blockH);
+      }
 
-      // Left vertical accent stripe
-      doc.setFillColor(accentColor[0], accentColor[1], accentColor[2]);
-      doc.rect(cardX, currentY, 2.5, cardH, 'F');
-
-      // Label
-      doc.setTextColor(107, 114, 128);
+      // Column Header Label
+      doc.setTextColor(71, 85, 105);
       doc.setFontSize(5.8);
       doc.setFont('NotoSansSinhala', 'bold');
-      doc.text(card.label, cardX + 8, currentY + 10);
+      doc.text(card.label, colX + (colW / 2), currentY + 8, { align: 'center' });
 
-      // Value
-      doc.setTextColor(17, 24, 39);
-      doc.setFontSize(9.5);
+      // Metric Value
+      doc.setTextColor(112, 26, 43);
+      doc.setFontSize(9);
       doc.setFont('NotoSansSinhala', 'bold');
-      doc.text(card.val, cardX + 8, currentY + 22);
+      doc.text(card.val, colX + (colW / 2), currentY + 21, { align: 'center' });
 
       // Subtext
-      doc.setTextColor(120, 130, 145);
-      doc.setFontSize(5.8);
+      doc.setTextColor(100, 116, 139);
+      doc.setFontSize(5.5);
       doc.setFont('NotoSansSinhala', 'normal');
-      doc.text(card.sub, cardX + 8, currentY + 31);
+      doc.text(card.sub, colX + (colW / 2), currentY + 28.5, { align: 'center' });
     });
 
-    currentY += cardH + 11;
+    currentY += blockH + 8;
   }
 
   return {
@@ -275,82 +289,111 @@ export function finishGovernmentReportPdf(
 ): jsPDF {
   const { doc, pageWidth, pageHeight, marginX, usableWidth, genDateStr } = context;
 
-  // 1. Verification block on final page
+  // 1. Formal Statutory Verification Block on final page
   const finalY = (doc as any).lastAutoTable?.finalY || 400;
-  const signatureHeight = 62;
-  let signY = finalY + 14;
+  const signatureHeight = 72;
+  let signY = finalY + 12;
 
-  if (signY + signatureHeight > pageHeight - 38) {
+  if (signY + signatureHeight > pageHeight - 36) {
     doc.addPage();
-    signY = 50;
+    signY = 46;
   }
 
-  doc.setFillColor(252, 253, 255);
-  doc.roundedRect(marginX, signY, usableWidth, signatureHeight, 3, 3, 'F');
-  doc.setDrawColor(226, 232, 240);
-  doc.setLineWidth(0.5);
-  doc.roundedRect(marginX, signY, usableWidth, signatureHeight, 3, 3, 'S');
+  // Container Box
+  doc.setFillColor(255, 255, 255);
+  doc.rect(marginX, signY, usableWidth, signatureHeight, 'F');
+  doc.setDrawColor(203, 213, 225);
+  doc.setLineWidth(0.6);
+  doc.rect(marginX, signY, usableWidth, signatureHeight, 'S');
 
+  // Top Maroon Border Strip
   doc.setFillColor(112, 26, 43);
-  doc.rect(marginX, signY, usableWidth, 2, 'F');
+  doc.rect(marginX, signY, usableWidth, 2.5, 'F');
+
+  // Title
+  doc.setFontSize(6.8);
+  doc.setFont('NotoSansSinhala', 'bold');
+  doc.setTextColor(112, 26, 43);
+  doc.text('නිල ප්‍රකාශනය සහ ව්‍යවස්ථාපිත සහතික කිරීම  •  STATUTORY DECLARATION & AUDIT SIGN-OFF', marginX + 8, signY + 11);
+
+  // Declaration Notice
+  doc.setFontSize(5.8);
+  doc.setFont('NotoSansSinhala', 'normal');
+  doc.setTextColor(71, 85, 105);
+  doc.text('ඉහත විස්තර කරන ලද සියලු තොරතුරු නියමිත පරිදි බලයලත් ලේඛන හා ගබඩා ප්‍රධාන ලේඛනය (Store Ledger / Bin Cards) හා සසඳා බලා නිවැරදි බවට මෙයින් සහතික කරමි.', marginX + 8, signY + 20);
+  doc.text('I hereby certify that the particulars of inventory enumerated above have been duly verified with official Store Ledgers and requisitions.', marginX + 8, signY + 27);
+
+  // 3 Signature Columns + Seal Box
+  const sealWidth = 72;
+  const signAreaWidth = usableWidth - sealWidth - 20;
+  const signColWidth = signAreaWidth / 3;
+  const lineY = signY + 50;
+
+  // Col 1: Store Keeper
+  doc.setDrawColor(148, 163, 184);
+  doc.setLineDashPattern([2, 2], 0);
+  doc.line(marginX + 8, lineY, marginX + 8 + signColWidth - 18, lineY);
+  doc.setLineDashPattern([], 0);
 
   doc.setFontSize(6.2);
   doc.setFont('NotoSansSinhala', 'bold');
-  doc.setTextColor(112, 26, 43);
-  doc.text('නිල සහතික කිරීම සහ අනුමැතිය  •  OFFICIAL VERIFICATION, AUDIT REVIEW & INSTITUTIONAL SANCTION', marginX + 10, signY + 10);
-
-  const signColWidth = (usableWidth - 20) / 3;
-  const lineY = signY + 34;
-
-  // Col 1: Store Officer
-  doc.setDrawColor(156, 163, 175);
-  doc.setLineDashPattern([2, 2], 0);
-  doc.line(marginX + 10, lineY, marginX + 10 + signColWidth - 25, lineY);
-  doc.setLineDashPattern([], 0);
-
-  doc.setFontSize(6.5);
-  doc.setFont('NotoSansSinhala', 'bold');
-  doc.setTextColor(17, 24, 39);
-  doc.text('සකස් කළේ / PREPARED BY', marginX + 10, lineY + 9);
+  doc.setTextColor(15, 23, 42);
+  doc.text('සකස් කළේ / PREPARED BY', marginX + 8, lineY + 8);
   doc.setFont('NotoSansSinhala', 'normal');
-  doc.setFontSize(5.8);
-  doc.setTextColor(107, 114, 128);
-  doc.text('ගබඩා භාරකරු / Store Keeper', marginX + 10, lineY + 17);
-  doc.text('දිනය / Date: ...........................................', marginX + 10, lineY + 24);
+  doc.setFontSize(5.5);
+  doc.setTextColor(100, 116, 139);
+  doc.text('ගබඩා භාරකරු / Store Keeper', marginX + 8, lineY + 14.5);
+  doc.text('දිනය / Date: ...................................', marginX + 8, lineY + 20.5);
 
   // Col 2: Internal Audit / Accountant
-  const col2X = marginX + 10 + signColWidth;
-  doc.setDrawColor(156, 163, 175);
+  const col2X = marginX + 8 + signColWidth;
+  doc.setDrawColor(148, 163, 184);
   doc.setLineDashPattern([2, 2], 0);
-  doc.line(col2X, lineY, col2X + signColWidth - 25, lineY);
+  doc.line(col2X, lineY, col2X + signColWidth - 18, lineY);
   doc.setLineDashPattern([], 0);
 
-  doc.setFontSize(6.5);
+  doc.setFontSize(6.2);
   doc.setFont('NotoSansSinhala', 'bold');
-  doc.setTextColor(17, 24, 39);
-  doc.text('පරීක්ෂා කළේ / VERIFIED & AUDITED BY', col2X, lineY + 9);
+  doc.setTextColor(15, 23, 42);
+  doc.text('පරීක්ෂා කළේ / AUDITED & VERIFIED', col2X, lineY + 8);
   doc.setFont('NotoSansSinhala', 'normal');
-  doc.setFontSize(5.8);
-  doc.setTextColor(107, 114, 128);
-  doc.text('ගණකාධිකාරී / Accountant', col2X, lineY + 17);
-  doc.text('දිනය / Date: ...........................................', col2X, lineY + 24);
+  doc.setFontSize(5.5);
+  doc.setTextColor(100, 116, 139);
+  doc.text('අභ්‍යන්තර විගණක / Accountant', col2X, lineY + 14.5);
+  doc.text('දිනය / Date: ...................................', col2X, lineY + 20.5);
 
   // Col 3: Secretary / Chairman
-  const col3X = marginX + 10 + (signColWidth * 2);
-  doc.setDrawColor(156, 163, 175);
+  const col3X = marginX + 8 + (signColWidth * 2);
+  doc.setDrawColor(148, 163, 184);
   doc.setLineDashPattern([2, 2], 0);
-  doc.line(col3X, lineY, col3X + signColWidth - 30, lineY);
+  doc.line(col3X, lineY, col3X + signColWidth - 18, lineY);
   doc.setLineDashPattern([], 0);
 
-  doc.setFontSize(6.5);
+  doc.setFontSize(6.2);
   doc.setFont('NotoSansSinhala', 'bold');
-  doc.setTextColor(17, 24, 39);
-  doc.text('අනුමත කළේ / APPROVED & SANCTIONED', col3X, lineY + 9);
+  doc.setTextColor(15, 23, 42);
+  doc.text('අනුමත කළේ / APPROVED & SANCTIONED', col3X, lineY + 8);
   doc.setFont('NotoSansSinhala', 'normal');
-  doc.setFontSize(5.8);
-  doc.setTextColor(107, 114, 128);
-  doc.text('ලේකම් / සභාපති (Secretary / Chairman)', col3X, lineY + 17);
-  doc.text('දිනය / Date: ...........................................', col3X, lineY + 24);
+  doc.setFontSize(5.5);
+  doc.setTextColor(100, 116, 139);
+  doc.text('ලේකම් / සභාපති (Secretary / Chairman)', col3X, lineY + 14.5);
+  doc.text('දිනය / Date: ...................................', col3X, lineY + 20.5);
+
+  // Rubber Stamp Box
+  const sealBoxX = marginX + usableWidth - sealWidth - 6;
+  const sealBoxY = signY + 34;
+  const sealBoxH = 34;
+
+  doc.setDrawColor(148, 163, 184);
+  doc.setLineDashPattern([2, 2], 0);
+  doc.rect(sealBoxX, sealBoxY, sealWidth, sealBoxH, 'S');
+  doc.setLineDashPattern([], 0);
+
+  doc.setFontSize(5.5);
+  doc.setFont('NotoSansSinhala', 'bold');
+  doc.setTextColor(148, 163, 184);
+  doc.text('නිල මුද්‍රාව සඳහා', sealBoxX + (sealWidth / 2), sealBoxY + 15, { align: 'center' });
+  doc.text('OFFICIAL SEAL', sealBoxX + (sealWidth / 2), sealBoxY + 23, { align: 'center' });
 
   // 2. Two-Pass Running Headers & Footers
   const totalPages = typeof (doc as any).getNumberOfPages === 'function'

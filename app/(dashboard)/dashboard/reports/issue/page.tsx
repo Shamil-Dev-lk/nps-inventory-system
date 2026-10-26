@@ -32,6 +32,7 @@ import {
   getDepartmentOrPurpose,
   calculateTotalQty
 } from '@/lib/reports/issue-report-pdf';
+import { GovernmentReportView } from '@/lib/reports/government-report-view';
 
 export default function IssueReportPage() {
   const { user } = useAuthStore();
@@ -47,9 +48,11 @@ export default function IssueReportPage() {
   const [previewModalOpen, setPreviewModalOpen] = useState(false);
   const [previewBlobUrl, setPreviewBlobUrl] = useState<string | null>(null);
   const [previewOrientation, setPreviewOrientation] = useState<'landscape' | 'portrait'>('landscape');
+  const [previewMode, setPreviewMode] = useState<'form' | 'pdf'>('form');
   const [isExporting, setIsExporting] = useState(false);
   const [exportAction, setExportAction] = useState<'download' | 'preview' | 'print' | 'csv' | null>(null);
   const [cachedExportIssues, setCachedExportIssues] = useState<IssueRecordForPdf[] | null>(null);
+  const [activeExportIssues, setActiveExportIssues] = useState<IssueRecordForPdf[]>([]);
 
   const getIssueNumber = (issue: any) => issue.issue_number || `IS-${String(issue.id || 0).padStart(4, '0')}`;
   const getOfficerName = (issue: any) => {
@@ -232,6 +235,7 @@ export default function IssueReportPage() {
     try {
       const records = cachedExportIssues || (await fetchAllMatchingIssues());
       setCachedExportIssues(records);
+      setActiveExportIssues(records);
 
       if (records.length === 0) {
         toast.error('No stock issue records match the selected filters.', { id: toastId });
@@ -267,6 +271,7 @@ export default function IssueReportPage() {
     try {
       const records = cachedExportIssues || (await fetchAllMatchingIssues());
       setCachedExportIssues(records);
+      setActiveExportIssues(records);
 
       const doc = buildPdf(records, orientation);
       const blob = doc.output('blob');
@@ -298,46 +303,21 @@ export default function IssueReportPage() {
     try {
       const records = cachedExportIssues || (await fetchAllMatchingIssues());
       setCachedExportIssues(records);
+      setActiveExportIssues(records);
 
       if (records.length === 0) {
         toast.error('No stock issues found to print.', { id: toastId });
         return;
       }
 
-      const doc = buildPdf(records, previewOrientation);
-      const blob = doc.output('blob');
-      const blobUrl = URL.createObjectURL(blob);
-
-      // Create hidden iframe for direct vector printing
-      const iframe = document.createElement('iframe');
-      iframe.style.position = 'fixed';
-      iframe.style.right = '0';
-      iframe.style.bottom = '0';
-      iframe.style.width = '0';
-      iframe.style.height = '0';
-      iframe.style.border = '0';
-      iframe.src = blobUrl;
-
-      document.body.appendChild(iframe);
-      iframe.onload = () => {
-        toast.success('Opening print dialog...', { id: toastId });
-        try {
-          iframe.contentWindow?.focus();
-          iframe.contentWindow?.print();
-        } catch (printErr) {
-          console.warn('Direct print fallback to window.print():', printErr);
-          window.print();
-        }
-        setTimeout(() => {
-          if (document.body.contains(iframe)) {
-            document.body.removeChild(iframe);
-          }
-          URL.revokeObjectURL(blobUrl);
-        }, 60000);
-      };
+      toast.success('Opening print dialog...', { id: toastId });
+      setTimeout(() => {
+        window.print();
+      }, 300);
     } catch (err: any) {
       console.error('Print error:', err);
       toast.error(err.message || 'Failed to prepare print view.', { id: toastId });
+      window.print();
     } finally {
       setIsExporting(false);
       setExportAction(null);
@@ -913,7 +893,7 @@ export default function IssueReportPage() {
         <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-2 sm:p-4 md:p-6 print:hidden">
           <div className="bg-card w-full max-w-6xl h-[92vh] rounded-2xl border border-border shadow-2xl flex flex-col overflow-hidden animate-in fade-in-50 zoom-in-95 duration-200">
             {/* Modal Header */}
-            <div className="px-5 py-3.5 border-b border-border flex flex-wrap items-center justify-between gap-3 bg-muted/40">
+            <div className="px-5 py-3.5 border-b border-border flex flex-wrap items-center justify-between gap-3 bg-muted/40 shrink-0">
               <div className="flex items-center gap-3">
                 <div className="w-9 h-9 rounded-xl bg-[#701a2b] text-white flex items-center justify-center shadow-sm">
                   <FileText size={18} />
@@ -921,20 +901,44 @@ export default function IssueReportPage() {
                 <div>
                   <div className="flex items-center gap-2">
                     <h3 className="font-bold text-sm text-foreground">
-                      Document Preview — Official Inventory Issue Report
+                      Document Preview — Official Government Stock Issue Register
                     </h3>
                     <span className="text-[10px] bg-[#701a2b]/15 text-[#701a2b] dark:text-rose-200 px-2 py-0.5 rounded-full font-bold uppercase tracking-wider">
-                      Official A4
+                      FORM GENERAL 136
                     </span>
                   </div>
                   <p className="text-xs text-muted-foreground mt-0.5">
-                    Nikaweratiya Pradeshiya Sabha • Print-ready vector audit record
+                    නිකවැරටිය ප්‍රාදේශීය සභාව • Nikaweratiya Pradeshiya Sabha Official Audit Document
                   </p>
                 </div>
               </div>
 
               {/* Toolbar Controls in Modal */}
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-wrap">
+                {/* View Mode Switcher: Government Form vs PDF File */}
+                <div className="flex items-center bg-muted rounded-xl p-1 border border-border text-xs">
+                  <button
+                    onClick={() => setPreviewMode('form')}
+                    className={`px-3 py-1 rounded-lg font-semibold transition-all ${
+                      previewMode === 'form'
+                        ? 'bg-[#701a2b] text-white shadow-sm'
+                        : 'text-muted-foreground hover:text-foreground'
+                    }`}
+                  >
+                    රාජ්‍ය ආකෘතිය (Form View)
+                  </button>
+                  <button
+                    onClick={() => setPreviewMode('pdf')}
+                    className={`px-3 py-1 rounded-lg font-semibold transition-all ${
+                      previewMode === 'pdf'
+                        ? 'bg-[#701a2b] text-white shadow-sm'
+                        : 'text-muted-foreground hover:text-foreground'
+                    }`}
+                  >
+                    PDF ගොනුව (PDF File)
+                  </button>
+                </div>
+
                 {/* Orientation Switcher */}
                 <div className="flex items-center bg-muted rounded-xl p-1 border border-border text-xs">
                   <button
@@ -964,10 +968,10 @@ export default function IssueReportPage() {
                   onClick={handlePrintReport}
                   disabled={isExporting}
                   className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-border bg-card hover:bg-muted text-xs font-semibold transition-all shadow-sm"
-                  title="Print this document directly"
+                  title="Print this official government document directly"
                 >
                   <Printer size={14} />
-                  Print
+                  මුද්‍රණය (Print)
                 </button>
 
                 {/* Direct Download from Modal */}
@@ -975,10 +979,10 @@ export default function IssueReportPage() {
                   onClick={handleDownloadPdf}
                   disabled={isExporting}
                   className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-[#701a2b] hover:bg-[#581522] text-white text-xs font-semibold transition-all shadow-sm"
-                  title="Download PDF"
+                  title="Download Official PDF"
                 >
                   <Download size={14} />
-                  Download
+                  බාගන්න (Download PDF)
                 </button>
 
                 {/* Close Modal */}
@@ -992,16 +996,113 @@ export default function IssueReportPage() {
               </div>
             </div>
 
-            {/* Modal Body: Embedded PDF Iframe */}
-            <div className="flex-1 bg-zinc-950/20 p-3 sm:p-4 overflow-hidden relative">
-              {previewBlobUrl ? (
+            {/* Modal Body */}
+            <div className="flex-1 bg-slate-900/40 overflow-y-auto p-4 sm:p-6 relative">
+              {previewMode === 'form' ? (
+                <GovernmentReportView
+                  titleEn="Inventory Issue Report & Official Register"
+                  titleSi="බඩුතොග නිකුත් කිරීම් නිල ලේඛනය සහ වාර්තාව"
+                  formCode="ආකෘති පත්‍රය: පොදු 136 (ගබඩා නිකුත් කිරීම්) • FORM GENERAL 136 (STORES ISSUE)"
+                  subtitleEn="Stores & Inventory Management Division • Government Store System"
+                  subtitleSi="ගබඩා සහ බඩුතොග කළමනාකරණ අංශය"
+                  reportRef={`NPS-ISS-${new Date().toISOString().slice(0, 10).replace(/-/g, '')}`}
+                  generatedBy={user?.email || 'Store Administration'}
+                  orientation={previewOrientation}
+                  filterScopeStr={`[ දෙපාර්තමේන්තුව / Department: ${departments.find(d => d.id.toString() === departmentId)?.name_en || 'All Departments'} ] • [ තත්ත්වය / Status: ${status || 'ALL'} ] • [ කාලසීමාව / Period: ${fromDate || 'Start'} to ${toDate || 'End'} ]`}
+                  summaryMetrics={[
+                    {
+                      label: 'මුළු නිකුත් කිරීම් / TOTAL ISSUES',
+                      val: `${(activeExportIssues.length > 0 ? activeExportIssues : (cachedExportIssues || issues)).length.toLocaleString()} Vouchers`,
+                      sub: 'Dispatched Records'
+                    },
+                    {
+                      label: 'නිකුත් කළ මුළු ප්‍රමාණය / TOTAL UNITS',
+                      val: `${(activeExportIssues.length > 0 ? activeExportIssues : (cachedExportIssues || issues)).reduce((acc, curr) => acc + calculateTotalQty(curr.items), 0).toLocaleString()} Units`,
+                      sub: 'Dispatched Goods'
+                    },
+                    {
+                      label: 'ලැබුම්කරුවන් / DISTINCT RECIPIENTS',
+                      val: `${new Set((activeExportIssues.length > 0 ? activeExportIssues : (cachedExportIssues || issues)).map(r => getRecipientDetails(r)).filter(x => x && x !== '—')).size} Officers`,
+                      sub: 'Authorized Receivers'
+                    },
+                    {
+                      label: 'විගණන තත්ත්වය / AUDIT STATUS',
+                      val: 'තහවුරු කරන ලදී (VERIFIED)',
+                      sub: 'General Form 136'
+                    }
+                  ]}
+                  tableHeaders={['#', 'නිකුත් අංකය\nIssue No.', 'දිනය\nDate', 'ලැබුම්කරු\nRecipient (Name & NIC)', 'අංශය සහ අරමුණ\nDepartment & Purpose', 'ගබඩාව\nWarehouse', 'නිකුත් කළ භාණ්ඩ විස්තරය\nParticulars of Issued Goods', 'ප්‍රමාණය\nQty', 'නිකුත් කළේ\nIssued By', 'තත්ත්වය\nOfficial Status']}
+                  columnAlignments={['center', 'center', 'center', 'left', 'left', 'left', 'left', 'right', 'left', 'center']}
+                  columnWidths={['3%', '9%', '8%', '16%', '13%', '8%', '25%', '5%', '7%', '6%']}
+                  tableRows={(activeExportIssues.length > 0 ? activeExportIssues : (cachedExportIssues || issues)).map((iss, index) => {
+                    const issueNum = iss.issue_number || `IS-${String(iss.id || 0).padStart(4, '0')}`;
+                    const dateFormatted = iss.issue_date
+                      ? new Date(iss.issue_date).toLocaleDateString('en-LK', { year: 'numeric', month: 'short', day: '2-digit' })
+                      : '—';
+                    const recipient = getRecipientDetails(iss);
+                    const deptPurpose = getDepartmentOrPurpose(iss);
+                    const warehouse = iss.warehouse?.name_si
+                      ? `${iss.warehouse.name_si} (${iss.warehouse.name_en})`
+                      : (iss.warehouse?.name_en || 'Main Store');
+                    const itemsList = (iss.items || []).map((i, idx) => {
+                      const nameSi = i.item?.name_si;
+                      const nameEn = i.item?.name_en || 'Item';
+                      const itemName = nameSi ? `${nameSi} (${nameEn})` : nameEn;
+                      const itemCode = i.item?.code || i.item?.item_code || '';
+                      const qty = Number(i.quantity || 0);
+                      const unit = i.item?.unit?.symbol || i.item?.unit?.name_en || 'ea';
+                      return (
+                        <div key={idx} className="text-[11px] leading-tight mb-1 last:mb-0">
+                          <span className="font-semibold">{idx + 1}. </span>
+                          {itemCode && <span className="font-mono text-slate-500">[{itemCode}] </span>}
+                          <span>{itemName}</span>
+                          <span className="font-bold text-[#701a2b]"> — {qty} {unit}</span>
+                        </div>
+                      );
+                    });
+
+                    const totalQty = calculateTotalQty(iss.items);
+                    const issuedBy = iss.issued_by ? (typeof iss.issued_by === 'object' ? iss.issued_by.name : iss.issued_by) : (iss.created_by || 'Store Admin');
+                    const st = (iss.status || 'draft').toUpperCase();
+
+                    return [
+                      <span key="idx" className="font-mono font-semibold text-slate-500">{index + 1}</span>,
+                      <span key="num" className="font-mono font-bold text-[#701a2b]">{issueNum}</span>,
+                      <span key="date" className="whitespace-nowrap">{dateFormatted}</span>,
+                      <div key="rec" className="whitespace-pre-line font-medium">{recipient}</div>,
+                      <div key="dept" className="whitespace-pre-line text-slate-600">{deptPurpose}</div>,
+                      <span key="wh">{warehouse}</span>,
+                      <div key="items">{itemsList.length > 0 ? itemsList : '—'}</div>,
+                      <span key="qty" className="font-mono font-bold text-right block">{totalQty.toLocaleString()}</span>,
+                      <span key="by" className="text-slate-600">{issuedBy}</span>,
+                      <span
+                        key="st"
+                        className={`inline-block px-2 py-0.5 rounded text-[10px] font-bold border uppercase tracking-wider ${
+                          st === 'ISSUED'
+                            ? 'bg-emerald-50 text-emerald-800 border-emerald-300'
+                            : st === 'APPROVED'
+                            ? 'bg-sky-50 text-sky-800 border-sky-300'
+                            : st === 'REJECTED'
+                            ? 'bg-rose-50 text-rose-800 border-rose-300'
+                            : 'bg-amber-50 text-amber-800 border-amber-300'
+                        }`}
+                      >
+                        {st === 'ISSUED' ? '[ නිකුත් කළා / ISSUED ]' :
+                         st === 'APPROVED' ? '[ අනුමතයි / APPROVED ]' :
+                         st === 'REJECTED' ? '[ ප්‍රතික්ෂේපිත / REJECTED ]' :
+                         '[ කෙටුම්පත් / DRAFT ]'}
+                      </span>
+                    ];
+                  })}
+                />
+              ) : previewBlobUrl ? (
                 <iframe
                   src={previewBlobUrl}
                   title="Inventory Issue Report PDF Preview"
-                  className="w-full h-full rounded-xl border border-border shadow-md bg-white"
+                  className="w-full h-full rounded-xl border border-border shadow-md bg-white min-h-[600px]"
                 />
               ) : (
-                <div className="w-full h-full flex flex-col items-center justify-center gap-3">
+                <div className="w-full h-full min-h-[400px] flex flex-col items-center justify-center gap-3">
                   <Loader2 size={36} className="animate-spin text-[#701a2b]" />
                   <p className="text-sm font-semibold text-muted-foreground">Rendering print-ready PDF...</p>
                 </div>
@@ -1009,25 +1110,124 @@ export default function IssueReportPage() {
             </div>
 
             {/* Modal Footer */}
-            <div className="px-5 py-2.5 border-t border-border bg-card flex items-center justify-between text-xs text-muted-foreground">
-              <span>Ready for official filing, institutional record keeping & external audits</span>
-              <span className="font-mono text-[11px]">Format: A4 (297 x 210 mm) • 300 DPI Vector Output</span>
+            <div className="px-5 py-2.5 border-t border-border bg-card flex items-center justify-between text-xs text-muted-foreground shrink-0">
+              <span>රාජ්‍ය විගණනය සහ ගබඩා ලේඛනාගාර කටයුතු සඳහා සූදානම් නිල වාර්තාව • Ready for official filing & external audits</span>
+              <span className="font-mono text-[11px]">Format: A4 ({previewOrientation === 'landscape' ? '297 x 210 mm' : '210 x 297 mm'}) • High Definition Government Standard</span>
             </div>
           </div>
         </div>
       )}
+
+      {/* DEDICATED NATIVE PRINT VIEW (Visible only during window.print) */}
+      <div className="hidden print:block">
+        <GovernmentReportView
+          titleEn="Inventory Issue Report & Official Register"
+          titleSi="බඩුතොග නිකුත් කිරීම් නිල ලේඛනය සහ වාර්තාව"
+          formCode="ආකෘති පත්‍රය: පොදු 136 (ගබඩා නිකුත් කිරීම්) • FORM GENERAL 136 (STORES ISSUE)"
+          subtitleEn="Stores & Inventory Management Division • Government Store System"
+          subtitleSi="ගබඩා සහ බඩුතොග කළමනාකරණ අංශය"
+          reportRef={`NPS-ISS-${new Date().toISOString().slice(0, 10).replace(/-/g, '')}`}
+          generatedBy={user?.email || 'Store Administration'}
+          orientation={previewOrientation}
+          filterScopeStr={`[ දෙපාර්තමේන්තුව: ${departments.find(d => d.id.toString() === departmentId)?.name_en || 'All Departments'} ] • [ තත්ත්වය: ${status || 'ALL'} ] • [ කාලසීමාව: ${fromDate || 'Start'} to ${toDate || 'End'} ]`}
+          summaryMetrics={[
+            {
+              label: 'මුළු නිකුත් කිරීම් / TOTAL ISSUES',
+              val: `${(activeExportIssues.length > 0 ? activeExportIssues : (cachedExportIssues || issues)).length.toLocaleString()} Vouchers`,
+              sub: 'Dispatched Records'
+            },
+            {
+              label: 'නිකුත් කළ මුළු ප්‍රමාණය / TOTAL UNITS',
+              val: `${(activeExportIssues.length > 0 ? activeExportIssues : (cachedExportIssues || issues)).reduce((acc, curr) => acc + calculateTotalQty(curr.items), 0).toLocaleString()} Units`,
+              sub: 'Dispatched Goods'
+            },
+            {
+              label: 'ලැබුම්කරුවන් / DISTINCT RECIPIENTS',
+              val: `${new Set((activeExportIssues.length > 0 ? activeExportIssues : (cachedExportIssues || issues)).map(r => getRecipientDetails(r)).filter(x => x && x !== '—')).size} Officers`,
+              sub: 'Authorized Receivers'
+            },
+            {
+              label: 'විගණන තත්ත්වය / AUDIT STATUS',
+              val: 'තහවුරු කරන ලදී (VERIFIED)',
+              sub: 'General Form 136'
+            }
+          ]}
+          tableHeaders={['#', 'නිකුත් අංකය\nIssue No.', 'දිනය\nDate', 'ලැබුම්කරු\nRecipient (Name & NIC)', 'අංශය සහ අරමුණ\nDepartment & Purpose', 'ගබඩාව\nWarehouse', 'නිකුත් කළ භාණ්ඩ විස්තරය\nParticulars of Issued Goods', 'ප්‍රමාණය\nQty', 'නිකුත් කළේ\nIssued By', 'තත්ත්වය\nOfficial Status']}
+          columnAlignments={['center', 'center', 'center', 'left', 'left', 'left', 'left', 'right', 'left', 'center']}
+          columnWidths={['3%', '9%', '8%', '16%', '13%', '8%', '25%', '5%', '7%', '6%']}
+          tableRows={(activeExportIssues.length > 0 ? activeExportIssues : (cachedExportIssues || issues)).map((iss, index) => {
+            const issueNum = iss.issue_number || `IS-${String(iss.id || 0).padStart(4, '0')}`;
+            const dateFormatted = iss.issue_date
+              ? new Date(iss.issue_date).toLocaleDateString('en-LK', { year: 'numeric', month: 'short', day: '2-digit' })
+              : '—';
+            const recipient = getRecipientDetails(iss);
+            const deptPurpose = getDepartmentOrPurpose(iss);
+            const warehouse = iss.warehouse?.name_si
+              ? `${iss.warehouse.name_si} (${iss.warehouse.name_en})`
+              : (iss.warehouse?.name_en || 'Main Store');
+            const itemsList = (iss.items || []).map((i, idx) => {
+              const nameSi = i.item?.name_si;
+              const nameEn = i.item?.name_en || 'Item';
+              const itemName = nameSi ? `${nameSi} (${nameEn})` : nameEn;
+              const itemCode = i.item?.code || i.item?.item_code || '';
+              const qty = Number(i.quantity || 0);
+              const unit = i.item?.unit?.symbol || i.item?.unit?.name_en || 'ea';
+              return (
+                <div key={idx} className="text-[11px] leading-tight mb-1 last:mb-0">
+                  <span className="font-semibold">{idx + 1}. </span>
+                  {itemCode && <span className="font-mono text-slate-500">[{itemCode}] </span>}
+                  <span>{itemName}</span>
+                  <span className="font-bold text-[#701a2b]"> — {qty} {unit}</span>
+                </div>
+              );
+            });
+
+            const totalQty = calculateTotalQty(iss.items);
+            const issuedBy = iss.issued_by ? (typeof iss.issued_by === 'object' ? iss.issued_by.name : iss.issued_by) : (iss.created_by || 'Store Admin');
+            const st = (iss.status || 'draft').toUpperCase();
+
+            return [
+              <span key="idx" className="font-mono font-semibold text-slate-500">{index + 1}</span>,
+              <span key="num" className="font-mono font-bold text-[#701a2b]">{issueNum}</span>,
+              <span key="date" className="whitespace-nowrap">{dateFormatted}</span>,
+              <div key="rec" className="whitespace-pre-line font-medium">{recipient}</div>,
+              <div key="dept" className="whitespace-pre-line text-slate-600">{deptPurpose}</div>,
+              <span key="wh">{warehouse}</span>,
+              <div key="items">{itemsList.length > 0 ? itemsList : '—'}</div>,
+              <span key="qty" className="font-mono font-bold text-right block">{totalQty.toLocaleString()}</span>,
+              <span key="by" className="text-slate-600">{issuedBy}</span>,
+              <span
+                key="st"
+                className={`inline-block px-2 py-0.5 rounded text-[10px] font-bold border uppercase tracking-wider ${
+                  st === 'ISSUED'
+                    ? 'bg-emerald-50 text-emerald-800 border-emerald-300'
+                    : st === 'APPROVED'
+                    ? 'bg-sky-50 text-sky-800 border-sky-300'
+                    : st === 'REJECTED'
+                    ? 'bg-rose-50 text-rose-800 border-rose-300'
+                    : 'bg-amber-50 text-amber-800 border-amber-300'
+                }`}
+              >
+                {st === 'ISSUED' ? '[ නිකුත් කළා / ISSUED ]' :
+                 st === 'APPROVED' ? '[ අනුමතයි / APPROVED ]' :
+                 st === 'REJECTED' ? '[ ප්‍රතික්ෂේපිත / REJECTED ]' :
+                 '[ කෙටුම්පත් / DRAFT ]'}
+              </span>
+            ];
+          })}
+        />
+      </div>
 
       {/* DEDICATED PRINT STYLING FOR BROWSER PRINT (Ctrl+P / window.print) */}
       <style jsx global>{`
         @media print {
           @page {
             size: A4 landscape;
-            margin: 8mm;
+            margin: 6mm;
           }
           body {
             background: #ffffff !important;
             color: #000000 !important;
-            font-size: 9pt !important;
           }
           nav,
           aside,
@@ -1038,20 +1238,23 @@ export default function IssueReportPage() {
           select {
             display: none !important;
           }
-          .data-table {
+          body * {
+            visibility: hidden;
+          }
+          .government-document,
+          .government-document * {
+            visibility: visible;
+          }
+          .government-document {
+            position: absolute !important;
+            left: 0 !important;
+            top: 0 !important;
             width: 100% !important;
-            border-collapse: collapse !important;
-          }
-          .data-table thead {
-            display: table-header-group !important;
-          }
-          .data-table tr {
-            page-break-inside: avoid !important;
-          }
-          .data-table th,
-          .data-table td {
-            border: 0.5pt solid #cbd5e1 !important;
-            padding: 4pt 6pt !important;
+            max-width: none !important;
+            border: none !important;
+            box-shadow: none !important;
+            padding: 0 !important;
+            margin: 0 !important;
           }
         }
       `}</style>
