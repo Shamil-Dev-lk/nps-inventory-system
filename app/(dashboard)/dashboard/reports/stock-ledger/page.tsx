@@ -47,6 +47,18 @@ export default function StockLedgerPage() {
   const [cachedExportEntries, setCachedExportEntries] = useState<LedgerEntryForPdf[] | null>(null);
   const [activeExportEntries, setActiveExportEntries] = useState<LedgerEntryForPdf[]>([]);
 
+  const formatSafeDate = (d?: string | null) => {
+    if (!d) return '—';
+    try {
+      const parsed = new Date(d);
+      return isNaN(parsed.getTime())
+        ? String(d)
+        : parsed.toLocaleDateString('en-LK', { year: 'numeric', month: 'short', day: '2-digit' });
+    } catch {
+      return String(d);
+    }
+  };
+
   const { data, isLoading, refetch } = useQuery({
     queryKey: ['report-stock-ledger', page, itemId, warehouseId, fromDate, toDate, transactionType],
     queryFn: async () => {
@@ -856,9 +868,7 @@ export default function StockLedgerPage() {
                   columnAlignments={['center', 'center', 'center', 'center', 'left', 'left', 'right', 'right', 'right', 'right']}
                   columnWidths={['3%', '8%', '7%', '10%', '27%', '10%', '8%', '8%', '9%', '10%']}
                   tableRows={(activeExportEntries.length > 0 ? activeExportEntries : (cachedExportEntries || entries)).map((e, index) => {
-                    const dateStr = e.transaction_date
-                      ? new Date(e.transaction_date).toLocaleDateString('en-LK', { year: 'numeric', month: 'short', day: '2-digit' })
-                      : '—';
+                    const dateStr = formatSafeDate(e.transaction_date);
                     const type = (e.transaction_type || 'adjustment').toUpperCase();
                     const ref = e.reference_number || '—';
                     const itemCode = e.item?.code || e.item?.item_code || '';
@@ -961,9 +971,7 @@ export default function StockLedgerPage() {
           columnAlignments={['center', 'center', 'center', 'center', 'left', 'left', 'right', 'right', 'right', 'right']}
           columnWidths={['3%', '8%', '7%', '10%', '27%', '10%', '8%', '8%', '9%', '10%']}
           tableRows={(activeExportEntries.length > 0 ? activeExportEntries : (cachedExportEntries || entries)).map((e, index) => {
-            const dateStr = e.transaction_date
-              ? new Date(e.transaction_date).toLocaleDateString('en-LK', { year: 'numeric', month: 'short', day: '2-digit' })
-              : '—';
+            const dateStr = formatSafeDate(e.transaction_date);
             const type = (e.transaction_type || 'adjustment').toUpperCase();
             const ref = e.reference_number || '—';
             const itemCode = e.item?.code || e.item?.item_code || '';

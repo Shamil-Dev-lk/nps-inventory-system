@@ -46,6 +46,18 @@ export default function GrnReportPage() {
   const [cachedExportGrns, setCachedExportGrns] = useState<GrnRecordForPdf[] | null>(null);
   const [activeExportGrns, setActiveExportGrns] = useState<GrnRecordForPdf[]>([]);
 
+  const formatSafeDate = (d?: string | null) => {
+    if (!d) return '—';
+    try {
+      const parsed = new Date(d);
+      return isNaN(parsed.getTime())
+        ? String(d)
+        : parsed.toLocaleDateString('en-LK', { year: 'numeric', month: 'short', day: '2-digit' });
+    } catch {
+      return String(d);
+    }
+  };
+
   const { data, isLoading, refetch } = useQuery({
     queryKey: ['report-grn', page, supplierId, fromDate, toDate, status, search],
     queryFn: async () => {
@@ -864,9 +876,7 @@ export default function GrnReportPage() {
                   columnWidths={['3%', '10%', '8%', '16%', '9%', '9%', '27%', '11%', '7%']}
                   tableRows={(activeExportGrns.length > 0 ? activeExportGrns : (cachedExportGrns || grns)).map((grn, index) => {
                     const grnNum = grn.grn_number || `GRN-${String(grn.id || 0).padStart(4, '0')}`;
-                    const dateStr = grn.received_date
-                      ? new Date(grn.received_date).toLocaleDateString('en-LK', { year: 'numeric', month: 'short', day: '2-digit' })
-                      : '—';
+                    const dateStr = formatSafeDate(grn.received_date);
                     const supplier = grn.supplier?.company_name || '—';
                     const invoice = grn.invoice_number || '—';
                     const warehouse = grn.warehouse?.name_si
@@ -979,9 +989,7 @@ export default function GrnReportPage() {
           columnWidths={['3%', '10%', '8%', '16%', '9%', '9%', '27%', '11%', '7%']}
           tableRows={(activeExportGrns.length > 0 ? activeExportGrns : (cachedExportGrns || grns)).map((grn, index) => {
             const grnNum = grn.grn_number || `GRN-${String(grn.id || 0).padStart(4, '0')}`;
-            const dateStr = grn.received_date
-              ? new Date(grn.received_date).toLocaleDateString('en-LK', { year: 'numeric', month: 'short', day: '2-digit' })
-              : '—';
+            const dateStr = formatSafeDate(grn.received_date);
             const supplier = grn.supplier?.company_name || '—';
             const invoice = grn.invoice_number || '—';
             const warehouse = grn.warehouse?.name_si

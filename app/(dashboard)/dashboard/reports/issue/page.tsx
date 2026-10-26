@@ -77,6 +77,18 @@ export default function IssueReportPage() {
     return 'Store Admin';
   };
 
+  const formatSafeDate = (d?: string | null) => {
+    if (!d) return '—';
+    try {
+      const parsed = new Date(d);
+      return isNaN(parsed.getTime())
+        ? String(d)
+        : parsed.toLocaleDateString('en-LK', { year: 'numeric', month: 'short', day: '2-digit' });
+    } catch {
+      return String(d);
+    }
+  };
+
   // Live paginated query for dashboard table view
   const { data, isLoading, refetch } = useQuery({
     queryKey: ['report-issue', page, departmentId, fromDate, toDate, status, search],
@@ -826,7 +838,7 @@ export default function IssueReportPage() {
                               {itemsCount} {itemsCount === 1 ? 'item' : 'items'}
                             </span>
                             <div className="text-[11px] text-muted-foreground line-clamp-1">
-                              {issue.items.map((i: any) => i.item?.name_en).filter(Boolean).join(', ')}
+                              {(issue.items || []).map((i: any) => i.item?.name_en).filter(Boolean).join(', ')}
                             </div>
                           </div>
                         ) : (
@@ -1008,7 +1020,7 @@ export default function IssueReportPage() {
                   reportRef={`NPS-ISS-${new Date().toISOString().slice(0, 10).replace(/-/g, '')}`}
                   generatedBy={user?.email || 'Store Administration'}
                   orientation={previewOrientation}
-                  filterScopeStr={`[ දෙපාර්තමේන්තුව / Department: ${departments.find(d => d.id.toString() === departmentId)?.name_en || 'All Departments'} ] • [ තත්ත්වය / Status: ${status || 'ALL'} ] • [ කාලසීමාව / Period: ${fromDate || 'Start'} to ${toDate || 'End'} ]`}
+                  filterScopeStr={`[ දෙපාර්තමේන්තුව / Department: ${departmentName || 'All Departments'} ] • [ තත්ත්වය / Status: ${status || 'ALL'} ] • [ කාලසීමාව / Period: ${fromDate || 'Start'} to ${toDate || 'End'} ]`}
                   summaryMetrics={[
                     {
                       label: 'මුළු නිකුත් කිරීම් / TOTAL ISSUES',
@@ -1036,9 +1048,7 @@ export default function IssueReportPage() {
                   columnWidths={['3%', '9%', '8%', '16%', '13%', '8%', '25%', '5%', '7%', '6%']}
                   tableRows={(activeExportIssues.length > 0 ? activeExportIssues : (cachedExportIssues || issues)).map((iss, index) => {
                     const issueNum = iss.issue_number || `IS-${String(iss.id || 0).padStart(4, '0')}`;
-                    const dateFormatted = iss.issue_date
-                      ? new Date(iss.issue_date).toLocaleDateString('en-LK', { year: 'numeric', month: 'short', day: '2-digit' })
-                      : '—';
+                    const dateFormatted = formatSafeDate(iss.issue_date);
                     const recipient = getRecipientDetails(iss);
                     const deptPurpose = getDepartmentOrPurpose(iss);
                     const warehouse = iss.warehouse?.name_si
@@ -1129,7 +1139,7 @@ export default function IssueReportPage() {
           reportRef={`NPS-ISS-${new Date().toISOString().slice(0, 10).replace(/-/g, '')}`}
           generatedBy={user?.email || 'Store Administration'}
           orientation={previewOrientation}
-          filterScopeStr={`[ දෙපාර්තමේන්තුව: ${departments.find(d => d.id.toString() === departmentId)?.name_en || 'All Departments'} ] • [ තත්ත්වය: ${status || 'ALL'} ] • [ කාලසීමාව: ${fromDate || 'Start'} to ${toDate || 'End'} ]`}
+          filterScopeStr={`[ දෙපාර්තමේන්තුව / Department: ${departmentName || 'All Departments'} ] • [ තත්ත්වය / Status: ${status || 'ALL'} ] • [ කාලසීමාව / Period: ${fromDate || 'Start'} to ${toDate || 'End'} ]`}
           summaryMetrics={[
             {
               label: 'මුළු නිකුත් කිරීම් / TOTAL ISSUES',
@@ -1157,9 +1167,7 @@ export default function IssueReportPage() {
           columnWidths={['3%', '9%', '8%', '16%', '13%', '8%', '25%', '5%', '7%', '6%']}
           tableRows={(activeExportIssues.length > 0 ? activeExportIssues : (cachedExportIssues || issues)).map((iss, index) => {
             const issueNum = iss.issue_number || `IS-${String(iss.id || 0).padStart(4, '0')}`;
-            const dateFormatted = iss.issue_date
-              ? new Date(iss.issue_date).toLocaleDateString('en-LK', { year: 'numeric', month: 'short', day: '2-digit' })
-              : '—';
+            const dateFormatted = formatSafeDate(iss.issue_date);
             const recipient = getRecipientDetails(iss);
             const deptPurpose = getDepartmentOrPurpose(iss);
             const warehouse = iss.warehouse?.name_si
