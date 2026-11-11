@@ -18,6 +18,7 @@ import { supabase } from '@/lib/supabase';
 import type { DashboardAnalytics } from '@/types';
 import { useOrgStore } from '@/store/org-store';
 import { useAuthStore } from '@/store/auth-store';
+import { canViewReport } from '@/lib/auth/report-permissions';
 
 const COLORS = ['#006838', '#8DC63F', '#FDB913', '#00a651', '#2ecc71', '#f39c12'];
 
@@ -296,12 +297,14 @@ export default function DashboardPage() {
           <p className="text-sm text-red-700 dark:text-red-400 flex-1">
             <strong>{data?.inventory?.out_of_stock_count} items</strong> are out of stock and need urgent replenishment.
           </p>
-          <Link
-            href="/dashboard/reports/low-stock"
-            className="text-xs text-red-600 dark:text-red-400 font-medium hover:underline flex items-center gap-1"
-          >
-            View all <ArrowRight size={12} />
-          </Link>
+          {canViewReport(user, 'low-stock') && (
+            <Link
+              href="/dashboard/reports/low-stock"
+              className="text-xs text-red-600 dark:text-red-400 font-medium hover:underline flex items-center gap-1"
+            >
+              View all <ArrowRight size={12} />
+            </Link>
+          )}
         </motion.div>
       )}
 
@@ -500,13 +503,17 @@ export default function DashboardPage() {
         <h3 className="font-semibold text-sm text-foreground mb-4">Quick Actions</h3>
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
           {[
-            { label: 'New GRN', href: '/dashboard/stock/grn/new', icon: ShoppingCart, color: '#006838' },
-            { label: 'Issue Stock', href: '/dashboard/stock/issue/new', icon: PackageMinus, color: '#8DC63F' },
-            { label: 'Purchase Request', href: '/dashboard/purchase/requests/new', icon: Package, color: '#FDB913' },
-            { label: 'Stock Taking', href: '/dashboard/stock/taking/new', icon: Activity, color: '#3b82f6' },
-            { label: 'Low Stock', href: '/dashboard/reports/low-stock', icon: AlertTriangle, color: '#ef4444' },
-            { label: 'Analytics', href: '/dashboard/reports/analytics', icon: TrendingUp, color: '#8b5cf6' },
-          ].map((action) => (
+            { label: 'New GRN', href: '/dashboard/stock/grn/new', icon: ShoppingCart, color: '#006838', permission: 'create-grn' },
+            { label: 'Issue Stock', href: '/dashboard/stock/issue/new', icon: PackageMinus, color: '#8DC63F', permission: 'create-issue' },
+            { label: 'Purchase Request', href: '/dashboard/purchase/requests/new', icon: Package, color: '#FDB913', permission: 'create-pr' },
+            { label: 'Stock Taking', href: '/dashboard/stock/taking/new', icon: Activity, color: '#3b82f6', permission: 'create-stock-take' },
+            { label: 'Low Stock', href: '/dashboard/reports/low-stock', icon: AlertTriangle, color: '#ef4444', reportCategory: 'low-stock' },
+            { label: 'Analytics', href: '/dashboard/reports/analytics', icon: TrendingUp, color: '#8b5cf6', reportCategory: 'analytics' },
+          ].filter(action => {
+            if (action.reportCategory) return canViewReport(user, action.reportCategory);
+            if (action.permission) return hasPermission(action.permission);
+            return true;
+          }).map((action) => (
             <Link
               key={action.label}
               href={action.href}
