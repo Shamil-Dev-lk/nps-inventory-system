@@ -6,6 +6,7 @@ import { toast } from 'sonner';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
 import { useAuthStore } from '@/store/auth-store';
+import { resolveMatchingIssueIds } from '@/lib/reports/issue-search-helper';
 
 export default function StockIssuePage() {
   const qc = useQueryClient();
@@ -14,9 +15,13 @@ export default function StockIssuePage() {
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState('');
   const [page, setPage] = useState(1);
-  const getIssueNumber = (issue: any) => issue.issue_number || `IS-${String(issue.id || 0).padStart(4, '0')}`;
+  const getIssueNumber = (issue: any) => issue?.issue_number || `IS-${String(issue?.id || 0).padStart(4, '0')}`;
   const getIssuedToName = (issue: any) => {
-    if (issue.customer?.name) return issue.customer.name;
+    if (!issue) return '—';
+    if (issue.customer?.name) {
+      if (issue.customer.address) return `${issue.customer.name} (📍 ${issue.customer.address})`;
+      return issue.customer.name;
+    }
     if (issue.department?.name_en) return issue.department.name_en;
     if (issue.officer?.name) return issue.officer.name;
     if (issue.project?.name_en) return issue.project.name_en;
@@ -37,11 +42,29 @@ export default function StockIssuePage() {
     queryFn: async () => {
       let query = supabase
         .from('stock_issues')
-        .select('*, department:departments(id, name_en), project:projects(id, name_en), customer:customers(id, name), warehouse:warehouses(id, name_en)')
+        .select(`
+          *,
+          department:departments(id, name_en, name_si),
+          project:projects(id, name_en),
+          customer:customers(id, name, address, nic, phone),
+          warehouse:warehouses(id, name_en, name_si),
+          items:stock_issue_items(
+            id,
+            quantity,
+            remarks,
+            item:items(id, name_en, name_si, code, unit:units(symbol, name_en))
+          )
+        `)
         .order('created_at', { ascending: false });
 
-      if (search) {
-        query = query.ilike('issue_number', `%${search}%`);
+      if (search.trim()) {
+        const matchRes = await resolveMatchingIssueIds(search.trim());
+        const cleanTerm = search.trim().replace(/,/g, ' ');
+        if (matchRes.matchedIssueIds.length > 0) {
+          query = query.or(`id.in.(${matchRes.matchedIssueIds.join(',')}),issue_number.ilike.%${cleanTerm}%,purpose.ilike.%${cleanTerm}%,remarks.ilike.%${cleanTerm}%`);
+        } else {
+          query = query.or(`issue_number.ilike.%${cleanTerm}%,purpose.ilike.%${cleanTerm}%,remarks.ilike.%${cleanTerm}%`);
+        }
       }
       if (status) {
         query = query.eq('status', status);

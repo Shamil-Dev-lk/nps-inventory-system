@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -171,7 +171,7 @@ function NavItemComp({ item, collapsed }: { item: NavItem; collapsed: boolean })
 
 import { GlobalScanner } from '@/components/scanner/GlobalScanner';
 import { CommandPalette } from '@/components/scanner/CommandPalette';
-import React from 'react';
+
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();

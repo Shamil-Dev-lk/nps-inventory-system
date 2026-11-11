@@ -13,7 +13,7 @@ export interface IssueRecordForPdf {
   issue_to_type?: string | null;
   department?: { id: number; name_en: string; name_si?: string } | null;
   project?: { id: number; name_en: string; name_si?: string } | null;
-  customer?: { id: number; name: string } | null;
+  customer?: { id: number; name: string; address?: string | null; nic?: string | null; phone?: string | null } | null;
   officer?: { id: number; name: string } | null;
   warehouse?: { id: number; name_en: string; name_si?: string } | null;
   purpose?: string | null;
@@ -74,6 +74,9 @@ export const getRecipientDetails = (issue: IssueRecordForPdf) => {
   let fullText = name;
   if (position) fullText += `\n(${position})`;
   if (nic) fullText += ` [NIC: ${nic}]`;
+  if (issue.customer?.address && !fullText.includes(issue.customer.address)) {
+    fullText += `\n[${issue.customer.address}]`;
+  }
   return fullText;
 };
 

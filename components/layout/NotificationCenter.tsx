@@ -37,9 +37,13 @@ export function NotificationCenter() {
       const { data } = await supabase
         .from('items')
         .select('id, name_en, code, current_quantity, reorder_level')
-        .or('current_quantity.eq.0,current_quantity.lte.reorder_level')
-        .limit(10);
-      return data || [];
+        .order('current_quantity', { ascending: true })
+        .limit(40);
+      return (data || []).filter((item: any) => {
+        const qty = Number(item.current_quantity || 0);
+        const reorder = Number(item.reorder_level || 0);
+        return qty <= 0 || (reorder > 0 && qty <= reorder);
+      }).slice(0, 10);
     },
     refetchInterval: 15000,
   });

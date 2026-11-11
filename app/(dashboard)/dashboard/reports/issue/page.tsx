@@ -20,7 +20,8 @@ import {
   CheckCircle2,
   FileCheck2,
   Sparkles,
-  Maximize2
+  Maximize2,
+  MapPin
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/lib/supabase';
@@ -33,6 +34,10 @@ import {
   calculateTotalQty
 } from '@/lib/reports/issue-report-pdf';
 import { GovernmentReportView } from '@/lib/reports/government-report-view';
+import {
+  resolveMatchingIssueIds,
+  itemMatchesProductSearch
+} from '@/lib/reports/issue-search-helper';
 
 export default function IssueReportPage() {
   const { user } = useAuthStore();
@@ -54,8 +59,9 @@ export default function IssueReportPage() {
   const [cachedExportIssues, setCachedExportIssues] = useState<IssueRecordForPdf[] | null>(null);
   const [activeExportIssues, setActiveExportIssues] = useState<IssueRecordForPdf[]>([]);
 
-  const getIssueNumber = (issue: any) => issue.issue_number || `IS-${String(issue.id || 0).padStart(4, '0')}`;
+  const getIssueNumber = (issue: any) => issue?.issue_number || `IS-${String(issue?.id || 0).padStart(4, '0')}`;
   const getOfficerName = (issue: any) => {
+    if (!issue) return '—';
     if (issue.customer?.name) return issue.customer.name;
     if (issue.officer?.name) return issue.officer.name;
     if (issue.remarks && issue.remarks.includes('[Person Details]')) {
@@ -65,12 +71,14 @@ export default function IssueReportPage() {
     return '—';
   };
   const getDepartmentName = (issue: any) => {
+    if (!issue) return '—';
     if (issue.department?.name_en) return issue.department.name_en;
     if (issue.project?.name_en) return issue.project.name_en;
     if (issue.purpose) return issue.purpose;
     return '—';
   };
   const getIssuedBy = (issue: any) => {
+    if (!issue) return 'Store Admin';
     if (issue.issued_by?.name) return issue.issued_by.name;
     if (typeof issue.issued_by === 'string' && issue.issued_by) return issue.issued_by;
     if (issue.created_by) return issue.created_by;
@@ -99,8 +107,8 @@ export default function IssueReportPage() {
           `*,
           department:departments(id, name_en, name_si),
           project:projects(id, name_en),
-          customer:customers(id, name),
-          warehouse:warehouses(id, name_en),
+          customer:customers(id, name, address, nic, phone),
+          warehouse:warehouses(id, name_en, name_si),
           items:stock_issue_items(
             id,
             quantity,
@@ -114,8 +122,40 @@ export default function IssueReportPage() {
       if (status) query = query.eq('status', status);
       if (fromDate) query = query.gte('issue_date', fromDate);
       if (toDate) query = query.lte('issue_date', toDate);
+
+      let isProductSearch = false;
+      let searchedProductTotalQty = 0;
+      let searchedProductUnit = '';
+      let matchedItemsList: any[] = [];
+
       if (search.trim()) {
-        query = query.or(`issue_number.ilike.%${search.trim()}%,purpose.ilike.%${search.trim()}%,remarks.ilike.%${search.trim()}%`);
+        const matchRes = await resolveMatchingIssueIds(search.trim());
+        isProductSearch = matchRes.isProductSearch;
+        matchedItemsList = matchRes.matchedItems;
+
+        if (isProductSearch && matchRes.matchedItemIds.length > 0) {
+          searchedProductUnit = matchRes.matchedItems[0]?.unit?.symbol || matchRes.matchedItems[0]?.unit?.name_en || 'Units';
+
+          let totalQtyQuery = supabase
+            .from('stock_issue_items')
+            .select('quantity, stock_issue:stock_issues!inner(id, department_id, status, issue_date)')
+            .in('item_id', matchRes.matchedItemIds);
+
+          if (departmentId) totalQtyQuery = totalQtyQuery.eq('stock_issues.department_id', departmentId);
+          if (status) totalQtyQuery = totalQtyQuery.eq('stock_issues.status', status);
+          if (fromDate) totalQtyQuery = totalQtyQuery.gte('stock_issues.issue_date', fromDate);
+          if (toDate) totalQtyQuery = totalQtyQuery.lte('stock_issues.issue_date', toDate);
+
+          const { data: matchedIssueItems } = await totalQtyQuery;
+          searchedProductTotalQty = (matchedIssueItems || []).reduce((acc, curr) => acc + Number(curr.quantity || 0), 0);
+        }
+
+        const cleanTerm = search.trim().replace(/,/g, ' ');
+        if (matchRes.matchedIssueIds.length > 0) {
+          query = query.or(`id.in.(${matchRes.matchedIssueIds.join(',')}),issue_number.ilike.%${cleanTerm}%,purpose.ilike.%${cleanTerm}%,remarks.ilike.%${cleanTerm}%`);
+        } else {
+          query = query.or(`issue_number.ilike.%${cleanTerm}%,purpose.ilike.%${cleanTerm}%,remarks.ilike.%${cleanTerm}%`);
+        }
       }
 
       const from = (page - 1) * perPage;
@@ -132,6 +172,12 @@ export default function IssueReportPage() {
           from: from + 1,
           to: Math.min(from + perPage, count || 0),
           last_page: Math.ceil((count || 0) / perPage),
+        },
+        searchSummary: {
+          isProductSearch,
+          totalQty: searchedProductTotalQty,
+          unit: searchedProductUnit,
+          matchedItems: matchedItemsList
         }
       };
     },
@@ -149,6 +195,7 @@ export default function IssueReportPage() {
 
   const issues = data?.data?.data || [];
   const meta = data?.data;
+  const searchSummary = data?.searchSummary;
 
   // Selected department label
   const selectedDepartment = departments?.find((d: any) => String(d.id) === String(departmentId));
@@ -190,8 +237,8 @@ export default function IssueReportPage() {
         *,
         department:departments(id, name_en, name_si),
         project:projects(id, name_en),
-        customer:customers(id, name),
-        warehouse:warehouses(id, name_en),
+        customer:customers(id, name, address, nic, phone),
+        warehouse:warehouses(id, name_en, name_si),
         items:stock_issue_items(
           id,
           quantity,
@@ -212,7 +259,13 @@ export default function IssueReportPage() {
     if (fromDate) query = query.gte('issue_date', fromDate);
     if (toDate) query = query.lte('issue_date', toDate);
     if (search.trim()) {
-      query = query.or(`issue_number.ilike.%${search.trim()}%,purpose.ilike.%${search.trim()}%,remarks.ilike.%${search.trim()}%`);
+      const matchRes = await resolveMatchingIssueIds(search.trim());
+      const cleanTerm = search.trim().replace(/,/g, ' ');
+      if (matchRes.matchedIssueIds.length > 0) {
+        query = query.or(`id.in.(${matchRes.matchedIssueIds.join(',')}),issue_number.ilike.%${cleanTerm}%,purpose.ilike.%${cleanTerm}%,remarks.ilike.%${cleanTerm}%`);
+      } else {
+        query = query.or(`issue_number.ilike.%${cleanTerm}%,purpose.ilike.%${cleanTerm}%,remarks.ilike.%${cleanTerm}%`);
+      }
     }
 
     const { data: allRecords, error } = await query;
@@ -557,22 +610,28 @@ export default function IssueReportPage() {
           <div className="absolute top-0 left-0 w-1.5 h-full bg-[#701a2b]" />
         </div>
 
-        {/* Units Dispatched */}
+        {/* Units Dispatched / Total Product Quantity */}
         <div className="rounded-xl bg-card border border-border p-4 shadow-sm relative overflow-hidden flex flex-col justify-between">
           <div className="flex items-center justify-between text-muted-foreground">
-            <span className="text-xs font-semibold uppercase tracking-wider">Dispatched Units</span>
-            <Package size={16} className="text-emerald-600" />
+            <span className="text-xs font-semibold uppercase tracking-wider">
+              {searchSummary?.isProductSearch ? 'Product Total Issued' : 'Dispatched Units'}
+            </span>
+            <Package size={16} className={searchSummary?.isProductSearch ? 'text-[#701a2b]' : 'text-emerald-600'} />
           </div>
           <div className="mt-2">
             <span className="text-2xl font-bold tracking-tight text-foreground">
-              {onScreenMetrics.pageUnits.toLocaleString()}
+              {(searchSummary?.isProductSearch ? searchSummary.totalQty : onScreenMetrics.pageUnits).toLocaleString()}
             </span>
-            <span className="text-xs text-muted-foreground ml-1.5">units</span>
+            <span className="text-xs text-muted-foreground ml-1.5 font-medium">
+              {searchSummary?.isProductSearch ? (searchSummary.unit || 'units') : 'units'}
+            </span>
           </div>
-          <div className="mt-1 text-[11px] text-muted-foreground">
-            Items issued in view
+          <div className="mt-1 text-[11px] text-muted-foreground truncate">
+            {searchSummary?.isProductSearch
+              ? `Total for "${search.trim()}" in filtered scope`
+              : 'Items issued in view'}
           </div>
-          <div className="absolute top-0 left-0 w-1.5 h-full bg-emerald-600" />
+          <div className={`absolute top-0 left-0 w-1.5 h-full ${searchSummary?.isProductSearch ? 'bg-[#701a2b]' : 'bg-emerald-600'}`} />
         </div>
 
         {/* Unique Recipients */}
@@ -621,7 +680,7 @@ export default function IssueReportPage() {
               type="text"
               value={search}
               onChange={e => { setSearch(e.target.value); setPage(1); }}
-              placeholder="Search by issue no, purpose, remarks..."
+              placeholder="Search product name, code, receiver, village, issue no..."
               className="w-full pl-9 pr-8 py-2 text-sm rounded-lg border border-input bg-background focus:outline-none focus:ring-2 focus:ring-[#701a2b]/30"
             />
             {search && (
@@ -725,6 +784,12 @@ export default function IssueReportPage() {
                   &ldquo;{search}&rdquo;
                 </span>
               )}
+              {searchSummary?.isProductSearch && (
+                <span className="bg-[#701a2b] text-white px-2.5 py-0.5 rounded-full font-bold flex items-center gap-1 shadow-sm text-[11px]">
+                  <span>Total Issued:</span>
+                  <span className="font-mono">{searchSummary.totalQty.toLocaleString()} {searchSummary.unit}</span>
+                </span>
+              )}
             </div>
 
             <button
@@ -747,6 +812,11 @@ export default function IssueReportPage() {
             <span className="text-xs bg-[#701a2b]/10 text-[#701a2b] dark:text-rose-300 px-2.5 py-0.5 rounded-full font-bold">
               {meta?.total || 0} Records
             </span>
+            {searchSummary?.isProductSearch && (
+              <span className="text-xs bg-emerald-100 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300 px-2.5 py-0.5 rounded-full font-bold border border-emerald-300 dark:border-emerald-700">
+                Total &quot;{search.trim()}&quot; Issued: {searchSummary.totalQty.toLocaleString()} {searchSummary.unit}
+              </span>
+            )}
           </div>
 
           <div className="text-xs text-muted-foreground">
@@ -808,6 +878,13 @@ export default function IssueReportPage() {
                   const totalUnits = calculateTotalQty(issue.items);
                   const itemsCount = issue.items?.length || 0;
 
+                  // Find matching product items in this issue if search is active
+                  const matchedItemsInIssue = search.trim()
+                    ? (issue.items || []).filter((i: any) => itemMatchesProductSearch(i.item, search.trim()))
+                    : [];
+                  const matchedProductQty = matchedItemsInIssue.reduce((sum: number, i: any) => sum + Number(i.quantity || 0), 0);
+                  const matchedItemUnit = matchedItemsInIssue[0]?.item?.unit?.symbol || matchedItemsInIssue[0]?.item?.unit?.name_en || '';
+
                   return (
                     <tr key={issue.id} className="hover:bg-muted/30 transition-colors">
                       <td className="py-3 px-4 text-center text-xs text-muted-foreground font-mono">
@@ -819,10 +896,16 @@ export default function IssueReportPage() {
                         </code>
                       </td>
                       <td className="py-3 px-4 text-xs text-muted-foreground whitespace-nowrap">
-                        {issue.issue_date ? new Date(issue.issue_date).toLocaleDateString('en-LK') : '—'}
+                        {formatSafeDate(issue.issue_date)}
                       </td>
                       <td className="py-3 px-4 text-sm font-medium text-foreground">
                         <div className="line-clamp-2">{getOfficerName(issue)}</div>
+                        {issue.customer?.address && (
+                          <div className="text-[11px] text-muted-foreground flex items-center gap-1 mt-0.5">
+                            <MapPin size={11} className="shrink-0 text-[#701a2b]" />
+                            <span className="line-clamp-1">{issue.customer.address}</span>
+                          </div>
+                        )}
                       </td>
                       <td className="py-3 px-4 text-xs text-muted-foreground">
                         <div className="font-medium text-foreground">{issue.department?.name_en || issue.project?.name_en || '—'}</div>
@@ -833,20 +916,51 @@ export default function IssueReportPage() {
                       </td>
                       <td className="py-3 px-4 text-xs">
                         {itemsCount > 0 ? (
-                          <div className="space-y-0.5 max-w-xs">
-                            <span className="font-medium text-foreground">
-                              {itemsCount} {itemsCount === 1 ? 'item' : 'items'}
-                            </span>
-                            <div className="text-[11px] text-muted-foreground line-clamp-1">
-                              {(issue.items || []).map((i: any) => i.item?.name_en).filter(Boolean).join(', ')}
-                            </div>
+                          <div className="space-y-1 max-w-xs">
+                            {matchedItemsInIssue.length > 0 ? (
+                              <>
+                                {matchedItemsInIssue.map((mi: any, miIdx: number) => (
+                                  <div key={`m-${miIdx}`} className="bg-[#701a2b]/10 text-[#701a2b] dark:text-rose-300 px-2 py-0.5 rounded text-[11px] font-semibold flex items-center justify-between border border-[#701a2b]/20">
+                                    <span className="truncate">{mi.item?.name_en || mi.item?.name_si}</span>
+                                    <span className="shrink-0 ml-1 font-mono font-bold">{mi.quantity} {mi.item?.unit?.symbol || mi.item?.unit?.name_en || ''}</span>
+                                  </div>
+                                ))}
+                                {itemsCount > matchedItemsInIssue.length && (
+                                  <div className="text-[11px] text-muted-foreground line-clamp-1 pl-1">
+                                    + {(issue.items || []).filter((i: any) => !matchedItemsInIssue.includes(i)).map((i: any) => i.item?.name_en).filter(Boolean).join(', ')}
+                                  </div>
+                                )}
+                              </>
+                            ) : (
+                              <>
+                                <span className="font-medium text-foreground">
+                                  {itemsCount} {itemsCount === 1 ? 'item' : 'items'}
+                                </span>
+                                <div className="text-[11px] text-muted-foreground line-clamp-1">
+                                  {(issue.items || []).map((i: any) => i.item?.name_en).filter(Boolean).join(', ')}
+                                </div>
+                              </>
+                            )}
                           </div>
                         ) : (
                           <span className="text-muted-foreground">—</span>
                         )}
                       </td>
                       <td className="py-3 px-4 text-sm font-semibold text-right text-foreground font-mono">
-                        {totalUnits.toLocaleString()}
+                        {searchSummary?.isProductSearch && matchedItemsInIssue.length > 0 ? (
+                          <div>
+                            <span className="text-[#701a2b] dark:text-rose-400 font-bold">
+                              {matchedProductQty.toLocaleString()} {matchedItemUnit}
+                            </span>
+                            {totalUnits !== matchedProductQty && (
+                              <div className="text-[10px] text-muted-foreground font-normal">
+                                Total: {totalUnits.toLocaleString()}
+                              </div>
+                            )}
+                          </div>
+                        ) : (
+                          totalUnits.toLocaleString()
+                        )}
                       </td>
                       <td className="py-3 px-4 text-center">
                         <span
