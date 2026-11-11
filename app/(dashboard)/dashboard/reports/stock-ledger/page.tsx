@@ -26,9 +26,15 @@ import {
   LedgerEntryForPdf
 } from '@/lib/reports/stock-ledger-report-pdf';
 import { GovernmentReportView } from '@/lib/reports/government-report-view';
+import { canViewReport, canDownloadPdf, canPrintReport, canExportExcel } from '@/lib/auth/report-permissions';
+import { ReportAccessDenied } from '@/components/common/ReportAccessDenied';
 
 export default function StockLedgerPage() {
   const { user } = useAuthStore();
+  const hasView = canViewReport(user, 'stock-ledger');
+  const hasPdf = canDownloadPdf(user, 'stock-ledger');
+  const hasPrint = canPrintReport(user, 'stock-ledger');
+  const hasExcel = canExportExcel(user, 'stock-ledger');
   const [itemId, setItemId] = useState('');
   const [warehouseId, setWarehouseId] = useState('');
   const [fromDate, setFromDate] = useState('');
@@ -339,6 +345,16 @@ export default function StockLedgerPage() {
   };
 
   const hasActiveFilters = Boolean(itemId || warehouseId || fromDate || toDate || transactionType);
+  if (!hasView) {
+    return (
+      <ReportAccessDenied
+        reportTitle="Stock Ledger Report"
+        reportTitleSi="තොග ලෙජර් වාර්තාව"
+        requiredPermission="reports.stock-ledger.view"
+      />
+    );
+  }
+
 
   return (
     <div className="space-y-6 max-w-[1600px] pb-10">
@@ -358,7 +374,8 @@ export default function StockLedgerPage() {
 
         {/* Action Controls */}
         <div className="flex flex-wrap items-center gap-2.5">
-          <button
+          {hasPdf && (
+<button
             onClick={() => handlePreviewPdf()}
             disabled={isExporting}
             className="flex items-center gap-2 px-3.5 py-2.5 rounded-xl border border-[#701a2b]/30 bg-card hover:bg-[#701a2b]/10 text-[#701a2b] dark:text-rose-300 text-sm font-semibold transition-all shadow-sm disabled:opacity-50"
@@ -374,8 +391,10 @@ export default function StockLedgerPage() {
               A4
             </span>
           </button>
+)}
 
-          <button
+          {hasPdf && (
+<button
             onClick={handleDownloadPdf}
             disabled={isExporting}
             className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-[#701a2b] to-[#8d2238] hover:from-[#5d1624] hover:to-[#701a2b] text-white text-sm font-semibold transition-all shadow-md disabled:opacity-50"
@@ -388,8 +407,10 @@ export default function StockLedgerPage() {
             )}
             <span>Download PDF</span>
           </button>
+)}
 
-          <button
+          {hasPrint && (
+<button
             onClick={handlePrintReport}
             disabled={isExporting}
             className="flex items-center gap-2 px-3.5 py-2.5 rounded-xl border border-border bg-card text-foreground text-sm font-medium hover:bg-muted transition-all shadow-sm disabled:opacity-50"
@@ -402,8 +423,10 @@ export default function StockLedgerPage() {
             )}
             <span>Print</span>
           </button>
+)}
 
-          <button
+          {hasExcel && (
+<button
             onClick={handleExportCsv}
             disabled={isExporting}
             className="flex items-center gap-2 px-3.5 py-2.5 rounded-xl border border-border bg-card text-muted-foreground hover:text-foreground text-sm font-medium hover:bg-muted transition-all shadow-sm disabled:opacity-50"
@@ -416,6 +439,7 @@ export default function StockLedgerPage() {
             )}
             <span>CSV</span>
           </button>
+)}
         </div>
       </div>
 

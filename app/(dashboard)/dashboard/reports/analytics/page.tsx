@@ -6,11 +6,16 @@ import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, R
 import { TrendingUp, Package, AlertTriangle, DollarSign, RefreshCw } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { useOrgStore } from '@/store/org-store';
+import { useAuthStore } from '@/store/auth-store';
+import { canViewReport } from '@/lib/auth/report-permissions';
+import { ReportAccessDenied } from '@/components/common/ReportAccessDenied';
 
 const COLORS = ['#006838','#8DC63F','#FDB913','#00a651','#2ecc71','#f39c12'];
 
 export default function AnalyticsPage() {
   const { org } = useOrgStore();
+  const { user } = useAuthStore();
+  const hasView = canViewReport(user, 'analytics');
   const { data, isLoading, refetch } = useQuery({
     queryKey: ['dashboard-analytics'],
     queryFn: async () => {
@@ -47,6 +52,10 @@ export default function AnalyticsPage() {
   const fmt = (v: number) => `Rs. ${Number(v).toLocaleString('en-LK', {minimumFractionDigits:0,maximumFractionDigits:0})}`;
   const trend = data?.monthly_trend || [];
   const categories = (data?.stock_by_category || []).slice(0,6).map((c:any) => ({ name: c.category?.name_en || 'Other', count: c.count, value: Math.round(c.value) }));
+  if (!hasView) {
+    return <ReportAccessDenied reportTitle="විශ්ලේෂණ සහ වාර්තා / Analytics & Reports" category="analytics" />;
+  }
+
   return (
     <div className="space-y-6 max-w-[1600px]">
       <div className="page-header">

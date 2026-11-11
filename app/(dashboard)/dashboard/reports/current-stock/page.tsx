@@ -27,9 +27,15 @@ import {
   StockItemForPdf
 } from '@/lib/reports/stock-report-pdf';
 import { GovernmentReportView } from '@/lib/reports/government-report-view';
+import { canViewReport, canDownloadPdf, canPrintReport, canExportExcel } from '@/lib/auth/report-permissions';
+import { ReportAccessDenied } from '@/components/common/ReportAccessDenied';
 
 export default function CurrentStockPage() {
   const { user } = useAuthStore();
+  const hasView = canViewReport(user, 'stock');
+  const hasPdf = canDownloadPdf(user, 'stock');
+  const hasPrint = canPrintReport(user, 'stock');
+  const hasExcel = canExportExcel(user, 'stock');
   const [search, setSearch] = useState('');
   const [categoryId, setCategoryId] = useState('');
   const [warehouseId, setWarehouseId] = useState('');
@@ -341,6 +347,16 @@ export default function CurrentStockPage() {
   };
 
   const hasActiveFilters = Boolean(search.trim() || categoryId || warehouseId);
+  if (!hasView) {
+    return (
+      <ReportAccessDenied
+        reportTitle="Current Stock Report"
+        reportTitleSi="වත්මන් තොග වාර්තාව"
+        requiredPermission="reports.stock.view"
+      />
+    );
+  }
+
 
   return (
     <div className="space-y-6 max-w-[1600px] pb-10">
@@ -360,7 +376,8 @@ export default function CurrentStockPage() {
 
         {/* Action Controls Toolbar */}
         <div className="flex flex-wrap items-center gap-2.5">
-          <button
+          {hasPdf && (
+<button
             onClick={() => handlePreviewPdf()}
             disabled={isExporting}
             className="flex items-center gap-2 px-3.5 py-2.5 rounded-xl border border-[#701a2b]/30 bg-card hover:bg-[#701a2b]/10 text-[#701a2b] dark:text-rose-300 text-sm font-semibold transition-all shadow-sm disabled:opacity-50"
@@ -376,8 +393,10 @@ export default function CurrentStockPage() {
               A4
             </span>
           </button>
+)}
 
-          <button
+          {hasPdf && (
+<button
             onClick={handleDownloadPdf}
             disabled={isExporting}
             className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-[#701a2b] to-[#8d2238] hover:from-[#5d1624] hover:to-[#701a2b] text-white text-sm font-semibold transition-all shadow-md disabled:opacity-50"
@@ -390,8 +409,10 @@ export default function CurrentStockPage() {
             )}
             <span>Download PDF</span>
           </button>
+)}
 
-          <button
+          {hasPrint && (
+<button
             onClick={handlePrintReport}
             disabled={isExporting}
             className="flex items-center gap-2 px-3.5 py-2.5 rounded-xl border border-border bg-card text-foreground text-sm font-medium hover:bg-muted transition-all shadow-sm disabled:opacity-50"
@@ -404,8 +425,10 @@ export default function CurrentStockPage() {
             )}
             <span>Print</span>
           </button>
+)}
 
-          <button
+          {hasExcel && (
+<button
             onClick={handleExportCsv}
             disabled={isExporting}
             className="flex items-center gap-2 px-3.5 py-2.5 rounded-xl border border-border bg-card text-muted-foreground hover:text-foreground text-sm font-medium hover:bg-muted transition-all shadow-sm disabled:opacity-50"
@@ -418,6 +441,7 @@ export default function CurrentStockPage() {
             )}
             <span>CSV</span>
           </button>
+)}
         </div>
       </div>
 

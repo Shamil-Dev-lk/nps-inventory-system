@@ -1,12 +1,13 @@
 'use client';
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Plus, Search, Edit, Trash2, RefreshCw, Shield, UserCheck, UserX, Eye } from 'lucide-react';
+import { Plus, Search, Edit, Trash2, RefreshCw, Shield, ShieldCheck, UserCheck, UserX, Eye } from 'lucide-react';
 import { toast } from 'sonner';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
 import { useAuthStore } from '@/store/auth-store';
 import UserViewModal from './UserViewModal';
+import { ReportPermissionsModal } from '@/components/settings/ReportPermissionsModal';
 
 export default function UsersPage() {
   const qc = useQueryClient();
@@ -14,6 +15,7 @@ export default function UsersPage() {
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
   const [viewUser, setViewUser] = useState<any>(null);
+  const [permUser, setPermUser] = useState<any>(null);
   const { data, isLoading, refetch } = useQuery({
     queryKey: ['users', page, search],
     queryFn: async () => {
@@ -154,8 +156,17 @@ export default function UsersPage() {
                     <button onClick={() => setViewUser(u)} className="p-1.5 rounded hover:bg-muted text-muted-foreground hover:text-primary transition-colors" title="View Details">
                       <Eye size={15}/>
                     </button>
+                    {(hasPermission('manage-users') || hasPermission('manage-settings')) && (
+                      <button
+                        onClick={() => setPermUser(u)}
+                        className="p-1.5 rounded hover:bg-[#701a2b]/10 text-muted-foreground hover:text-[#701a2b] transition-colors"
+                        title="Configure Report Permissions"
+                      >
+                        <ShieldCheck size={15} />
+                      </button>
+                    )}
                     {hasPermission('manage-users') && (<>
-                      <Link href={`/dashboard/settings/users/${u.id}/edit`} className="p-1.5 rounded hover:bg-muted text-muted-foreground hover:text-blue-500 transition-colors"><Edit size={15}/></Link>
+                      <Link href={`/dashboard/settings/users/edit?id=${u.id}`} className="p-1.5 rounded hover:bg-muted text-muted-foreground hover:text-blue-500 transition-colors" title="Edit User"><Edit size={15}/></Link>
                       <button onClick={()=>toggleMutation.mutate(u.id)} className="p-1.5 rounded hover:bg-muted text-muted-foreground hover:text-amber-500 transition-colors" title={u.is_active?'Deactivate':'Activate'}>
                         {u.is_active?<UserX size={15}/>:<UserCheck size={15}/>}
                       </button>
@@ -174,6 +185,15 @@ export default function UsersPage() {
         user={viewUser} 
         isOpen={!!viewUser} 
         onClose={() => setViewUser(null)} 
+      />
+
+      <ReportPermissionsModal
+        user={permUser}
+        isOpen={!!permUser}
+        onClose={() => setPermUser(null)}
+        onSaved={() => {
+          qc.invalidateQueries({ queryKey: ['users'] });
+        }}
       />
     </div>
   );

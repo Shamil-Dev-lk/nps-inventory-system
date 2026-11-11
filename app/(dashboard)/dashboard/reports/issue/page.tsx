@@ -38,9 +38,20 @@ import {
   resolveMatchingIssueIds,
   itemMatchesProductSearch
 } from '@/lib/reports/issue-search-helper';
+import {
+  canViewReport,
+  canDownloadPdf,
+  canPrintReport,
+  canExportExcel
+} from '@/lib/auth/report-permissions';
+import { ReportAccessDenied } from '@/components/common/ReportAccessDenied';
 
 export default function IssueReportPage() {
   const { user } = useAuthStore();
+  const hasView = canViewReport(user, 'issue');
+  const hasPdf = canDownloadPdf(user, 'issue');
+  const hasPrint = canPrintReport(user, 'issue');
+  const hasExcel = canExportExcel(user, 'issue');
   const [departmentId, setDepartmentId] = useState('');
   const [fromDate, setFromDate] = useState('');
   const [toDate, setToDate] = useState('');
@@ -292,6 +303,10 @@ export default function IssueReportPage() {
 
   // Handle Download PDF
   const handleDownloadPdf = async () => {
+    if (!hasPdf) {
+      toast.error('You do not have permission to download this PDF report.');
+      return;
+    }
     if (isExporting) return;
     setIsExporting(true);
     setExportAction('download');
@@ -414,6 +429,10 @@ export default function IssueReportPage() {
 
   // Handle Export CSV
   const handleExportCsv = async () => {
+    if (!hasExcel) {
+      toast.error('You do not have permission to export this report to Excel/CSV.');
+      return;
+    }
     if (isExporting) return;
     setIsExporting(true);
     setExportAction('csv');
@@ -507,6 +526,16 @@ export default function IssueReportPage() {
 
   const hasActiveFilters = Boolean(departmentId || status || fromDate || toDate || search.trim());
 
+  if (!hasView) {
+    return (
+      <ReportAccessDenied
+        reportTitle="Inventory Issue Report"
+        reportTitleSi="බඩුතොග නිකුත් කිරීම් වාර්තාව"
+        requiredPermission="reports.issue.view"
+      />
+    );
+  }
+
   return (
     <div className="space-y-6 max-w-[1600px] pb-10">
       {/* Page Header */}
@@ -526,9 +555,10 @@ export default function IssueReportPage() {
         {/* Action Controls Toolbar */}
         <div className="flex flex-wrap items-center gap-2.5">
           {/* Preview PDF */}
-          <button
-            onClick={() => handlePreviewPdf()}
-            disabled={isExporting}
+          {hasPdf && (
+            <button
+              onClick={() => handlePreviewPdf()}
+              disabled={isExporting}
             className="flex items-center gap-2 px-3.5 py-2.5 rounded-xl border border-[#701a2b]/30 bg-card hover:bg-[#701a2b]/10 text-[#701a2b] dark:text-rose-300 text-sm font-semibold transition-all shadow-sm hover:shadow disabled:opacity-50"
             title="Inspect formatted A4 document before printing or saving"
           >
@@ -543,10 +573,13 @@ export default function IssueReportPage() {
             </span>
           </button>
 
+          )}
+
           {/* Download PDF */}
-          <button
-            onClick={handleDownloadPdf}
-            disabled={isExporting}
+          {hasPdf && (
+            <button
+              onClick={handleDownloadPdf}
+              disabled={isExporting}
             className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-[#701a2b] to-[#8d2238] hover:from-[#5d1624] hover:to-[#701a2b] text-white text-sm font-semibold transition-all shadow-md hover:shadow-lg disabled:opacity-50"
             title="Download official PDF report (A4)"
           >
@@ -558,10 +591,13 @@ export default function IssueReportPage() {
             <span>Download PDF</span>
           </button>
 
+          )}
+
           {/* Print Report */}
-          <button
-            onClick={handlePrintReport}
-            disabled={isExporting}
+          {hasPrint && (
+            <button
+              onClick={handlePrintReport}
+              disabled={isExporting}
             className="flex items-center gap-2 px-3.5 py-2.5 rounded-xl border border-border bg-card text-foreground text-sm font-medium hover:bg-muted transition-all shadow-sm disabled:opacity-50"
             title="Print report directly with high-resolution vector layout"
           >
@@ -573,10 +609,13 @@ export default function IssueReportPage() {
             <span>Print</span>
           </button>
 
+          )}
+
           {/* Export CSV */}
-          <button
-            onClick={handleExportCsv}
-            disabled={isExporting}
+          {hasExcel && (
+            <button
+              onClick={handleExportCsv}
+              disabled={isExporting}
             className="flex items-center gap-2 px-3.5 py-2.5 rounded-xl border border-border bg-card text-muted-foreground hover:text-foreground text-sm font-medium hover:bg-muted transition-all shadow-sm disabled:opacity-50"
             title="Export raw data as spreadsheet CSV"
           >
@@ -587,6 +626,7 @@ export default function IssueReportPage() {
             )}
             <span>CSV</span>
           </button>
+          )}
         </div>
       </div>
 

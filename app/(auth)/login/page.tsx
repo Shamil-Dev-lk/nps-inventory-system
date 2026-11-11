@@ -111,7 +111,7 @@ export default function LoginPage() {
         throw new Error('Your account is inactive. Please contact your administrator.');
       }
 
-      // Fetch actual permissions for their role from the roles table
+      // Fetch role permissions and merge with user-specific permissions
       const userRoleName = userData.roles?.[0] || userData.role || 'user';
       const { data: roleDef } = await supabase
         .from('roles')
@@ -119,7 +119,9 @@ export default function LoginPage() {
         .eq('name', userRoleName)
         .single();
 
-      const actualPermissions = roleDef?.permissions || userData.permissions || [];
+      const rolePerms: string[] = Array.isArray(roleDef?.permissions) ? roleDef.permissions : [];
+      const userPerms: string[] = Array.isArray(userData.permissions) ? userData.permissions : [];
+      const actualPermissions = Array.from(new Set([...rolePerms, ...userPerms]));
       
       const profileData: User = { 
         id: userData.id, 

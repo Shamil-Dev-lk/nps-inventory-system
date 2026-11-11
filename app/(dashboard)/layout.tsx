@@ -23,6 +23,7 @@ import { useOrgStore } from '@/store/org-store';
 import { Organization } from '@/types';
 import { NotificationCenter } from '@/components/layout/NotificationCenter';
 import { DailySpecialDayBanner } from '@/components/common/DailySpecialDayBanner';
+import { canAccessReportsPage, canViewReport } from '@/lib/auth/report-permissions';
 
 interface NavItem {
   label: string;
@@ -101,14 +102,25 @@ const navItems: NavItem[] = [
 
 function NavItemComp({ item, collapsed }: { item: NavItem; collapsed: boolean }) {
   const pathname = usePathname();
-  const { hasPermission } = useAuthStore();
+  const { hasPermission, user } = useAuthStore();
   const [open, setOpen] = React.useState(false);
+
+  // Check master reports page permission
+  if (item.label === 'Reports' && !canAccessReportsPage(user)) {
+    return null;
+  }
 
   if (item.permission && !hasPermission(item.permission)) return null;
 
   // Filter children based on permissions
   const visibleChildren = item.children?.filter(
-    (child) => !child.permission || hasPermission(child.permission)
+    (child) => {
+      if (child.href?.includes('/dashboard/reports/')) {
+        const seg = child.href.split('/dashboard/reports/')[1]?.replace(/\/$/, '');
+        return canViewReport(user, seg);
+      }
+      return !child.permission || hasPermission(child.permission);
+    }
   );
 
   // If this item has children but ALL of them are hidden due to permissions, hide the parent too
@@ -175,13 +187,46 @@ import { CommandPalette } from '@/components/scanner/CommandPalette';
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
-  const { user, logout, isAuthenticated } = useAuthStore();
+  const { user, logout, isAuthenticated, setUser } = useAuthStore();
   const { setOrg, org } = useOrgStore();
   const { theme, setTheme } = useTheme();
   const [sidebarCollapsed, setSidebarCollapsed] = React.useState(false);
   const [scannerOpen, setScannerOpen] = React.useState(false);
 
   const [isHydrated, setIsHydrated] = React.useState(false);
+
+  // Synchronize latest permissions from Supabase
+  useEffect(() => {
+    if (!user?.id) return;
+    const syncPermissions = async () => {
+      try {
+        const { data: dbUser } = await supabase
+          .from('users')
+          .select('permissions, roles, role, is_active')
+          .eq('id', user.id)
+          .single();
+
+        if (dbUser && Array.isArray(dbUser.permissions)) {
+          const current = user.permissions || [];
+          const diff = dbUser.permissions.length !== current.length ||
+            dbUser.permissions.some(p => !current.includes(p));
+
+          if (diff) {
+            setUser({
+              ...user,
+              permissions: dbUser.permissions,
+              roles: dbUser.roles?.length ? dbUser.roles : user.roles,
+              role: dbUser.role || user.role,
+              is_active: dbUser.is_active !== false
+            });
+          }
+        }
+      } catch {
+        // Silently continue
+      }
+    };
+    syncPermissions();
+  }, [user?.id, setUser]);
 
   const { data: orgData } = useQuery({
     queryKey: ['organization'],

@@ -5,9 +5,10 @@ import { useForm } from 'react-hook-form';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { toast } from 'sonner';
-import { ArrowLeft, Save } from 'lucide-react';
+import { ArrowLeft, Save, ShieldCheck } from 'lucide-react';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
+import { ReportPermissionsManager } from '@/components/settings/ReportPermissionsManager';
 
 export default function EditUserPage() {
   const router = useRouter();
@@ -153,6 +154,27 @@ export default function EditUserPage() {
               <textarea {...register('address')} className="w-full px-3 py-2 mt-1 border rounded-lg focus:ring-2 focus:ring-primary/30 outline-none" rows={2} />
             </div>
           </div>
+        </div>
+
+        {/* Granular Report Permissions Management Section */}
+        <div className="bg-card border rounded-xl p-6 shadow-sm space-y-4">
+          <div className="border-b pb-3">
+            <h2 className="text-lg font-bold text-foreground flex items-center gap-2">
+              <ShieldCheck size={20} className="text-[#701a2b]" />
+              Report Access & Permissions (වාර්තා ප්‍රවේශ අවසර)
+            </h2>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              Configure granular report capabilities (View, PDF Download, Print, Excel Export) for this user.
+            </p>
+          </div>
+          <ReportPermissionsManager
+            user={user}
+            isInline={true}
+            onSaved={(updatedPerms) => {
+              qc.invalidateQueries({ queryKey: ['user', id] });
+              qc.invalidateQueries({ queryKey: ['users'] });
+            }}
+          />
         </div>
 
         <div className="flex justify-end gap-3">

@@ -23,6 +23,8 @@ import {
   LowStockItemForPdf
 } from '@/lib/reports/low-stock-report-pdf';
 import { GovernmentReportView } from '@/lib/reports/government-report-view';
+import { canViewReport, canDownloadPdf, canPrintReport, canExportExcel } from '@/lib/auth/report-permissions';
+import { ReportAccessDenied } from '@/components/common/ReportAccessDenied';
 
 export default function LowStockPage() {
   const { user } = useAuthStore();
@@ -35,6 +37,11 @@ export default function LowStockPage() {
   const [previewMode, setPreviewMode] = useState<'form' | 'pdf'>('form');
   const [isExporting, setIsExporting] = useState(false);
   const [exportAction, setExportAction] = useState<'download' | 'preview' | 'print' | 'csv' | null>(null);
+
+  const hasView = canViewReport(user, 'low-stock');
+  const hasPdf = canDownloadPdf(user, 'low-stock');
+  const hasPrint = canPrintReport(user, 'low-stock');
+  const hasExcel = canExportExcel(user, 'low-stock');
 
   const { data: lowData, isLoading: lowLoading, refetch: refetchLow } = useQuery({
     queryKey: ['low-stock'],
@@ -85,6 +92,10 @@ export default function LowStockPage() {
   };
 
   const handleDownloadPdf = () => {
+    if (!hasPdf) {
+      toast.error('PDF බාගත කිරීමට ඔබට අවසර නැත / You do not have permission to download PDF');
+      return;
+    }
     if (isExporting || items.length === 0) return;
     setIsExporting(true);
     setExportAction('download');
@@ -105,6 +116,10 @@ export default function LowStockPage() {
   };
 
   const handlePreviewPdf = (targetOrientation?: 'landscape' | 'portrait') => {
+    if (!hasPdf) {
+      toast.error('PDF පෙරදසුන සඳහා අවසර නැත / You do not have permission to preview PDF');
+      return;
+    }
     if (items.length === 0) {
       toast.error('No items to preview.');
       return;
@@ -140,6 +155,10 @@ export default function LowStockPage() {
   };
 
   const handlePrintReport = () => {
+    if (!hasPrint) {
+      toast.error('මුද්‍රණය සඳහා ඔබට අවසර නැත / You do not have permission to print this report');
+      return;
+    }
     if (isExporting || items.length === 0) return;
     setIsExporting(true);
     setExportAction('print');
@@ -175,6 +194,10 @@ export default function LowStockPage() {
   }, [previewBlobUrl]);
 
   const handleExportCSV = () => {
+    if (!hasExcel) {
+      toast.error('Excel/CSV අපනයනය සඳහා අවසර නැත / You do not have permission to export CSV');
+      return;
+    }
     if (!items || items.length === 0) return;
     const headers = ['#', 'Code', 'Item Name (EN)', 'Item Name (SI)', 'Category', 'Current Stock', 'Min Stock', 'Reorder Level', 'Deficit Qty', 'Unit'];
     const rows = items.map((item: any, idx: number) => {
@@ -233,6 +256,7 @@ export default function LowStockPage() {
 
         {/* Actions */}
         <div className="flex flex-wrap items-center gap-2.5">
+          {hasPdf && (
           <button
             onClick={() => handlePreviewPdf()}
             disabled={isExporting || items.length === 0}
@@ -249,7 +273,9 @@ export default function LowStockPage() {
               A4
             </span>
           </button>
+          )}
 
+          {hasPdf && (
           <button
             onClick={handleDownloadPdf}
             disabled={isExporting || items.length === 0}
@@ -263,7 +289,9 @@ export default function LowStockPage() {
             )}
             <span>Download PDF</span>
           </button>
+          )}
 
+          {hasPrint && (
           <button
             onClick={handlePrintReport}
             disabled={isExporting || items.length === 0}
@@ -277,7 +305,9 @@ export default function LowStockPage() {
             )}
             <span>Print</span>
           </button>
+          )}
 
+          {hasExcel && (
           <button
             onClick={handleExportCSV}
             disabled={isExporting || items.length === 0}
@@ -287,6 +317,7 @@ export default function LowStockPage() {
             <FileText size={16} />
             <span>CSV</span>
           </button>
+          )}
 
           <button
             onClick={() => { refetchLow(); refetchZero(); }}
@@ -537,6 +568,7 @@ export default function LowStockPage() {
                   </button>
                 </div>
 
+                {hasPrint && (
                 <button
                   onClick={handlePrintReport}
                   disabled={isExporting}
@@ -546,7 +578,9 @@ export default function LowStockPage() {
                   <Printer size={14} />
                   මුද්‍රණය (Print)
                 </button>
+                )}
 
+                {hasPdf && (
                 <button
                   onClick={handleDownloadPdf}
                   disabled={isExporting}
@@ -556,6 +590,7 @@ export default function LowStockPage() {
                   <Download size={14} />
                   බාගන්න (Download PDF)
                 </button>
+                )}
 
                 <button
                   onClick={handleClosePreviewModal}

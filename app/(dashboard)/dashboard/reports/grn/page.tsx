@@ -25,9 +25,15 @@ import {
   GrnRecordForPdf
 } from '@/lib/reports/grn-report-pdf';
 import { GovernmentReportView } from '@/lib/reports/government-report-view';
+import { canViewReport, canDownloadPdf, canPrintReport, canExportExcel } from '@/lib/auth/report-permissions';
+import { ReportAccessDenied } from '@/components/common/ReportAccessDenied';
 
 export default function GrnReportPage() {
   const { user } = useAuthStore();
+  const hasView = canViewReport(user, 'grn');
+  const hasPdf = canDownloadPdf(user, 'grn');
+  const hasPrint = canPrintReport(user, 'grn');
+  const hasExcel = canExportExcel(user, 'grn');
   const [supplierId, setSupplierId] = useState('');
   const [fromDate, setFromDate] = useState('');
   const [toDate, setToDate] = useState('');
@@ -353,6 +359,16 @@ export default function GrnReportPage() {
   };
 
   const hasActiveFilters = Boolean(supplierId || status || fromDate || toDate || search.trim());
+  if (!hasView) {
+    return (
+      <ReportAccessDenied
+        reportTitle="Goods Received (GRN) Report"
+        reportTitleSi="භාණ්ඩ ලැබීමේ වාර්තාව"
+        requiredPermission="reports.grn.view"
+      />
+    );
+  }
+
 
   return (
     <div className="space-y-6 max-w-[1600px] pb-10">
@@ -372,7 +388,8 @@ export default function GrnReportPage() {
 
         {/* Actions */}
         <div className="flex flex-wrap items-center gap-2.5">
-          <button
+          {hasPdf && (
+<button
             onClick={() => handlePreviewPdf()}
             disabled={isExporting}
             className="flex items-center gap-2 px-3.5 py-2.5 rounded-xl border border-[#701a2b]/30 bg-card hover:bg-[#701a2b]/10 text-[#701a2b] dark:text-rose-300 text-sm font-semibold transition-all shadow-sm disabled:opacity-50"
@@ -388,8 +405,10 @@ export default function GrnReportPage() {
               A4
             </span>
           </button>
+)}
 
-          <button
+          {hasPdf && (
+<button
             onClick={handleDownloadPdf}
             disabled={isExporting}
             className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-[#701a2b] to-[#8d2238] hover:from-[#5d1624] hover:to-[#701a2b] text-white text-sm font-semibold transition-all shadow-md disabled:opacity-50"
@@ -402,8 +421,10 @@ export default function GrnReportPage() {
             )}
             <span>Download PDF</span>
           </button>
+)}
 
-          <button
+          {hasPrint && (
+<button
             onClick={handlePrintReport}
             disabled={isExporting}
             className="flex items-center gap-2 px-3.5 py-2.5 rounded-xl border border-border bg-card text-foreground text-sm font-medium hover:bg-muted transition-all shadow-sm disabled:opacity-50"
@@ -416,8 +437,10 @@ export default function GrnReportPage() {
             )}
             <span>Print</span>
           </button>
+)}
 
-          <button
+          {hasExcel && (
+<button
             onClick={handleExportCsv}
             disabled={isExporting}
             className="flex items-center gap-2 px-3.5 py-2.5 rounded-xl border border-border bg-card text-muted-foreground hover:text-foreground text-sm font-medium hover:bg-muted transition-all shadow-sm disabled:opacity-50"
@@ -430,6 +453,7 @@ export default function GrnReportPage() {
             )}
             <span>CSV</span>
           </button>
+)}
         </div>
       </div>
 

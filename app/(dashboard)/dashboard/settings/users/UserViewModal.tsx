@@ -1,5 +1,6 @@
 import React from 'react';
-import { X, User as UserIcon, Mail, Phone, Briefcase, MapPin, Calendar, Building2, ShieldCheck, Clock } from 'lucide-react';
+import { X, User as UserIcon, Mail, Phone, Briefcase, MapPin, Calendar, Building2, ShieldCheck, Clock, FileText } from 'lucide-react';
+import { parseUserReportPermissions, isSuperAdmin, isTrainee, SYSTEM_REPORT_CATEGORIES } from '@/lib/auth/report-permissions';
 import { User } from '@/types';
 
 interface UserViewModalProps {
@@ -98,6 +99,70 @@ export default function UserViewModal({ user, isOpen, onClose }: UserViewModalPr
                 {user.last_login_at ? new Date(user.last_login_at).toLocaleString() : 'Never'}
               </p>
             </div>
+          </div>
+
+          {/* Report Access & Permissions Summary */}
+          <div className="mt-5 pt-4 border-t border-border space-y-2.5">
+            <div className="flex items-center justify-between">
+              <span className="text-xs text-muted-foreground uppercase tracking-wider font-semibold flex items-center gap-1.5">
+                <FileText size={14} className="text-[#701a2b]" />
+                Report Access Permissions
+              </span>
+              <span className="text-[11px] font-mono text-muted-foreground">
+                {isSuperAdmin(user) ? 'Super Admin' : isTrainee(user) ? 'Trainee' : 'Standard'}
+              </span>
+            </div>
+
+            {isSuperAdmin(user) ? (
+              <div className="p-3 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 rounded-xl text-xs text-emerald-800 dark:text-emerald-300 font-medium">
+                Full Unrestricted Access to all reports, PDF generation, native printing, and Excel exports.
+              </div>
+            ) : (() => {
+              const { pageAccess, categories } = parseUserReportPermissions(user.permissions || []);
+              if (!pageAccess) {
+                return (
+                  <div className="p-3 bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 rounded-xl text-xs text-rose-800 dark:text-rose-300 font-medium">
+                    🚫 Reports Page Access Disabled (No report access granted).
+                  </div>
+                );
+              }
+
+              const allowedCats = SYSTEM_REPORT_CATEGORIES.filter(c => categories[c.id]?.view);
+              if (allowedCats.length === 0) {
+                return (
+                  <div className="p-3 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 rounded-xl text-xs text-amber-800 dark:text-amber-300 font-medium">
+                    ⚠️ Reports Page access enabled, but no individual categories are granted yet.
+                  </div>
+                );
+              }
+
+              return (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  {allowedCats.map(cat => {
+                    const st = categories[cat.id];
+                    const actions = [
+                      st.view && 'View',
+                      st.pdf && 'PDF',
+                      st.print && 'Print',
+                      st.excel && 'Excel'
+                    ].filter(Boolean);
+
+                    return (
+                      <div key={cat.id} className="p-2.5 rounded-lg border border-border bg-muted/40 text-xs space-y-1">
+                        <span className="font-semibold text-foreground block">{cat.name}</span>
+                        <div className="flex flex-wrap gap-1">
+                          {actions.map(a => (
+                            <span key={a} className="bg-[#701a2b]/10 text-[#701a2b] dark:text-rose-300 px-1.5 py-0.2 rounded text-[10px] font-bold">
+                              {a}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              );
+            })()}
           </div>
         </div>
         
