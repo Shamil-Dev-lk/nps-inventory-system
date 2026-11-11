@@ -78,7 +78,7 @@ function SkeletonCard() {
 
 export default function DashboardPage() {
   const { org } = useOrgStore();
-  const { hasSuperAdmin, hasPermission } = useAuthStore();
+  const { hasSuperAdmin, hasPermission, user } = useAuthStore();
   const [isStudioOpen, setIsStudioOpen] = React.useState(false);
   const [specialDay, setSpecialDay] = React.useState<SpecialDay | null>(null);
 
