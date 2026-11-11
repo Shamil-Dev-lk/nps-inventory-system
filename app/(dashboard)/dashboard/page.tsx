@@ -18,7 +18,7 @@ import { supabase } from '@/lib/supabase';
 import type { DashboardAnalytics } from '@/types';
 import { useOrgStore } from '@/store/org-store';
 import { useAuthStore } from '@/store/auth-store';
-import { canViewReport } from '@/lib/auth/report-permissions';
+import { canViewReport, canAccessReportsPage } from '@/lib/auth/report-permissions';
 
 const COLORS = ['#006838', '#8DC63F', '#FDB913', '#00a651', '#2ecc71', '#f39c12'];
 
@@ -86,12 +86,17 @@ export default function DashboardPage() {
     setSpecialDay(SpecialDaysRegistry.getCurrentSpecialDay());
   }, []);
   
-  // A manager/admin is someone who can view sensitive reports
-  const isManager = hasSuperAdmin() || hasPermission('view-reports');
+  // Role and module capabilities
+  const isManager = hasSuperAdmin() || hasPermission('view-reports') || canAccessReportsPage(user);
+  const canViewInventory = hasSuperAdmin() || hasPermission('view-items') || hasPermission('view-reports') || canAccessReportsPage(user);
+  const canViewGrn = hasSuperAdmin() || hasPermission('view-grn') || hasPermission('view-reports');
+  const canViewIssues = hasSuperAdmin() || hasPermission('view-stock-issues');
+  const canViewCharts = hasSuperAdmin() || hasPermission('view-reports') || canAccessReportsPage(user) || hasPermission('view-items');
 
   const { data, isLoading, refetch } = useQuery({
     queryKey: ['dashboard-analytics'],
     queryFn: async () => {
+      // 1. Live items with inventory metrics
       const { data: items = [] } = await supabase.from('items').select('*');
       
       let totalValue = 0;
@@ -112,9 +117,62 @@ export default function DashboardPage() {
         }
       });
 
-      const { data: issues = [] } = await supabase.from('stock_issues').select('*');
+      // 2. Categories breakdown
+      const { data: categories = [] } = await supabase.from('categories').select('id, name_en');
+      const catMap: Record<number, { category: { name_en: string }, count: number, value: number }> = {};
+      (categories || []).forEach((c: any) => {
+        catMap[c.id] = { category: { name_en: c.name_en }, count: 0, value: 0 };
+      });
+      (items || []).forEach((item: any) => {
+        const catId = item.category_id;
+        const val = Number(item.current_quantity || 0) * Number(item.purchase_price || item.price || item.average_cost || 0);
+        if (catId && catMap[catId]) {
+          catMap[catId].count++;
+          catMap[catId].value += val;
+        }
+      });
+      const stockByCategory = Object.values(catMap).filter(c => c.count > 0).sort((a, b) => b.value - a.value);
+
+      // 3. Stock Issues & Historical Trend
+      const { data: issues = [] } = await supabase.from('stock_issues').select('id, issue_date, created_at, status');
+      
+      const monthNames = ['Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov'];
+      const monthKeys = ['2026-06', '2026-07', '2026-08', '2026-09', '2026-10', '2026-11'];
+      const issueCountsByMonth: Record<string, number> = {};
+      (issues || []).forEach((iss: any) => {
+        const d = iss.issue_date || iss.created_at;
+        if (d) {
+          const m = d.slice(0, 7);
+          issueCountsByMonth[m] = (issueCountsByMonth[m] || 0) + 1;
+        }
+      });
+      const monthlyTrend = monthKeys.map((mk, idx) => ({
+        month: monthNames[idx],
+        grn_value: 0,
+        issues_count: issueCountsByMonth[mk] || 0,
+      }));
+
+      // Current vs previous month issues
+      const currentMonthKey = '2026-11';
+      const prevMonthKey = '2026-10';
+      const thisMonthIssues = issueCountsByMonth[currentMonthKey] || 0;
+      const lastMonthIssues = issueCountsByMonth[prevMonthKey] || 0;
+
+      // 4. Live Recent Issues
+      const { data: recentIssues = [] } = await supabase
+        .from('stock_issues')
+        .select('id, issue_number, issue_date, status, created_at, department:departments(name_en), customer:customers(name)')
+        .order('created_at', { ascending: false })
+        .limit(6);
+
+      // 5. Live GRNs & Recent GRNs
       const { data: grns = [] } = await supabase.from('grns').select('*');
       const grnTotalVal = (grns || []).reduce((acc: number, g: any) => acc + Number(g.total_amount || 0), 0);
+      const { data: recentGrns = [] } = await supabase
+        .from('grns')
+        .select('id, grn_number, total_amount, status, created_at, supplier:suppliers(company_name)')
+        .order('created_at', { ascending: false })
+        .limit(6);
 
       return {
         inventory: { 
@@ -124,10 +182,12 @@ export default function DashboardPage() {
           out_of_stock_count: outOfStockCount
         },
         monthly_grn: { this_month: grnTotalVal, last_month: 0, count: (grns || []).length },
-        monthly_issues: { this_month: (issues || []).length, last_month: 0, count: (issues || []).length },
+        monthly_issues: { this_month: thisMonthIssues || (issues || []).length, last_month: lastMonthIssues, count: (issues || []).length },
         low_stock_count: lowStockCount,
-        stock_by_category: [],
-        monthly_trend: [],
+        stock_by_category: stockByCategory,
+        monthly_trend: monthlyTrend,
+        recent_issues: recentIssues || [],
+        recent_grns: recentGrns || [],
         recent_activity: [],
       } as any;
     },
@@ -246,7 +306,7 @@ export default function DashboardPage() {
           Array.from({ length: 4 }).map((_, i) => <SkeletonCard key={i} />)
         ) : (
           <>
-            {isManager && (
+            {canViewInventory && (
               <StatCard
                 title="Total Inventory Value"
                 value={formatCurrency(data?.inventory?.total_value || 0)}
@@ -255,7 +315,7 @@ export default function DashboardPage() {
                 color="#006838"
               />
             )}
-            {isManager && (
+            {canViewGrn && (
               <StatCard
                 title="GRN This Month"
                 value={formatCurrency(data?.monthly_grn?.this_month || 0)}
@@ -266,15 +326,17 @@ export default function DashboardPage() {
                 trendValue={`${Math.abs(grnTrend).toFixed(1)}%`}
               />
             )}
-            <StatCard
-              title="Issues This Month"
-              value={data?.monthly_issues?.this_month || 0}
-              subtitle="Items dispatched"
-              icon={PackageMinus}
-              color="#FDB913"
-              trend={issueTrend >= 0 ? 'up' : 'down'}
-              trendValue={`${Math.abs(issueTrend).toFixed(1)}%`}
-            />
+            {canViewIssues && (
+              <StatCard
+                title="Issues This Month"
+                value={data?.monthly_issues?.this_month || 0}
+                subtitle="Items dispatched"
+                icon={PackageMinus}
+                color="#FDB913"
+                trend={issueTrend >= 0 ? 'up' : 'down'}
+                trendValue={`${Math.abs(issueTrend).toFixed(1)}%`}
+              />
+            )}
             <StatCard
               title="Low Stock Alerts"
               value={data?.inventory?.low_stock_count || 0}
@@ -309,7 +371,7 @@ export default function DashboardPage() {
       )}
 
       {/* ── Charts Row ───────────────────────────────────────────── */}
-      {isManager && (
+      {canViewCharts && (
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
           {/* Monthly trend chart */}
           <motion.div
@@ -473,11 +535,11 @@ export default function DashboardPage() {
               : (data?.recent_issues || []).map((issue: { id: number; issue_number: string; department?: { name_en?: string }; status: string; issue_date: string }) => (
                   <div key={issue.id} className="px-5 py-3 flex items-center justify-between hover:bg-muted/30 transition-colors">
                     <div>
-                      <p className="text-sm font-medium text-foreground">{issue.issue_number}</p>
-                      <p className="text-xs text-muted-foreground">{issue.department?.name_en || 'Unknown dept.'}</p>
+                      <p className="text-sm font-medium text-foreground font-mono">{issue.issue_number || `IS-${String(issue.id || 0).padStart(4, '0')}`}</p>
+                      <p className="text-xs text-muted-foreground">{issue.customer?.name || issue.department?.name_en || 'Store Dispatched'}</p>
                     </div>
                     <div className="text-right">
-                      <p className="text-xs text-muted-foreground">{new Date(issue.issue_date).toLocaleDateString('en-LK')}</p>
+                      <p className="text-xs text-muted-foreground">{new Date(issue.issue_date || issue.created_at).toLocaleDateString('en-LK')}</p>
                       <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded-full mt-0.5 inline-block ${
                         issue.status === 'issued' ? 'badge-success' : issue.status === 'rejected' ? 'badge-danger' : 'badge-warning'
                       }`}>

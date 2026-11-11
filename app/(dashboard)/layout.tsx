@@ -106,11 +106,11 @@ function NavItemComp({ item, collapsed }: { item: NavItem; collapsed: boolean })
   const [open, setOpen] = React.useState(false);
 
   // Check master reports page permission
-  if (item.label === 'Reports' && !canAccessReportsPage(user)) {
+  if (item.label === 'Reports') {
+    if (!canAccessReportsPage(user)) return null;
+  } else if (item.permission && !hasPermission(item.permission)) {
     return null;
   }
-
-  if (item.permission && !hasPermission(item.permission)) return null;
 
   // Filter children based on permissions
   const visibleChildren = item.children?.filter(
@@ -195,7 +195,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   const [isHydrated, setIsHydrated] = React.useState(false);
 
-  // Synchronize latest permissions from Supabase
+  // Synchronize latest permissions from Supabase (merging role permissions + user-specific permissions)
   useEffect(() => {
     if (!user?.id) return;
     const syncPermissions = async () => {
@@ -206,17 +206,37 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           .eq('id', user.id)
           .single();
 
-        if (dbUser && Array.isArray(dbUser.permissions)) {
+        if (dbUser) {
+          const userRoleName = dbUser.roles?.[0] || dbUser.role || 'user';
+          let rolePerms: string[] = [];
+          
+          if (userRoleName) {
+            const { data: roleDef } = await supabase
+              .from('roles')
+              .select('permissions')
+              .eq('name', userRoleName)
+              .single();
+            if (roleDef && Array.isArray(roleDef.permissions)) {
+              rolePerms = roleDef.permissions;
+            }
+          }
+
+          const userPerms: string[] = Array.isArray(dbUser.permissions) ? dbUser.permissions : [];
+          const mergedPerms = Array.from(new Set([...rolePerms, ...userPerms]));
+
           const current = user.permissions || [];
-          const diff = dbUser.permissions.length !== current.length ||
-            dbUser.permissions.some(p => !current.includes(p));
+          const diff = mergedPerms.length !== current.length ||
+            mergedPerms.some(p => !current.includes(p)) ||
+            current.some(p => !mergedPerms.includes(p)) ||
+            user.role !== dbUser.role ||
+            user.is_active !== (dbUser.is_active !== false);
 
           if (diff) {
             setUser({
               ...user,
-              permissions: dbUser.permissions,
-              roles: dbUser.roles?.length ? dbUser.roles : user.roles,
-              role: dbUser.role || user.role,
+              permissions: mergedPerms,
+              roles: dbUser.roles?.length ? dbUser.roles : (userRoleName ? [userRoleName] : user.roles),
+              role: dbUser.role || userRoleName,
               is_active: dbUser.is_active !== false
             });
           }

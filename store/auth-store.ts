@@ -48,20 +48,29 @@ export const useAuthStore = create<AuthState>()(
         const { user } = get();
         if (!user) return false;
         // Super admins have all permissions
-        if (user.roles?.includes('Super Admin') || user.roles?.includes('super-admin')) return true;
-        return user.permissions?.includes(permission) || false;
+        if (user.role === 'Super Admin' || user.roles?.includes('Super Admin') || user.roles?.includes('super-admin')) return true;
+        const perms = Array.isArray(user.permissions) ? user.permissions : [];
+        if (perms.includes('*') || perms.includes(permission)) return true;
+
+        // Aliases for manage vs view
+        if (permission === 'manage-users' && perms.includes('view-users')) return true;
+        if (permission === 'manage-roles' && perms.includes('view-roles')) return true;
+        if (permission === 'manage-categories' && perms.includes('view-categories')) return true;
+        if (permission === 'manage-brands' && perms.includes('view-brands')) return true;
+        if (permission === 'view-reports' && (perms.includes('reports.page.access') || perms.some((p: string) => p.startsWith('reports.')))) return true;
+        return false;
       },
 
       hasRole: (role: string) => {
         const { user } = get();
         if (!user) return false;
-        return user.roles?.includes(role) || false;
+        return user.role === role || user.roles?.includes(role) || false;
       },
 
       hasSuperAdmin: () => {
         const { user } = get();
         if (!user) return false;
-        return user.roles?.includes('Super Admin') || user.roles?.includes('super-admin') || false;
+        return user.role === 'Super Admin' || user.roles?.includes('Super Admin') || user.roles?.includes('super-admin') || false;
       },
     }),
     {
